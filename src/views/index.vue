@@ -2,5 +2,5 @@
 </script>
 
 <template lang="pug">
-router-view
+.h-full.flex-center index
 </template>

@@ -1,5 +1,6 @@
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import UnoCSS from 'unocss/vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
@@ -14,12 +15,23 @@ export default defineConfig({
     vue(),
     UnoCSS(),
     AutoImport({
-      imports: ['vue', 'vue-router', 'pinia'],
+      imports: [
+        'vue', 'vue-router', 'pinia', '@vueuse/core',
+        {
+          'naive-ui': [
+            'useDialog',
+            'useMessage',
+            'useNotification',
+            'useLoadingBar'
+          ]
+        }
+      ],
       dts:     'auto-imports.d.ts',
     }),
     Components({
-      dirs: [r('./src/components')],
-      dts:  'components.d.ts',
+      dirs:      [r('./src/components')],
+      resolvers: [NaiveUiResolver()],
+      dts:       'components.d.ts',
     }),
   ],
   resolve: {
