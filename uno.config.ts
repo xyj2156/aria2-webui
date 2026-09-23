@@ -3,10 +3,11 @@ import {
   presetAttributify,
   presetIcons,
   presetTypography,
-  presetWind3,
+  presetWind3, transformerCompileClass,
   transformerDirectives,
   transformerVariantGroup,
 } from 'unocss'
+import extractorPug from "@unocss/extractor-pug";
 
 export default defineConfig({
   presets: [
@@ -18,8 +19,18 @@ export default defineConfig({
   transformers: [
     transformerDirectives(),
     transformerVariantGroup(),
+    transformerCompileClass(),
   ],
   shortcuts: {
-    btn: 'inline-flex items-center justify-center rounded px-4 py-2 transition',
+    "wh-full":        "w-full h-full",
+    "flex-center":    "flex justify-center items-center",
+    "flex-x-center":  "flex justify-center",
+    "flex-y-center":  "flex items-center",
+    "flex-x-start":   "flex items-center justify-start",
+    "flex-x-between": "flex items-center justify-between",
+    "flex-x-end":     "flex items-center justify-end",
   },
+  extractors:[
+      extractorPug(),
+  ]
 })
