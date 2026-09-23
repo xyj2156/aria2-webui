@@ -1,7 +1,9 @@
 {
-  "name": "aria-webui",
+  "name": "aria2-webui",
   "private": true,
   "version": "0.0.0",
+  "license": "Apache-2.0",
+  "author": "阿杰 <master@x-ac.cn>",
   "type": "module",
   "scripts": {
     "dev": "vite",
