@@ -1,14 +1,36 @@
-import { createRouter, createWebHashHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from 'vue-router';
+
+const routes = [{
+  path: '/',
+  name: 'index',
+  component: () => import('@/layout/index.vue'),
+  children: [
+    {
+      path: '/',
+      name: 'downloading',
+      component: () => import('@/views/index.vue'),
+    },
+    {
+      path: '/waiting',
+      name: 'waiting',
+      component: () => import('@/views/waiting.vue'),
+    },
+    {
+      path: '/stopped',
+      name: 'stopped',
+      component: () => import('@/views/stopped.vue'),
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/settings.vue'),
+    },
+  ],
+}];
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes:  [
-    {
-      path:      '/',
-      name:      'home',
-      component: () => import('@/views/index.vue'),
-    },
-  ],
+  routes,
 });
 
 router.beforeEach(function (to, from) {

@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@unocss/extractor-pug':
-        specifier: ^66.10.5
-        version: 66.10.5(pug@3.0.4)
       '@vicons/ionicons5':
         specifier: ^0.13.0
         version: 0.13.0
@@ -27,6 +24,9 @@ importers:
         specifier: ^5.3.1
         version: 5.3.1(@vue/compiler-sfc@3.5.43)(pinia@4.0.3(@vue/devtools-api@8.2.1)(vue@3.5.43))(rolldown@1.2.9)(vite@8.3.0(jiti@2.7.0))(vue@3.5.43)
     devDependencies:
+      '@unocss/extractor-pug':
+        specifier: ^66.10.5
+        version: 66.10.5(pug@3.0.4)
       '@vitejs/plugin-vue':
         specifier: ^6.0.8
         version: 6.0.9(vite@8.3.0(jiti@2.7.0))(vue@3.5.43)
