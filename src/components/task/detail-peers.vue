@@ -22,8 +22,16 @@ div
         th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.address') }}
         th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.client') }}
         th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.status') }}
-        th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.download') }}
-        th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.upload') }}
+        th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70")
+          n-tooltip(:show-arrow="false" trigger="hover")
+            template(#trigger)
+              span(class="cursor-help") {{ t('task.peers.download') }}
+            | {{ t('task.peers.speed-tip') }}
+        th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70")
+          n-tooltip(:show-arrow="false" trigger="hover")
+            template(#trigger)
+              span(class="cursor-help") {{ t('task.peers.upload') }}
+            | {{ t('task.peers.speed-tip') }}
     tbody
       tr(v-for="peer in peers" :key="peer.name" class="odd:bg-[#808080]/5")
         td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15")

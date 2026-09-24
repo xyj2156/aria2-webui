@@ -118,8 +118,9 @@ task:
     address: 地址
     client: 客户端
     status: 状态
-    download: 下载
-    upload: 上传
+    download: 我下载
+    upload: 我上传
+    speed-tip: 以本机视角统计：「我下载」=本机从该邻居接收的速率（做种邻居通常出现在此列），「我上传」=本机发送给该邻居的速率。
     local: 本机
     empty: 暂无已连接的邻居
   detail:
