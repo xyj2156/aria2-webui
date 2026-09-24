@@ -104,7 +104,6 @@ task:
     info: '{completed} of {total} pieces completed'
   files:
     name: File Name
-    edit: Edit files to download
     empty: No files
     restart-tip: Editing while downloading restarts this task
     none-selected: Select at least one file

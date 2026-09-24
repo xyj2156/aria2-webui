@@ -223,15 +223,16 @@ n-modal(
   :bordered="false"
   size="huge"
   :style="{ width: '900px', maxWidth: '92vw' }"
-  :title="task?.taskName || gid || t('task.loading')"
   @update:show="onModalShow"
 )
-  .flex.flex-col.gap-3
-    // ---------- 头部操作（关闭交给右上角 X；这里只留暂停/继续，全终态整行隐藏） ----------
-    .flex.items-center.gap-2.flex-wrap(v-if="canPause || isPaused")
-      n-button(size="small" v-if="canPause" @click="toggleState") {{ t('task.action.pause') }}
-      n-button(size="small" v-else-if="isPaused" @click="toggleState") {{ t('task.action.resume') }}
+  // ---------- 自定义标题行：标题 + 合适间距 + 暂停/继续，整块 flex-1 靠左，关闭 X 留在最右不挤 ----------
+  template(#header)
+    .flex.items-center.gap-3.min-w-0(class="flex-1")
+      span.font-semibold.truncate(class="text-[17px]") {{ task?.taskName || gid || t('task.loading') }}
+      n-button(size="small" shrink-0 v-if="canPause" @click="toggleState") {{ t('task.action.pause') }}
+      n-button(size="small" shrink-0 v-else-if="isPaused" @click="toggleState") {{ t('task.action.resume') }}
 
+  .flex.flex-col.gap-3
     // ---------- 致命错误 ----------
     p(v-if="fatal" class="p-4 text-center text-[#d03050]") {{ fatal }}
 
