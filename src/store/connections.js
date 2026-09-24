@@ -131,22 +131,8 @@ export const useConnectionStore = defineStore('connections', function () {
     // 如果修改了地址信息，检查是否会与其它连接冲突
     const current = connections.value[index];
     const merged = {...current, ...partial};
-
-    const duplicate = connections.value.find(
-      (conn) =>
-        conn.id !== id &&
-        conn.protocol === merged.protocol &&
-        conn.host === merged.host &&
-        conn.port === merged.port &&
-        conn.path === merged.path,
-    );
-
-    if (duplicate) {
-      console.warn(`[connections] 更新后地址与 "${duplicate.name}" 冲突，跳过`);
-      return false;
-    }
-
     connections.value[index] = merged;
+    if(id === activeId.value) setConnection(merged);
     return true;
   }
 
