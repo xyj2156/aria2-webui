@@ -216,7 +216,7 @@ function resumeOne(task) {
 }
 function startNowOne(task) {
   // 立即开始 = aria2.changePosition 移到队首（POS_SET, 0），尽快排到下载
-  void runOnGids([task.gid], 'changePosition', t('task.action.start-now'), [0, 'POS_SET']);
+  void runOnGids([task.gid], 'changePosition', t('task.action.resume'), [0, 'POS_SET']);
 }
 function removeOne(task) {
   void runOnGids([task.gid], removeMethod(), t('task.action.remove'));
@@ -226,10 +226,12 @@ function pauseSelected() {
   void runOnGids(selectedGids.value, 'forcePause', t('task.action.pause'));
 }
 function resumeSelected() {
-  void runOnGids(resumableSelectedGids.value, 'unpause', t('task.action.resume'));
+  return runOnGids(resumableSelectedGids.value, 'unpause', t('task.action.resume'));
 }
 function startNowSelected() {
-  void runOnGids(selectedGids.value, 'changePosition', t('task.action.start-now'), [0, 'POS_SET']);
+  resumeSelected().then(function () {
+    runOnGids(selectedGids.value, 'changePosition', t('task.action.resume'), [0, 'POS_SET']);
+  });
 }
 
 function removeSelected() {
@@ -273,7 +275,7 @@ const menuOptions = computed(() => {
   if (isStopped.value) {
     items.push({ key: 'start', label: t('task.action.resume'), disabled: !hasResumable.value });
   } else if (isWaiting.value) {
-    items.push({ key: 'now', label: t('task.action.start-now'), disabled: !hasSelection.value });
+    items.push({ key: 'now', label: t('task.action.resume'), disabled: !hasSelection.value });
   } else {
     items.push({ key: 'pause', label: t('task.action.pause'), disabled: !hasSelection.value });
   }
@@ -404,7 +406,7 @@ onUnmounted(() => {
     n-button(size="small" shrink-0 v-if="isWaiting" :disabled="!hasSelection" @click="startNowSelected")
       template(#icon)
         n-icon(:component="PlayOutline")
-      | {{ t('task.action.start-now') }}
+      | {{ t('task.action.resume') }}
     n-button(size="small" shrink-0 v-if="isStopped" :disabled="!hasResumable" @click="resumeSelected")
       template(#icon)
         n-icon(:component="PlayOutline")

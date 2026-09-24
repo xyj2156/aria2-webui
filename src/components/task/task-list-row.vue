@@ -141,7 +141,7 @@ div(
       n-icon(:component="PauseOutline")
     n-button(v-else-if="task.canResume" text size="small" :title="t('task.action.resume')" @click.stop="emit('resume')")
       n-icon(:component="PlayOutline")
-    n-button(v-else-if="task.canStartNow" text size="small" :title="t('task.action.start-now')" @click.stop="emit('startNow')")
+    n-button(v-else-if="task.canStartNow" text size="small" :title="t('task.action.resume')" @click.stop="emit('startNow')")
       n-icon(:component="PlayOutline")
     n-button(text type="error" size="small" :title="t('task.action.remove')" @click.stop="emit('remove')")
       n-icon(:component="TrashOutline")

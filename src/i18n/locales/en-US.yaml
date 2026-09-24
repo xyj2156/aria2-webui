@@ -83,7 +83,6 @@ task:
   action:
     pause: Pause
     resume: Resume
-    start-now: Start Now
     remove: Remove
     retry: Retry
     clear-completed: Clear completed

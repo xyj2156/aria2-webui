@@ -86,7 +86,6 @@ task:
   action:
     pause: 暂停
     resume: 开始
-    start-now: 立即开始
     remove: 移除
     retry: 重试
     clear-completed: 清除已完成
