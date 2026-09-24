@@ -36,7 +36,7 @@ const props = defineProps({
   pageType: { type: String, default: 'downloading' },
 });
 
-const emit = defineEmits(['toggle', 'contextmenu', 'open', 'pause', 'resume', 'remove']);
+const emit = defineEmits(['toggle', 'contextmenu', 'open', 'pause', 'resume', 'startNow', 'remove']);
 
 /** 大小文案：已完成显示总量，下载中显示 已下/总 */
 const sizeText = computed(() => {
@@ -140,6 +140,8 @@ div(
     n-button(v-if="task.canPause" text size="small" :title="t('task.action.pause')" @click.stop="emit('pause')")
       n-icon(:component="PauseOutline")
     n-button(v-else-if="task.canResume" text size="small" :title="t('task.action.resume')" @click.stop="emit('resume')")
+      n-icon(:component="PlayOutline")
+    n-button(v-else-if="task.canStartNow" text size="small" :title="t('task.action.start-now')" @click.stop="emit('startNow')")
       n-icon(:component="PlayOutline")
     n-button(text type="error" size="small" :title="t('task.action.remove')" @click.stop="emit('remove')")
       n-icon(:component="TrashOutline")

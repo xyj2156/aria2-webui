@@ -83,6 +83,7 @@ task:
   action:
     pause: Pause
     resume: Resume
+    start-now: Start Now
     remove: Remove
     retry: Retry
     clear-completed: Clear completed
@@ -122,8 +123,6 @@ task:
     auto-refresh-hint: Auto refresh paused
     invalid-url: Invalid task address
     task-not-found: Task not found
-    retry-unsupported: This task cannot be retried (BT or no usable address)
-    retry-added: Re-added to download queue
   field:
     name: Name
     size: Size

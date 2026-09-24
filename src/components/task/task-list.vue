@@ -53,6 +53,8 @@ const FETCHERS = {
 
 const pageType = computed(() => (FETCHERS[props.type] ? props.type : 'downloading'));
 const isStopped = computed(() => pageType.value === 'stopped');
+const isDownloading = computed(() => pageType.value === 'downloading');
+const isWaiting = computed(() => pageType.value === 'waiting');
 
 const message = useMessage();
 const dialog = useDialog();
@@ -155,6 +157,12 @@ function selectWhere(predicate) {
 
 /** 当前可见且被勾选的 gid 列表（批量动作的作用域） */
 const selectedGids = computed(() => visibleRows.value.filter((task) => selected.has(task.gid)).map((task) => task.gid));
+/** 勾选里「可恢复」(canResume：paused/error) 的 gid——aria2.unpause 只对暂停有效，完成/移除发了也报错 */
+const resumableSelectedGids = computed(() =>
+  visibleRows.value.filter((task) => selected.has(task.gid) && task.canResume).map((task) => task.gid),
+);
+/** 是否有可恢复的勾选项：决定「开始」入口是否可用 */
+const hasResumable = computed(() => resumableSelectedGids.value.length > 0);
 
 // =================================================================== 动作
 /**
@@ -162,12 +170,21 @@ const selectedGids = computed(() => visibleRows.value.filter((task) => selected.
  * @param {string[]} gids
  * @param {string} method 去前缀的 aria2 方法名，如 forcePause
  * @param {string} successLabel 成功文案
+ * @param {unknown[]} [extraArgs] gid 之后的附加参数，如 changePosition 的 [0, 'POS_SET']
  */
-async function runOnGids(gids, method, successLabel) {
+async function runOnGids(gids, method, successLabel, extraArgs = []) {
   if (!gids.length) {
     return;
   }
-  const results = await invokeBatch(gids.map((gid) => ({ method, params: [gid] })));
+  let results;
+  try {
+    results = await invokeBatch(gids.map((gid) => ({ method, params: [gid, ...extraArgs] })));
+  } catch (e) {
+    // 整批调用本身失败（超时 / 断连 / 顶层 error / 报文异常）时，invokeBatch 会 reject；
+    // 调用方都是 void runOnGids(...)，不接住就会静默无反馈，这里兜底弹错。
+    message.error(`${successLabel}失败：${e?.message || String(e)}`);
+    return;
+  }
   const failed = results.filter((row) => !row.ok);
   const ok = results.length - failed.length;
 
@@ -190,6 +207,10 @@ function pauseOne(task) {
 function resumeOne(task) {
   void runOnGids([task.gid], 'unpause', t('task.action.resume'));
 }
+function startNowOne(task) {
+  // 立即开始 = aria2.changePosition 移到队首（POS_SET, 0），尽快排到下载
+  void runOnGids([task.gid], 'changePosition', t('task.action.start-now'), [0, 'POS_SET']);
+}
 function removeOne(task) {
   void runOnGids([task.gid], removeMethod(), t('task.action.remove'));
 }
@@ -198,7 +219,10 @@ function pauseSelected() {
   void runOnGids(selectedGids.value, 'forcePause', t('task.action.pause'));
 }
 function resumeSelected() {
-  void runOnGids(selectedGids.value, 'unpause', t('task.action.resume'));
+  void runOnGids(resumableSelectedGids.value, 'unpause', t('task.action.resume'));
+}
+function startNowSelected() {
+  void runOnGids(selectedGids.value, 'changePosition', t('task.action.start-now'), [0, 'POS_SET']);
 }
 
 function removeSelected() {
@@ -240,12 +264,13 @@ const menu = reactive({ show: false, x: 0, y: 0 });
 const menuOptions = computed(() => {
   const items = [];
   if (isStopped.value) {
-    items.push({ key: 'start', label: t('task.action.resume'), disabled: !hasSelection.value });
-    items.push({ key: 'remove', label: t('task.action.remove'), disabled: !hasSelection.value });
+    items.push({ key: 'start', label: t('task.action.resume'), disabled: !hasResumable.value });
+  } else if (isWaiting.value) {
+    items.push({ key: 'now', label: t('task.action.start-now'), disabled: !hasSelection.value });
   } else {
     items.push({ key: 'pause', label: t('task.action.pause'), disabled: !hasSelection.value });
-    items.push({ key: 'remove', label: t('task.action.remove'), disabled: !hasSelection.value });
   }
+  items.push({ key: 'remove', label: t('task.action.remove'), disabled: !hasSelection.value });
   items.push({ type: 'divider', key: 'div-1' });
   items.push({ key: 'select-all', label: t('task.menu.select-all') });
   if (isStopped.value) {
@@ -271,6 +296,9 @@ function onMenuSelect(key) {
   switch (key) {
     case 'start':
       resumeSelected();
+      break;
+    case 'now':
+      startNowSelected();
       break;
     case 'pause':
       pauseSelected();
@@ -355,12 +383,16 @@ onUnmounted(() => {
     span.text-sm.opacity-70.shrink-0(class="tabular-nums")
       | {{ t('task.count', { selected: selectedCount, total: rows.length }) }}
 
-    // 批量操作按钮（按页型出现，无选中时禁用）
-    n-button(size="small" shrink-0 v-if="!isStopped" :disabled="!hasSelection" @click="pauseSelected")
+    // 批量操作按钮（按页型出现，无选中时禁用）：下载中=暂停 / 等待中=立即开始 / 已停止=开始
+    n-button(size="small" shrink-0 v-if="isDownloading" :disabled="!hasSelection" @click="pauseSelected")
       template(#icon)
         n-icon(:component="PauseOutline")
       | {{ t('task.action.pause') }}
-    n-button(size="small" shrink-0 v-if="isStopped" :disabled="!hasSelection" @click="resumeSelected")
+    n-button(size="small" shrink-0 v-if="isWaiting" :disabled="!hasSelection" @click="startNowSelected")
+      template(#icon)
+        n-icon(:component="PlayOutline")
+      | {{ t('task.action.start-now') }}
+    n-button(size="small" shrink-0 v-if="isStopped" :disabled="!hasResumable" @click="resumeSelected")
       template(#icon)
         n-icon(:component="PlayOutline")
       | {{ t('task.action.resume') }}
@@ -399,6 +431,7 @@ onUnmounted(() => {
         @open="openDetail(task)"
         @pause="pauseOne(task)"
         @resume="resumeOne(task)"
+        @startNow="startNowOne(task)"
         @remove="removeOne(task)"
       )
 

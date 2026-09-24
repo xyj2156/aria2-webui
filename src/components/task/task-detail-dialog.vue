@@ -7,7 +7,7 @@
  * 停表且隐藏「设置」tab，只作展示）。遮罩点击不关闭，只保留右上角 X 与「关闭」。
  *
  * 受控组件：父级用 v-model:show 控制显隐，传 gid 指定看哪个任务；
- * 用户动作（暂停/继续/重试/选文件/改设置）成功后 emit('refresh') 通知列表抢跑一轮。
+ * 用户动作（暂停/继续/选文件/改设置）成功后 emit('refresh') 通知列表抢跑一轮。
  * 数据全走 @/rpc 具名函数（不直接碰 fetch/WS）；设置 tab 复用块 08 的 setting-item 引擎。
  */
 import { computed, ref, watch } from 'vue';
@@ -23,7 +23,6 @@ import { getAvailableTaskOptionKeys, getSpecifiedOptions } from '@/services/opti
 import { usePolling } from '@/composables/use-polling.js';
 import { useMonitorStore } from '@/store/monitor.js';
 import {
-  addTask,
   getTask,
   getTaskOptions,
   getTaskPeers,
@@ -154,31 +153,6 @@ async function toggleState() {
   }
 }
 
-/** 重试：用原任务的来源地址重新入队（非 BT；无地址时提示） */
-async function retry() {
-  if (!task.value) {
-    return;
-  }
-  const sources = (task.value.raw.files ?? [])
-    .map((file) => ((file.uris ?? []).map((uri) => uri.uri)).filter(Boolean))
-    .filter((urls) => urls.length > 0);
-
-  if (task.value.isBT || sources.length === 0) {
-    message.warning(t('task.detail.retry-unsupported'));
-    return;
-  }
-  try {
-    for (const urls of sources) {
-      await addTask(urls, task.value.dir ? { dir: task.value.dir } : {});
-    }
-    message.success(t('task.detail.retry-added'));
-    emit('refresh');
-    close();
-  } catch (e) {
-    message.error(e?.message || String(e));
-  }
-}
-
 /** 应用文件选择：草稿态攒好后一次性写回 select-file（只发一次 changeOption），失败提示、成功后刷新并通知列表 */
 async function applyFileSelection(indexes) {
   try {
@@ -253,11 +227,10 @@ n-modal(
   @update:show="onModalShow"
 )
   .flex.flex-col.gap-3
-    // ---------- 头部操作（关闭交给右上角 X；此处只留真正的动作，全终态时整行隐藏） ----------
-    .flex.items-center.gap-2.flex-wrap(v-if="canPause || isPaused || !isSettled")
+    // ---------- 头部操作（关闭交给右上角 X；这里只留暂停/继续，全终态整行隐藏） ----------
+    .flex.items-center.gap-2.flex-wrap(v-if="canPause || isPaused")
       n-button(size="small" v-if="canPause" @click="toggleState") {{ t('task.action.pause') }}
       n-button(size="small" v-else-if="isPaused" @click="toggleState") {{ t('task.action.resume') }}
-      n-button(size="small" v-if="!isSettled" @click="retry") {{ t('task.action.retry') }}
 
     // ---------- 致命错误 ----------
     p(v-if="fatal" class="p-4 text-center text-[#d03050]") {{ fatal }}

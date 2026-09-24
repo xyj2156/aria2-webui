@@ -86,6 +86,7 @@ task:
   action:
     pause: 暂停
     resume: 开始
+    start-now: 立即开始
     remove: 移除
     retry: 重试
     clear-completed: 清除已完成
@@ -125,8 +126,6 @@ task:
     auto-refresh-hint: 已暂停自动刷新
     invalid-url: 无效的任务地址
     task-not-found: 找不到该任务
-    retry-unsupported: 该任务无法重试（BT 或无可用地址）
-    retry-added: 已重新加入下载队列
   field:
     name: 名称
     size: 大小

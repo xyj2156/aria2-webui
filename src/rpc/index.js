@@ -425,10 +425,10 @@ export function resumeAllTasks() {
  * 在等待队列里移动任务（列表页的上移 / 下移 / 置顶 / 置底）。
  * @param {string} gid
  * @param {number} offset 位移量
- * @param {'POS_SET'|'POS_CUR'|'POS_END'} [reference] aria2 手册的三个取值：
- *   POS_SET 相对当前位置移动（offset 可为负）；POS_CUR 以当前队首为基准算绝对位；
- *   POS_END 从队尾倒数。置顶传 ('POS_END', 0) 或 ('POS_CUR', 0)，置底传 ('POS_END', -1) 附近，
- *   具体行为跟 aria2 版本有关，界面做完要实测一次。
+ * @param {'POS_SET'|'POS_CUR'|'POS_END'} [reference] aria2 手册的三个取值（how）：
+ *   POS_SET 相对队首算绝对位（offset 0 = 置顶，越界自动夹到区间内）；POS_CUR 相对当前位置移动
+ *   （offset 可为负）；POS_END 相对队尾。示例：置顶 (0, 'POS_SET')、下移一位 (1, 'POS_CUR')、
+ *   置底 (0, 'POS_END')。返回移动后的新位置。
  * @returns {Promise<number>} 移动后的新位置 aria2.changePosition
  */
 export async function moveTask(gid, offset, reference = 'POS_SET') {

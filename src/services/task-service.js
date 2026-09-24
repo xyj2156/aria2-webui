@@ -315,6 +315,7 @@ export function processDownloadTask(raw, options = {}) {
     isDone: status === 'complete',
     canPause: status === 'active',
     canResume: status === 'paused' || status === 'error',
+    canStartNow: status === 'waiting',
   };
 }
 
