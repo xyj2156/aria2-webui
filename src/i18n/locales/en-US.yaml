@@ -27,7 +27,7 @@ menu:
   webui-settings: WebUI Settings
   downloading: Downloading
   waiting: Waiting
-  stopped: Stopped
+  stopped: Completed / Stopped
   settings: Settings
   base-settings: Basic Settings
   protocol-settings: HTTP/FTP/SFTP Settings
@@ -157,6 +157,37 @@ task:
       title: Clear Completed
       content: Clear all completed / removed task records? (disk files are kept)
       positive: Clear
+  new:
+    button: New
+    title: New Download
+    source:
+      links: Links
+      torrent: Torrent
+    links:
+      placeholder: One download URL per line (http / https / ftp / sftp / magnet)
+      valid-count: '{count} valid link(s)'
+      ignored-count: ', {count} line(s) ignored'
+      empty: Enter at least one valid link
+    torrent:
+      pick: Choose file
+      hint: Accepts .torrent / .metalink / .meta4 files
+      none: No file selected
+      no-file: No file selected
+      empty: The selected file is empty
+      too-large: File exceeds the {size} limit
+      read-failed: Failed to read the file
+      unknown-type: Unrecognized file type, choose a torrent or Metalink file
+    options:
+      title: Options before download
+      hint: Left-blank options are not sent and fall back to aria2 global defaults
+    action:
+      download: Download Now
+      download-later: Download Later
+      cancel: Cancel
+      submitting: Creating…
+    result:
+      success: Created {count} task(s)
+      failed: 'Create failed: {message}'
 
 options:
   all-proxy-passwd:

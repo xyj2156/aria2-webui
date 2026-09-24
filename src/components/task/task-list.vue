@@ -14,6 +14,7 @@
 import { computed, defineAsyncComponent, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useDialog, useMessage } from 'naive-ui';
 import {
+  AddOutline,
   PauseOutline,
   PlayOutline,
   RefreshOutline,
@@ -24,6 +25,8 @@ import { t } from '@/i18n/index.js';
 import TaskListRow from '@/components/task/task-list-row.vue';
 // 详情弹窗（含 echarts 等重依赖）做成异步组件：点行打开时才拉该分片，列表首屏不背这份代码
 const TaskDetailDialog = defineAsyncComponent(() => import('@/components/task/task-detail-dialog.vue'));
+// 新建任务弹窗同样懒加载：只在点「新建」时才拉分片
+const NewTaskDialog = defineAsyncComponent(() => import('@/components/task/new-task-dialog.vue'));
 import { processTaskList } from '@/services/task-service.js';
 import { usePolling } from '@/composables/use-polling.js';
 import {
@@ -63,6 +66,10 @@ const dialog = useDialog();
 /** 当前打开详情的任务 gid 与显隐；点行左键赋值并弹出 */
 const detailGid = ref('');
 const detailShow = ref(false);
+
+// =================================================================== 新建任务弹窗
+/** 「新建」按钮显隐；创建成功后子组件 emit refresh → 抢跑一轮列表 */
+const newTaskShow = ref(false);
 
 /** 左键点某一行 → 弹出任务详情（弹窗内嵌在列表里，按 status 自动裁剪内容） */
 function openDetail(task) {
@@ -372,7 +379,7 @@ onUnmounted(() => {
 <template lang="pug">
 .flex.flex-col.gap-2.h-full
 
-  // ---------- 工具栏（单行：左=多选+操作+刷新，右=搜索） ----------
+  // ---------- 工具栏（单行：左=全选+计数+新建+操作+刷新，右=搜索） ----------
   .flex.items-center.gap-2.flex-nowrap
     // 全选（半选态：选中了但不是全选）
     n-checkbox.shrink-0(
@@ -382,6 +389,12 @@ onUnmounted(() => {
     )
     span.text-sm.opacity-70.shrink-0(class="tabular-nums")
       | {{ t('task.count', { selected: selectedCount, total: rows.length }) }}
+
+    // 新建任务：secondary 浅底（与「移除」同层级、不显笨重），置于操作按钮前并与之拉开一段距离
+    n-button(size="small" type="primary" secondary shrink-0 class="ml-2" @click="newTaskShow = true")
+      template(#icon)
+        n-icon(:component="AddOutline")
+      | {{ t('task.new.button') }}
 
     // 批量操作按钮（按页型出现，无选中时禁用）：下载中=暂停 / 等待中=立即开始 / 已停止=开始
     n-button(size="small" shrink-0 v-if="isDownloading" :disabled="!hasSelection" @click="pauseSelected")
@@ -451,4 +464,7 @@ onUnmounted(() => {
 
   // ---------- 任务详情弹窗（点行弹出；弹窗内动作改完抢跑一轮列表刷新） ----------
   task-detail-dialog(v-model:show="detailShow" :gid="detailGid" @refresh="polling.trigger()")
+
+  // ---------- 新建任务弹窗（工具栏「新建」弹出；创建成功后抢跑一轮列表刷新） ----------
+  new-task-dialog(v-model:show="newTaskShow" @refresh="polling.trigger()")
 </template>

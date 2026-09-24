@@ -126,3 +126,24 @@ export function groupTaskOptions(items) {
   }
   return order.map((category) => ({ category, items: buckets.get(category) }));
 }
+
+/**
+ * 新建任务弹窗「下载前配置」的选项键表（块 09）。
+ * 只挑创建时最常被改的项，不像全局设置页铺满 8 类：dir/out 决定落地，split/
+ * max-connection-per-server/min-split-size 决定并发与分片，两条 limit 是本任务限速，
+ * check-integrity/continue 是校验与续传。种子任务再追加 BT 相关四项。
+ * dir 在部分 aria2 是必填，但新建流程统一走 disableRequired，空值不发给后端。
+ */
+const NEW_TASK_COMMON_OPTIONS = [
+  'dir', 'out', 'split', 'max-connection-per-server', 'min-split-size',
+  'max-overall-download-limit', 'max-download-limit', 'check-integrity', 'continue',
+];
+const NEW_TASK_BT_OPTIONS = ['follow-torrent', 'bt-tracker', 'bt-prioritize-piece', 'bt-max-peers'];
+
+/**
+ * @param {boolean} isBittorrent 种子来源时带上 BT 选项
+ * @returns {string[]} 交给 getSpecifiedOptions 渲染
+ */
+export function getNewTaskOptionKeys(isBittorrent = false) {
+  return isBittorrent ? [...NEW_TASK_COMMON_OPTIONS, ...NEW_TASK_BT_OPTIONS] : [...NEW_TASK_COMMON_OPTIONS];
+}

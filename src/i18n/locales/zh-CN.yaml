@@ -27,7 +27,7 @@ menu:
   webui-settings: WebUI 设置
   downloading: 下载中
   waiting: 等待中
-  stopped: 已停止
+  stopped: 已完成/已停止
   settings: 设置
 
   #  Aria2 设置
@@ -160,6 +160,37 @@ task:
       title: 清除已完成
       content: 确定要清除所有已完成 / 已移除的任务记录吗？（不影响磁盘文件）
       positive: 清除
+  new:
+    button: 新建
+    title: 新建下载任务
+    source:
+      links: 链接
+      torrent: BT种子
+    links:
+      placeholder: 每行一个下载链接，支持 http / https / ftp / sftp / 磁力链接
+      valid-count: 有效链接 {count} 条
+      ignored-count: '，忽略 {count} 行'
+      empty: 请至少输入一个有效链接
+    torrent:
+      pick: 选择文件
+      hint: 支持 .torrent / .metalink / .meta4 文件
+      none: 尚未选择文件
+      no-file: 未选择文件
+      empty: 所选文件为空
+      too-large: 文件超过 {size} 上限
+      read-failed: 读取文件失败
+      unknown-type: 无法识别的文件类型，请选择种子或 Metalink 文件
+    options:
+      title: 下载前配置
+      hint: 留空的选项不会下发，沿用 aria2 全局默认
+    action:
+      download: 开始下载
+      download-later: 稍后下载
+      cancel: 取消
+      submitting: 创建中…
+    result:
+      success: 已创建 {count} 个任务
+      failed: 创建失败：{message}
 
 options:
   all-proxy-passwd:
