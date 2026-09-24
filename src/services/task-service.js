@@ -237,7 +237,7 @@ function statusTextKey(status, seeder) {
 }
 
 /**
- * 加工单个任务；addVirtualFileNode 为真且多文件 BT（bittorrent.mode==='mr'）时产出虚拟目录树。
+ * 加工单个任务；addVirtualFileNode 为真且多文件 BT（bittorrent.mode==='multi'）时产出虚拟目录树。
  * @param {Aria2Task} raw
  * @param {{ addVirtualFileNode?: boolean, orderIndex?: number }} [options]
  */
@@ -260,7 +260,9 @@ export function processDownloadTask(raw, options = {}) {
       ? firstUris[0].uri
       : undefined;
 
-  const isMultiFileBT = raw.bittorrent?.mode === 'mr' && files.length > 1;
+  // aria2 源码 bittorrent_helper.cc::getModeString 实证：多文件种子 mode === "multi"（单文件 "single"）。
+  // 注意别写成 'mr'——那是移植时对齐自造 mock 的错值，真机永不匹配、会让虚拟目录树永不构建。
+  const isMultiFileBT = raw.bittorrent?.mode === 'multi' && files.length > 1;
   const treeApplied = Boolean(options.addVirtualFileNode) && isMultiFileBT;
   const status = raw.status;
 
