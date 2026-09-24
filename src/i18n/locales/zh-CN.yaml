@@ -42,3 +42,47 @@ connection:
     content: 确定要删除该连接吗？
     positive: 删除
     negative: 取消
+
+task:
+  loading: 加载中…
+  count: 已选 {selected} / 共 {total}
+  search:
+    placeholder: 搜索任务名称
+  empty:
+    none: 暂无任务
+    filtered: 没有匹配的任务
+  refresh-failed: 刷新失败
+  duration:
+    more-than-a-day: 超过一天
+  status:
+    downloading: 下载中
+    seeding: 做种中
+    waiting: 等待中
+    paused: 已暂停
+    completed: 已完成
+    error: 出错了
+    removed: 已移除
+  meta:
+    seeders: 种子
+    remain: 剩余
+    error-code: 错误码
+  action:
+    pause: 暂停
+    resume: 开始
+    remove: 移除
+    clear-completed: 清除已完成
+    refresh: 刷新
+  menu:
+    select-all: 全选
+    select-completed: 全选已完成
+    select-failed: 全选失败/已移除
+  confirm:
+    negative: 取消
+    remove:
+      title: 确认移除
+      content: 确定要移除选中的 {count} 个任务吗？
+      positive: 移除
+    clear:
+      title: 清除已完成
+      content: 确定要清除所有已完成 / 已移除的任务记录吗？（不影响磁盘文件）
+      positive: 清除

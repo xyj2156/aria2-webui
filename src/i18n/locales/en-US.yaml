@@ -32,3 +32,47 @@ connection:
     content: Are you sure you want to delete this connection?
     positive: Delete
     negative: Cancel
+
+task:
+  loading: Loading…
+  count: '{selected} of {total} selected'
+  search:
+    placeholder: Search task name
+  empty:
+    none: No tasks
+    filtered: No matching tasks
+  refresh-failed: Refresh failed
+  duration:
+    more-than-a-day: More than one day
+  status:
+    downloading: Downloading
+    seeding: Seeding
+    waiting: Waiting
+    paused: Paused
+    completed: Completed
+    error: Error
+    removed: Removed
+  meta:
+    seeders: Seeders
+    remain: Remaining
+    error-code: 'Error code:'
+  action:
+    pause: Pause
+    resume: Resume
+    remove: Remove
+    clear-completed: Clear completed
+    refresh: Refresh
+  menu:
+    select-all: Select all
+    select-completed: Select completed
+    select-failed: Select failed / removed
+  confirm:
+    negative: Cancel
+    remove:
+      title: Confirm Remove
+      content: Remove the selected {count} task(s)?
+      positive: Remove
+    clear:
+      title: Clear Completed
+      content: Clear all completed / removed task records? (disk files are kept)
+      positive: Clear

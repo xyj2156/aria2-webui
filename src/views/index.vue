@@ -1,12 +1,8 @@
 <script setup>
-import { t } from '@/i18n';
-import {getDownloadingTasks} from "@/rpc/index.js";
-getDownloadingTasks().then(function (result) {
-  console.log(result);
-})
+// 下载中列表：通用组件的 downloading 态。
+import TaskList from '@/components/task/task-list.vue';
 </script>
 
 <template lang="pug">
-  .h-full.flex-center
-    n-empty(:description="t('menu.downloading')")
+task-list(type="downloading")
 </template>

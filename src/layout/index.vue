@@ -77,6 +77,7 @@ const menuOptions = computed(() => [
   },
   {
     label: t('menu.webui-settings'),
+    icon: renderIcon(SettingsOutline),
     key: 'webui-settings',
   },
   {
@@ -101,45 +102,49 @@ function handleMenuSelect(key) {
 
 <template lang="pug">
   n-config-provider(:locale="naiveLocale" :date-locale="naiveDateLocale" :theme="theme")
-    // has-sider 必须是 prop（写成 .has-sider 会变成 CSS 类、布局退化成上下堆叠）
-    n-layout(:has-sider="true" style="height: 100vh")
-      n-layout-sider(
-        bordered
-        collapse-mode="width"
-        :width="220"
-        :collapsed-width="64"
-        :collapsed="collapsed"
-        show-trigger
-        @collapse="collapsed = true"
-        @expand="collapsed = false"
-      )
-        // 侧栏品牌区：展开=图标块+标题，收缩=只留 logo 图标块。点它切换折叠/展开
-        .cursor-pointer.flex.items-center.gap-2.h-14.px-4.overflow-hidden(@click="collapsed = !collapsed")
-          .w-8.h-8.rounded-md.flex-center.bg-blue-500.text-white.shrink-0
-            n-icon(:component="CubeOutline" :size="18")
-          span.font-semibold.truncate(v-if="!collapsed") {{ t('app.name') }}
+    // message / dialog provider 包在布局外层：列表页的操作反馈（useMessage / useDialog）
+    // 必须在它们的子树里才拿得到实例
+    n-message-provider(placement="middle" :duration="3000")
+      n-dialog-provider
+        // has-sider 必须是 prop（写成 .has-sider 会变成 CSS 类、布局退化成上下堆叠）
+        n-layout(:has-sider="true" style="height: 100vh")
+          n-layout-sider(
+            bordered
+            collapse-mode="width"
+            :width="220"
+            :collapsed-width="64"
+            :collapsed="collapsed"
+            show-trigger
+            @collapse="collapsed = true"
+            @expand="collapsed = false"
+          )
+            // 侧栏品牌区：展开=图标块+标题，收缩=只留 logo 图标块。点它切换折叠/展开
+            .cursor-pointer.flex.items-center.gap-2.h-14.px-4.overflow-hidden(@click="collapsed = !collapsed")
+              .w-8.h-8.rounded-md.flex-center.bg-blue-500.text-white.shrink-0
+                n-icon(:component="CubeOutline" :size="18")
+              span.font-semibold.truncate(v-if="!collapsed") {{ t('app.name') }}
 
-        // 侧栏菜单：展开=完整分组树；收缩=Naive 按 collapsed-width 压成图标栏（显示分组图标，悬停浮出子项）
-        n-menu(
-          :options="menuOptions"
-          :value="activeKey"
-          :collapsed="collapsed"
-          :collapsed-width="64"
-          :collapsed-icon-size="22"
-          v-model:expanded-keys="expandedKeys"
-          @update:value="handleMenuSelect"
-        )
+            // 侧栏菜单：展开=完整分组树；收缩=Naive 按 collapsed-width 压成图标栏（显示分组图标，悬停浮出子项）
+            n-menu(
+              :options="menuOptions"
+              :value="activeKey"
+              :collapsed="collapsed"
+              :collapsed-width="64"
+              :collapsed-icon-size="22"
+              v-model:expanded-keys="expandedKeys"
+              @update:value="handleMenuSelect"
+            )
 
-      n-layout.wh-full
-        n-layout-header.bordered
-          .flex-x-between.px-4.h-14
-            // 顶栏左侧：当前页标题，给 header 一个实际用途
-            .text-lg.font-medium {{ activeLabel }}
-            // 顶栏右侧：主题切换（独立组件，含 element-plus 同款换肤动画）+ 语言切换
-            .flex.items-center.gap-3
-              theme-switch
-              lang-switch
-        //- 内容区先让页面自己滚，等列表页做完再决定要不要换成 n-layout-content 的内部滚动
-        n-layout-content(:content-style="{ padding: '1rem', overflow: 'auto' }")
-          router-view
+          n-layout.wh-full
+            n-layout-header.bordered
+              .flex-x-between.px-4.h-14
+                // 顶栏左侧：当前页标题，给 header 一个实际用途
+                .text-lg.font-medium {{ activeLabel }}
+                // 顶栏右侧：主题切换（独立组件，含 element-plus 同款换肤动画）+ 语言切换
+                .flex.items-center.gap-3
+                  theme-switch
+                  lang-switch
+            //- 内容区先让页面自己滚，等列表页做完再决定要不要换成 n-layout-content 的内部滚动
+            n-layout-content(:content-style="{ padding: '1rem', overflow: 'auto' }")
+              router-view
 </template>

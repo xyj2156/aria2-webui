@@ -1,13 +1,8 @@
 <script setup>
-// 占位页：已停止列表页做完后替换。
-import { t } from '@/i18n/index.js';
-import {getStoppedTasks} from "@/rpc/index.js";
-getStoppedTasks().then(function (result) {
-  console.log(result);
-});
+// 已停止列表（含暂停/完成/错误/历史）：通用组件的 stopped 态。
+import TaskList from '@/components/task/task-list.vue';
 </script>
 
 <template lang="pug">
-  .h-full.flex-center
-    n-empty(:description="t('menu.stopped')")
+task-list(type="stopped")
 </template>
