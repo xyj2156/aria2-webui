@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@vicons/ionicons5": "^0.13.0",
+    "echarts": "^6.1.0",
     "js-yaml": "^5.4.2",
     "naive-ui": "^2.45.3",
     "pinia": "^4.0.3",

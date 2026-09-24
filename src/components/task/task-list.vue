@@ -12,6 +12,7 @@
  * 只是 gids 传一个。反馈统一 useMessage，危险操作 useDialog 二次确认。
  */
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { useDialog, useMessage } from 'naive-ui';
 import {
   PauseOutline,
@@ -54,6 +55,12 @@ const isStopped = computed(() => pageType.value === 'stopped');
 
 const message = useMessage();
 const dialog = useDialog();
+const router = useRouter();
+
+/** 左键点某一行 → 进任务详情 */
+function openDetail(task) {
+  void router.push({ name: 'task-detail', params: { gid: task.gid } });
+}
 
 // =================================================================== 数据与状态
 const rows = ref([]);
@@ -383,6 +390,7 @@ onUnmounted(() => {
         :page-type="pageType"
         @toggle="toggleSelect(task.gid)"
         @contextmenu="openContextMenu($event, task)"
+        @open="openDetail(task)"
         @pause="pauseOne(task)"
         @resume="resumeOne(task)"
         @remove="removeOne(task)"

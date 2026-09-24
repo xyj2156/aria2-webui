@@ -38,7 +38,7 @@ function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
 }
 
-// 路由 name → 所属菜单父级 group key 的对查表
+// 路由 name → 所属菜单父级 group key 的对查表（settings/webui-settings 是顶层叶子，不在组里）
 const routeToGroup = {
   downloading: 'group-task',
   waiting: 'group-task',
@@ -81,12 +81,10 @@ const menuOptions = computed(() => [
     key: 'webui-settings',
   },
   {
+    // aria2 设置：顶层叶子（页内 n-tabs 分 8 类），与 WebUI 设置同级，不建子菜单/子路由
     label: t('menu.group.aria2-settings'),
-    key: 'aria2-settings',
     icon: renderIcon(BuildOutline),
-    children: [
-      { label: t('menu.base-settings'), key: 'base-settings', icon: renderIcon(SettingsOutline) },
-    ],
+    key: 'settings',
   },
 ]);
 
@@ -135,7 +133,7 @@ function handleMenuSelect(key) {
               @update:value="handleMenuSelect"
             )
 
-          n-layout.wh-full
+          .flex.flex-col.wh-full
             n-layout-header.bordered
               .flex-x-between.px-4.h-14
                 // 顶栏左侧：当前页标题，给 header 一个实际用途
@@ -144,7 +142,8 @@ function handleMenuSelect(key) {
                 .flex.items-center.gap-3
                   theme-switch
                   lang-switch
-            //- 内容区先让页面自己滚，等列表页做完再决定要不要换成 n-layout-content 的内部滚动
-            n-layout-content(:content-style="{ padding: '1rem', overflow: 'auto' }")
-              router-view
+            n-layout.wh-full
+              //- 内容区先让页面自己滚，等列表页做完再决定要不要换成 n-layout-content 的内部滚动
+              n-layout-content(:content-style="{ padding: '1rem', overflow: 'auto' }")
+                router-view
 </template>
