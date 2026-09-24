@@ -5,9 +5,22 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Loading ...</title>
+    <script>
+      (function() {
+        var v = localStorage.getItem('aria2-webui.theme-dark');
+        if (v === 'true' || v === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    <style>
+      html, body, #app { height: 100%; }
+      body { margin: 0; }
+      html.dark, html.dark body, html.dark #app { background-color: #18181c; }
+    </style>
   </head>
-  <body class="m-0 h-full">
-    <div id="app" class="h-full"></div>
+  <body>
+    <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
