@@ -1,0 +1,22 @@
+app:
+  name: Aria2 WebUI
+lang:
+  label: 语言
+theme:
+  toggle: 切换主题
+menu:
+  group:
+    task: 任务
+    system: 系统
+  webui-settings: WebUI 设置
+  downloading: 下载中
+  waiting: 等待中
+  stopped: 已停止
+  settings: 设置
+connection:
+  status:
+    idle: 未连接
+    connecting: 连接中
+    connected: 已连接
+    reconnecting: 重连中
+    error: 连接异常

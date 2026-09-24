@@ -10,12 +10,17 @@
  * 2. 取不到文案的顺序：当前语言 → 兜底语言 → 原样返回键名。漏译不该让整页崩掉，
  *    但也不能悄悄咽下去，所以开发模式告警一次。
  * 3. 占位符只认 {name}，不做嵌套和表达式，避免长成一个小模板引擎。
+ *
+ * 加载策略：
+ * 兜底语言（zh-CN）静态导入，永远立即可用。其余语言首次用到时才动态 import()，
+ * 加载完塞进缓存。t() 始终同步，取不到当前语言文案时自动走兜底，不等异步。
  */
 
 import { computed, ref } from 'vue';
+import { load } from 'js-yaml';
 
-import enUSMessages from './locales/en-US.js';
-import zhCNMessages from './locales/zh-CN.js';
+// 兜底语言静态导入，永远立即可用
+import zhCNYaml from './locales/zh-CN.yaml?raw';
 
 /** 语言代码存本地，刷新后保持。key 带工程前缀，避免同域下与别的工程串味 */
 const STORAGE_KEY = 'aria2-webui.locale';
@@ -23,13 +28,46 @@ const STORAGE_KEY = 'aria2-webui.locale';
 /** 兜底语言：新增语言时只改这一处 */
 const FALLBACK_LOCALE = 'zh-CN';
 
+/** 已加载的文案缓存：code → messages */
+const messageCache = new Map();
+messageCache.set(FALLBACK_LOCALE, load(zhCNYaml));
+
+/**
+ * 各语言的按需加载器。
+ * 新增语言时在这里加一行、同时在 LANGUAGES 表里加一条。
+ */
+const messageLoaders = {
+  'en-US': () => import('./locales/en-US.yaml?raw').then((m) => load(m.default)),
+};
+
+/**
+ * 确保指定语言的文案已加载到缓存。
+ * @param {string} code
+ */
+async function ensureMessages(code) {
+  if (messageCache.has(code)) return;
+  const loader = messageLoaders[code];
+  if (!loader) return;
+
+  try {
+    messageCache.set(code, await loader());
+  } catch (e) {
+    console.error(`[i18n] 加载语言包 "${code}" 失败`, e);
+  }
+}
+
+/** @param {string} code @returns {Record<string, unknown>} */
+function getMessages(code) {
+  return messageCache.get(code) || messageCache.get(FALLBACK_LOCALE);
+}
+
 /**
  * 语言注册表。label 是母语自称，不参与翻译。
- * @type {Array<{ code: string, label: string, messages: Record<string, unknown> }>}
+ * @type {Array<{ code: string, label: string }>}
  */
 export const LANGUAGES = [
-  { code: 'zh-CN', label: '简体中文', messages: zhCNMessages },
-  { code: 'en-US', label: 'English', messages: enUSMessages },
+  { code: 'zh-CN', label: '简体中文' },
+  { code: 'en-US', label: 'English' },
 ];
 
 /** @param {string} code @returns {typeof LANGUAGES[number]|undefined} */
@@ -80,6 +118,9 @@ function writeStoredLocale(code) {
 /** 当前语言：模块级 ref，全应用共享一份，不必动用 pinia */
 const current = ref(readStoredLocale() || resolveBrowserLocale());
 
+// 初始语言如果不是兜底语言，触发异步加载
+ensureMessages(current.value);
+
 /**
  * 按点号路径在字典里取值。
  * @param {Record<string, unknown>} messages
@@ -108,11 +149,10 @@ function warnMissing(key) {
  * @returns {string} 取不到时原样返回键名
  */
 export function t(key, params) {
-  const active = findLanguage(current.value) || findLanguage(FALLBACK_LOCALE);
-  let text = pick(active.messages, key);
+  let text = pick(getMessages(current.value), key);
 
   if (typeof text !== 'string') {
-    text = pick(findLanguage(FALLBACK_LOCALE).messages, key);
+    text = pick(getMessages(FALLBACK_LOCALE), key);
   }
 
   if (typeof text !== 'string') {
@@ -128,14 +168,17 @@ export function t(key, params) {
 }
 
 /**
- * 切换语言。
+ * 切换语言。先确保目标语言的文案已加载，再切 locale，
+ * 这样 Vue 重渲染时 t() 直接从缓存取、不走兜底。
  * @param {string} code LANGUAGES 里的 code
- * @returns {boolean} code 不认时返回 false 且不改动状态，便于调用方提示
+ * @returns {Promise<boolean>} code 不认时返回 false 且不改动状态
  */
-export function setLocale(code) {
+export async function setLocale(code) {
   if (!findLanguage(code)) {
     return false;
   }
+
+  await ensureMessages(code);
 
   current.value = code;
   writeStoredLocale(code);
@@ -177,24 +220,33 @@ function collectPaths(messages, prefix = '') {
 }
 
 if (import.meta.env?.DEV) {
-  const baseline = collectPaths(findLanguage(FALLBACK_LOCALE).messages);
+  (async () => {
+    // 等非兜底语言都加载完再比对
+    await Promise.all(
+      LANGUAGES
+        .filter((lang) => lang.code !== FALLBACK_LOCALE)
+        .map((lang) => ensureMessages(lang.code)),
+    );
 
-  for (const language of LANGUAGES) {
-    if (language.code === FALLBACK_LOCALE) {
-      continue;
+    const baseline = collectPaths(getMessages(FALLBACK_LOCALE));
+
+    for (const language of LANGUAGES) {
+      if (language.code === FALLBACK_LOCALE) {
+        continue;
+      }
+
+      const keys = collectPaths(getMessages(language.code));
+      const missing = baseline.filter((path) => !keys.includes(path));
+      const extra = keys.filter((path) => !baseline.includes(path));
+
+      if (missing.length || extra.length) {
+        console.warn(`[i18n] 语言包 ${language.code} 与 ${FALLBACK_LOCALE} 键不一致`, {
+          missing,
+          extra,
+        });
+      }
     }
-
-    const keys = collectPaths(language.messages);
-    const missing = baseline.filter((path) => !keys.includes(path));
-    const extra = keys.filter((path) => !baseline.includes(path));
-
-    if (missing.length || extra.length) {
-      console.warn(`[i18n] 语言包 ${language.code} 与 ${FALLBACK_LOCALE} 键不一致`, {
-        missing,
-        extra,
-      });
-    }
-  }
+  })();
 }
 
 // 首屏把 html 的 lang 对齐，别让它是 index.html 里写死的 en

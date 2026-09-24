@@ -1,0 +1,22 @@
+app:
+  name: Aria2 WebUI
+lang:
+  label: Language
+theme:
+  toggle: Toggle theme
+menu:
+  group:
+    task: Tasks
+    system: System
+  webui-settings: WebUI Settings
+  downloading: Downloading
+  waiting: Waiting
+  stopped: Stopped
+  settings: Settings
+connection:
+  status:
+    idle: Not connected
+    connecting: Connecting
+    connected: Connected
+    reconnecting: Reconnecting
+    error: Connection error
