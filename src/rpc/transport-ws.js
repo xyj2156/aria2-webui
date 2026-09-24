@@ -69,6 +69,9 @@ export function createWsTransport(getConfig, handlers) {
     if (disposed) {
       return Promise.reject(new RpcError('该 RPC 通道已关闭', { kind: 'transport' }));
     }
+    if (activeSocket && activeSocket.readyState === WebSocket.OPEN) {
+      return Promise.resolve(activeSocket);
+    }
     if (connectPromise) {
       return connectPromise;
     }
