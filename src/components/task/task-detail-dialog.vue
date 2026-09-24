@@ -1,11 +1,16 @@
 <script setup>
 /**
- * 任务详情页（块 10）：单任务轮询 + 五个 tab（概览 / 分块 / 文件 / 邻居 / 设置）。
- * 终态（complete/error/removed）自动停表，文件选择态也停表，避免刷掉用户正在改的勾选。
- * 数据全走 @/rpc 的具名函数（不直接碰 fetch/WS）；设置 tab 复用块 08 的 setting-item 引擎。
+ * 任务详情弹窗（块 10 由独立路由页改造而来）。
+ *
+ * 为什么是 dialog 而不是路由页：点某一行弹出，弹窗内嵌在列表里，能直接按任务真实
+ * status 裁剪内容（活动/等待→可编辑+轮询+速度图；暂停→可编辑便于继续；完成/移除→
+ * 停表且隐藏「设置」tab，只作展示）。遮罩点击不关闭，只保留右上角 X 与「关闭」。
+ *
+ * 受控组件：父级用 v-model:show 控制显隐，传 gid 指定看哪个任务；
+ * 用户动作（暂停/继续/重试/选文件/改设置）成功后 emit('refresh') 通知列表抢跑一轮。
+ * 数据全走 @/rpc 具名函数（不直接碰 fetch/WS）；设置 tab 复用块 08 的 setting-item 引擎。
  */
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, ref, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 import { t } from '@/i18n/index.js';
 import DetailOverview from '@/components/task/detail-overview.vue';
@@ -28,34 +33,40 @@ import {
   saveTaskOptions,
 } from '@/rpc';
 
-const POLL_INTERVAL_MS = 5000;
+const props = defineProps({
+  /** 显隐（配合 v-model:show） */
+  show: { type: Boolean, default: false },
+  /** 要看哪个任务 */
+  gid: { type: String, default: '' },
+});
 
-const route = useRoute();
-const router = useRouter();
+const emit = defineEmits(['update:show', 'refresh']);
+
+const POLL_INTERVAL_MS = 5000;
+// 分片方块图 DOM 上限：超过就不画，避免上千个方块拖垮弹窗（阈值后续接设置项）
+const PIECE_CAP = 4000;
+
 const message = useMessage();
 const monitor = useMonitorStore();
 
-const gid = computed(() => String(route.params.gid ?? ''));
+const gid = computed(() => String(props.gid ?? ''));
 const raw = ref(null);
 const task = computed(() => (raw.value ? processDownloadTask(raw.value, { addVirtualFileNode: true }) : null));
 const peers = ref([]);
 const taskOptions = ref({});
 const fatal = ref('');
 const activeTab = ref('overview');
-/** 文件选择态：勾选文件期间停表，免得轮询把用户正在改的勾选刷掉 */
-const chooseMode = ref(false);
 
 const isBT = computed(() => Boolean(task.value?.isBT));
 const isSettled = computed(() => ['complete', 'error', 'removed'].includes(task.value?.status));
 const showSpeedChart = computed(() => task.value?.status === 'active' || task.value?.status === 'waiting');
 const showPeers = computed(() => isBT.value && task.value?.status === 'active');
 const hasFiles = computed(() => (task.value?.raw.files?.length ?? 0) > 0);
-
-// 分片方块图 DOM 上限：超过就不画，避免上千个方块拖垮页面（阈值后续接设置项）
-const PIECE_CAP = 4000;
 const showPieces = computed(
   () => Boolean(task.value?.bitfield) && (task.value?.numPieces ?? 0) > 0 && (task.value?.numPieces ?? 0) <= PIECE_CAP,
 );
+// 完成/移除：设置改了没意义，直接隐藏设置 tab；活动/等待/暂停/错误保留可编辑。
+const showSettings = computed(() => Boolean(task.value) && !['complete', 'removed'].includes(task.value?.status));
 
 const stats = computed(() => (gid.value ? monitor.getStatsData(gid.value) : { xAxis: [], series: [[], []] }));
 const healthPercent = computed(() => (task.value ? estimateHealthPercentFromPeers(task.value, peers.value) : 0));
@@ -84,7 +95,7 @@ async function refresh() {
     fatal.value = '';
     monitor.recordStat(vm.gid, { downloadSpeed: vm.downloadSpeed, uploadSpeed: vm.uploadSpeed });
 
-    if (isSettled.value || chooseMode.value) {
+    if (isSettled.value) {
       polling.stop();
     }
   } catch (e) {
@@ -107,6 +118,7 @@ function startLoop() {
   if (!gid.value) {
     return;
   }
+  activeTab.value = 'overview';
   monitor.resetStat(gid.value);
   raw.value = null;
   fatal.value = '';
@@ -114,8 +126,15 @@ function startLoop() {
   void loadOptions();
 }
 
-function backToList() {
-  void router.push({ name: 'downloading' });
+function close() {
+  emit('update:show', false);
+}
+
+/** n-modal 内部（X / Esc）请求关闭时同步到父级 */
+function onModalShow(visible) {
+  if (!visible) {
+    close();
+  }
 }
 
 async function toggleState() {
@@ -129,6 +148,7 @@ async function toggleState() {
       await pauseTaskNow(task.value.gid);
     }
     await refresh();
+    emit('refresh');
   } catch (e) {
     message.error(e?.message || String(e));
   }
@@ -152,37 +172,23 @@ async function retry() {
       await addTask(urls, task.value.dir ? { dir: task.value.dir } : {});
     }
     message.success(t('task.detail.retry-added'));
-    void router.push({ name: 'downloading' });
+    emit('refresh');
+    close();
   } catch (e) {
     message.error(e?.message || String(e));
   }
 }
 
-/** 写回 select-file（选中文件下标数组），失败提示、成功停选择态并刷新 */
+/** 应用文件选择：草稿态攒好后一次性写回 select-file（只发一次 changeOption），失败提示、成功后刷新并通知列表 */
 async function applyFileSelection(indexes) {
   try {
     await saveTaskOptions(gid.value, { 'select-file': indexes.join(',') });
-    chooseMode.value = false;
     await refresh();
+    emit('refresh');
     message.success(t('task.action.saved'));
   } catch (e) {
     message.error(e?.message || String(e));
   }
-}
-
-/** 非选择模式下单击勾选：以当前已选集合为基准改之后即时应用 */
-function onFilesToggle(indexes, value) {
-  const selected = new Set(
-    (task.value?.files ?? []).filter((file) => file.type !== 'dir' && file.selected).map((file) => file.index),
-  );
-  for (const index of indexes) {
-    if (value) {
-      selected.add(index);
-    } else {
-      selected.delete(index);
-    }
-  }
-  void applyFileSelection([...selected]);
 }
 
 /** 详情页可编辑的任务级选项（按状态/BT 过滤，不可改的由引擎标只读） */
@@ -205,6 +211,7 @@ async function onSettingChange(payload) {
     await saveTaskOptions(gid.value, { [payload.key]: payload.value });
     taskOptions.value = { ...taskOptions.value, [payload.key]: payload.value };
     settingItemRefs.get(payload.key)?.reportResult(true);
+    emit('refresh');
   } catch (e) {
     settingItemRefs.get(payload.key)?.reportResult(false, e?.message || String(e));
   }
@@ -214,73 +221,88 @@ function goTab(target) {
   activeTab.value = target;
 }
 
-watch(gid, () => startLoop());
-watch(chooseMode, (choosing) => (choosing ? polling.stop() : polling.start()));
-onMounted(() => startLoop());
-onUnmounted(() => polling.stop());
+// 弹窗打开且有目标 gid 时才起表；关掉立即停表，别在后台空转。
+watch(
+  () => props.show,
+  (visible) => {
+    if (visible) {
+      startLoop();
+    } else {
+      polling.stop();
+    }
+  },
+);
+// 打开状态下换任务（切换查看不同 gid）重起一轮。
+watch(gid, () => {
+  if (props.show) {
+    startLoop();
+  }
+});
 </script>
 
 <template lang="pug">
-.flex.flex-col.gap-3.h-full
-  // ---------- 头部 ----------
-  .flex.items-center.gap-3
-    h2.title.m-0.truncate(:title="task?.taskName") {{ task?.taskName || t('task.loading') }}
-    .flex.items-center.gap-2(class="ml-auto")
-      n-button(size="small" @click="backToList") {{ t('task.detail.back') }}
+n-modal(
+  :show="props.show"
+  preset="card"
+  :mask-closable="false"
+  :closable="true"
+  :bordered="false"
+  size="huge"
+  :style="{ width: '900px', maxWidth: '92vw' }"
+  :title="task?.taskName || gid || t('task.loading')"
+  @update:show="onModalShow"
+)
+  .detail-body
+    // ---------- 头部操作（关闭交给右上角 X；此处只留真正的动作，全终态时整行隐藏） ----------
+    .flex.items-center.gap-2.flex-wrap(v-if="canPause || isPaused || !isSettled")
       n-button(size="small" v-if="canPause" @click="toggleState") {{ t('task.action.pause') }}
       n-button(size="small" v-else-if="isPaused" @click="toggleState") {{ t('task.action.resume') }}
-      n-button(size="small" v-if="hasFiles" @click="chooseMode = !chooseMode") {{ t('task.files.choose') }}
-      n-button(size="small" @click="retry") {{ t('task.action.retry') }}
+      n-button(size="small" v-if="!isSettled" @click="retry") {{ t('task.action.retry') }}
 
-  // ---------- 致命错误 ----------
-  p.fatal(v-if="fatal") {{ fatal }}
+    // ---------- 致命错误 ----------
+    p.fatal(v-if="fatal") {{ fatal }}
 
-  // ---------- tab ----------
-  template(v-else-if="task")
-    n-tabs(v-model:value="activeTab" type="line" animated)
-      n-tab-pane(:tab="t('task.tab.overview')" name="overview")
-        detail-overview(
-          :task="task"
-          :health-percent="healthPercent"
-          :stats="stats"
-          :show-speed-chart="showSpeedChart"
-          :is-settled="isSettled"
-          :has-files="hasFiles"
-          @jump="goTab"
-        )
-
-      n-tab-pane(:tab="t('task.tab.pieces')" name="pieces" v-if="showPieces")
-        detail-pieces(:bit-field="task.bitfield" :num-pieces="task.numPieces")
-
-      n-tab-pane(:tab="t('task.tab.files')" name="filelist" v-if="hasFiles")
-        detail-file-list(
-          :task="task"
-          :choose-mode="chooseMode"
-          @toggle="onFilesToggle"
-          @confirm="applyFileSelection"
-          @cancel="chooseMode = false"
-        )
-
-      n-tab-pane(:tab="t('task.tab.peers')" name="btpeers" v-if="showPeers")
-        detail-peers(:peers="peers" :num-pieces="task.numPieces")
-
-      n-tab-pane(:tab="t('task.tab.settings')" name="settings")
-        form
-          setting-item(
-            v-for="item in taskOptionItems"
-            :key="item.key"
-            :ref="(el) => setSettingItemRef(el, item.key)"
-            :option="item"
-            :model-value="String(taskOptions[item.key] ?? '')"
-            disable-required
-            @change="onSettingChange"
+    // ---------- tab ----------
+    template(v-else-if="task")
+      n-tabs(v-model:value="activeTab" type="line" animated :pane-style="{ maxHeight: '60vh', overflowY: 'auto' }")
+        n-tab-pane(:tab="t('task.tab.overview')" name="overview")
+          detail-overview(
+            :task="task"
+            :health-percent="healthPercent"
+            :stats="stats"
+            :show-speed-chart="showSpeedChart"
+            :is-settled="isSettled"
+            :has-files="hasFiles"
+            @jump="goTab"
           )
+
+        n-tab-pane(:tab="t('task.tab.pieces')" name="pieces" v-if="showPieces")
+          detail-pieces(:bit-field="task.bitfield" :num-pieces="task.numPieces")
+
+        n-tab-pane(:tab="t('task.tab.files')" name="filelist" v-if="hasFiles")
+          detail-file-list(:task="task" @apply="applyFileSelection")
+
+        n-tab-pane(:tab="t('task.tab.peers')" name="btpeers" v-if="showPeers")
+          detail-peers(:peers="peers" :num-pieces="task.numPieces")
+
+        n-tab-pane(:tab="t('task.tab.settings')" name="settings" v-if="showSettings")
+          form
+            setting-item(
+              v-for="item in taskOptionItems"
+              :key="item.key"
+              :ref="(el) => setSettingItemRef(el, item.key)"
+              :option="item"
+              :model-value="String(taskOptions[item.key] ?? '')"
+              disable-required
+              @change="onSettingChange"
+            )
 </template>
 
 <style scoped>
-.title {
-  font-size: 16px;
-  font-weight: 600;
+.detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .fatal {
   padding: 16px;

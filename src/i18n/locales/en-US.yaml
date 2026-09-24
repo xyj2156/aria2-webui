@@ -102,8 +102,11 @@ task:
     uncompleted: Uncompleted
     info: '{completed} of {total} pieces completed'
   files:
-    choose: Choose Files
     name: File Name
+    edit: Edit files to download
+    empty: No files
+    restart-tip: Editing while downloading restarts this task
+    none-selected: Select at least one file
     select-all: Select All
     select-none: Select None
     select-invert: Select Invert
@@ -116,8 +119,6 @@ task:
     upload: Upload
     empty: No connected peers
   detail:
-    title: Task Detail
-    back: Back to list
     auto-refresh-hint: Auto refresh paused
     invalid-url: Invalid task address
     task-not-found: Task not found

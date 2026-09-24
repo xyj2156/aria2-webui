@@ -1,32 +1,81 @@
 <script setup>
 /**
- * 任务详情页文件列表（块 10 §3）。两种形态：扁平（一行一文件）与多目录树
- * （06 构好的节点数组，按 level 缩进、目录三态勾选）。
+ * 任务详情「文件」tab（块 10 §3）。
  *
- * choose 模式维护本地草稿，Confirm 时把选中文件下标交回父层写 select-file；
- * 非 choose 模式下单击勾选直接上抛，由父层即时应用。
+ * 渲染：文件用 NVirtualList 虚拟滚动——BT 动辄上千文件，全量渲染 <tr> 又卡又慢，
+ * 只画视口内的行。行等高（ROW_H），把已摊平的 visibleRows（目录+文件混排、尊重折叠）喂进去。
  *
- * 说明：project 里的「按类型/扩展名批量选」和「表头右键排序」依赖 file-types 服务与
- * display-order 存储（属块 08/07 基建），详情页暂缓，此处按 aria2 原始文件序展示。
+ * 选择语义（方案一，对齐 aria2 手册）：
+ * - aria2 允许下载中改 select-file，但改它会使 active 下载自动重启，故这里走「草稿 + 一次确认」，
+ *   绝不逐次点勾选即时下发（那等于每点一下重启一次任务）。
+ * - 已在下载/已下载的文件（selected 且 completedLength>0）禁止取消勾选；只有没开始的（completedLength==0）可取消。
+ * - 全选/全不选/反选都只作用于「可取消」的文件，锁定项恒为选中。
+ * - 编辑态在 tab 内联，不另开弹窗；下载中确认前行内提示会重启。
+ *
+ * 说明：project 的「按类型/扩展名批量选」和「表头右键排序」依赖 file-types 与 display-order
+ * 基建（属块 08/07），详情页暂缓，此处按 aria2 原始文件序展示。
  */
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { t } from '@/i18n/index.js';
 import { formatPercent, formatVolume } from '@/utils/format.js';
 
 const props = defineProps({
   task: { type: Object, required: true },
-  chooseMode: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['toggle', 'confirm', 'cancel']);
+const emit = defineEmits(['apply']);
+
+/** 行高（px），必须与 .vrow 实际高度一致，NVirtualList 按它算窗口 */
+const ROW_H = 34;
 
 const collapsed = reactive({});
+const editing = ref(false);
+/** 草稿：编辑态下当前勾选的文件 index 集合 */
 const draft = ref(new Set());
 
 const isTree = computed(
   () => props.task.isMultiFileBT && props.task.files.some((file) => file.type === 'dir'),
 );
 const fileNodes = computed(() => props.task.files.filter((file) => file.type !== 'dir'));
+
+/** 实时（后端已生效）已选文件 index 集合 */
+const liveSelected = computed(() => new Set(fileNodes.value.filter((file) => file.selected).map((file) => file.index)));
+/** 计算勾选态要用的集合：编辑看草稿，否则看实时 */
+const activeSet = computed(() => (editing.value ? draft.value : liveSelected.value));
+
+/** 锁定：已选且已有下载数据 → 不能取消。仅在实时为选中时锁定。 */
+function isLocked(file) {
+  return file.selected && file.completedLength > 0;
+}
+
+/** 每个目录下（含子目录）的文件总数与已选数：单次遍历按 relativePath 前缀累加，避免 O(files²) */
+const dirStats = computed(() => {
+  const stats = new Map();
+  const selected = activeSet.value;
+  for (const file of fileNodes.value) {
+    const isSel = selected.has(file.index);
+    const rel = file.relativePath || '';
+    const segments = rel ? rel.split('/') : [];
+    let prefix = '';
+    bump(prefix, isSel);
+    for (const seg of segments) {
+      prefix = prefix ? `${prefix}/${seg}` : seg;
+      bump(prefix, isSel);
+    }
+  }
+  function bump(path, isSel) {
+    let entry = stats.get(path);
+    if (!entry) {
+      entry = { total: 0, selected: 0 };
+      stats.set(path, entry);
+    }
+    entry.total += 1;
+    if (isSel) {
+      entry.selected += 1;
+    }
+  }
+  return stats;
+});
 
 function nodePath(node) {
   if (node.type === 'dir') {
@@ -35,151 +84,176 @@ function nodePath(node) {
   return node.path;
 }
 
-/** 某目录下的所有文件（按 relativePath 前缀匹配） */
+/** 某目录下的所有文件（含子目录）：仅目录勾选/预设等偶发操作用，非每帧 */
 function filesUnder(dirPath) {
-  return fileNodes.value.filter((file) =>
-    dirPath === '' ? true : file.relativePath === dirPath || file.relativePath.startsWith(`${dirPath}/`),
-  );
+  return fileNodes.value.filter((file) => {
+    const rel = file.relativePath || '';
+    return dirPath === '' || rel === dirPath || rel.startsWith(`${dirPath}/`);
+  });
 }
 
-function indexSelected(index) {
-  const node = props.task.files.find((file) => file.index === index && file.type !== 'dir');
-  return Boolean(node?.selected);
-}
-function isChecked(index) {
-  return props.chooseMode ? draft.value.has(index) : indexSelected(index);
-}
-
+/** 摊平后的可见行：尊重折叠，目录与文件混排，携带 checked/indeterminate/locked 供渲染 */
 const visibleRows = computed(() => {
   const rows = [];
+  const selected = activeSet.value;
   const hidden = Object.entries(collapsed)
     .filter(([, value]) => value)
     .map(([path]) => path);
   const isUnder = (child, prefix) => child.startsWith(`${prefix}/`);
 
   for (const node of props.task.files) {
-    const isDir = node.type === 'dir';
     const path = nodePath(node);
     if (hidden.some((prefix) => isUnder(path, prefix))) {
       continue;
     }
-    if (isDir) {
-      const under = filesUnder(path);
-      const selectedCount = under.filter((file) => isChecked(file.index)).length;
+    if (node.type === 'dir') {
+      const stat = dirStats.value.get(path) ?? { total: 0, selected: 0 };
       rows.push({
         key: `dir:${path}`, isDir: true, path, name: node.fileName, level: node.level,
         length: node.length, percent: node.completePercent,
-        checked: under.length > 0 && selectedCount === under.length,
-        indeterminate: selectedCount > 0 && selectedCount < under.length,
+        checked: stat.total > 0 && stat.selected === stat.total,
+        indeterminate: stat.selected > 0 && stat.selected < stat.total,
+        locked: false,
       });
     } else {
       rows.push({
         key: `file:${node.index}`, isDir: false, path, name: node.fileName, level: node.level,
-        length: node.length, percent: node.completePercent, checked: isChecked(node.index), index: node.index,
+        length: node.length, percent: node.completePercent,
+        checked: selected.has(node.index),
+        locked: isLocked(node),
+        index: node.index,
       });
     }
   }
   return rows;
 });
 
-watch(
-  () => props.chooseMode,
-  (active) => {
-    if (active) {
-      draft.value = new Set(fileNodes.value.filter((file) => file.selected).map((file) => file.index));
-    }
-  },
-  { immediate: true },
+/** 有 >1 个文件、且任务非完成/移除态，才允许改选 */
+const canEdit = computed(() =>
+  fileNodes.value.length > 1 && !['complete', 'removed'].includes(props.task.status),
 );
+/** 下载中改选会重启该任务（用于行内提示） */
+const willRestart = computed(() => props.task.status === 'active');
+/** 草稿非空才可提交：select-file 传空串会被 aria2 当成「全选」，须拦掉 */
+const canApply = computed(() => draft.value.size > 0);
+
+const listStyle = { height: '48vh', minHeight: '200px' };
 
 function toggleDir(path) {
   collapsed[path] = !collapsed[path];
 }
 
-function setDraft(indexes, value) {
+function startEdit() {
+  draft.value = new Set(liveSelected.value);
+  editing.value = true;
+}
+function cancelEdit() {
+  editing.value = false;
+}
+function applyEdit() {
+  if (!canApply.value) {
+    return;
+  }
+  emit('apply', [...draft.value].sort((a, b) => a - b));
+  editing.value = false;
+}
+
+/** 把一批文件设为 value；取消时跳过锁定项（不能取消已下载的） */
+function setDraft(targets, value) {
   const next = new Set(draft.value);
-  for (const index of indexes) {
+  for (const file of targets) {
+    if (!value && isLocked(file)) {
+      continue; // 锁定项恒选，不因取消/反选/全不选被摘掉
+    }
     if (value) {
-      next.add(index);
+      next.add(file.index);
     } else {
-      next.delete(index);
+      next.delete(file.index);
     }
   }
   draft.value = next;
 }
 
 function onToggle(row, value) {
+  if (!editing.value) {
+    return;
+  }
   if (row.isDir) {
-    const targets = filesUnder(row.path).map((file) => file.index);
-    if (props.chooseMode) {
-      setDraft(targets, value);
-    } else {
-      emit('toggle', targets, value);
+    setDraft(filesUnder(row.path), value);
+  } else if (row.index !== undefined) {
+    const file = props.task.files.find((item) => item.index === row.index && item.type !== 'dir');
+    if (file) {
+      setDraft([file], value);
     }
-    return;
-  }
-  if (row.index === undefined) {
-    return;
-  }
-  if (props.chooseMode) {
-    setDraft([row.index], value);
-  } else {
-    emit('toggle', [row.index], value);
   }
 }
 
+/** 预设：all 全选中；none 仅保留锁定项；invert 翻转未锁定项 */
 function applyPreset(mode) {
   const next = new Set();
   for (const file of fileNodes.value) {
+    const locked = isLocked(file);
     if (mode === 'all') {
       next.add(file.index);
     } else if (mode === 'none') {
-      // 全不选
-    } else if (!draft.value.has(file.index)) {
-      next.add(file.index);
+      if (locked) {
+        next.add(file.index);
+      }
+    } else { // invert
+      const isSelected = draft.value.has(file.index);
+      if (locked || !isSelected) {
+        next.add(file.index); // 锁定恒选；未锁定的取反
+      }
     }
   }
   draft.value = next;
 }
-
-function confirm() {
-  emit('confirm', [...draft.value]);
-}
 </script>
 
 <template lang="pug">
-.flex.flex-col.gap-2
-  // 选择模式的工具条
-  .flex.items-center.gap-2(v-if="chooseMode")
-    n-button(size="small" @click="applyPreset('all')") {{ t('task.files.select-all') }}
-    n-button(size="small" @click="applyPreset('none')") {{ t('task.files.select-none') }}
-    n-button(size="small" @click="applyPreset('reverse')") {{ t('task.files.select-invert') }}
-    .grow
-    n-button(size="small" @click="emit('cancel')") {{ t('task.confirm.negative') }}
-    n-button(size="small" type="primary" @click="confirm") {{ t('task.files.confirm') }}
+.flex.flex-col.gap-2.h-full
+  // ---------- 工具条：默认「更改下载文件」入口；编辑态给预设 + 取消/确认 + 重启提示 ----------
+  .flex.items-center.gap-2.flex-wrap.min-h-32px
+    template(v-if="!editing")
+      n-button(v-if="canEdit" size="small" @click="startEdit") {{ t('task.files.edit') }}
+    template(v-else)
+      n-button(size="small" @click="applyPreset('all')") {{ t('task.files.select-all') }}
+      n-button(size="small" @click="applyPreset('none')") {{ t('task.files.select-none') }}
+      n-button(size="small" @click="applyPreset('invert')") {{ t('task.files.select-invert') }}
+      span.tip-danger(v-if="!canApply") {{ t('task.files.none-selected') }}
+      span.tip-danger(v-else-if="willRestart") {{ t('task.files.restart-tip') }}
+      .grow.shrink
+      n-button(size="small" @click="cancelEdit") {{ t('task.confirm.negative') }}
+      n-button(size="primary" small :disabled="!canApply" @click="applyEdit") {{ t('task.files.confirm') }}
 
-  table.file-table
-    thead
-      tr
-        th.col-check
-        th {{ t('task.files.name') }}
-        th.col-progress {{ t('task.field.progress') }}
-        th.col-size {{ t('task.field.size') }}
-    tbody
-      tr(v-for="row in visibleRows" :key="row.key" :class="{ 'is-dir': row.isDir }")
-        td.col-check
+  // ---------- 表头（非虚拟，固定） ----------
+  .vrow.vheader(:class="{ 'vheader--indented': isTree }")
+    .c-check
+    .c-name {{ t('task.files.name') }}
+    .c-progress {{ t('task.field.progress') }}
+    .c-size {{ t('task.field.size') }}
+
+  // ---------- 虚拟列表主体：只渲染视口内行 ----------
+  n-virtual-list(v-if="visibleRows.length" :items="visibleRows" :item-size="ROW_H" :style="listStyle")
+    template(#default="{ item: row, index }")
+      .vrow(:class="{ 'is-dir': row.isDir, 'is-alt': index % 2 === 1 }" :style="{ height: ROW_H + 'px' }")
+        .c-check
           n-checkbox(
             :checked="row.checked"
             :indeterminate="Boolean(row.indeterminate)"
+            :disabled="!editing || row.locked"
             @update:checked="(value) => onToggle(row, value)"
           )
-        td.min-w-0
+        .c-name.min-w-0
           span(:style="{ display: 'inline-block', width: `${row.level * 16}px` }")
           button.dir-toggle(v-if="row.isDir" type="button" @click="toggleDir(row.path)") {{ collapsed[row.path] ? '+' : '-' }}
-          span.file-name(:title="row.name") {{ row.name }}
-        td.col-progress
+          n-tooltip(:show-arrow="false" trigger="hover")
+            template(#trigger)
+              span.file-name {{ row.name }}
+            span {{ row.path }}
+        .c-progress
           .file-progress
-            n-progress(
+            n-progress.grow(
               type="line"
               :percentage="row.percent"
               :height="6"
@@ -187,40 +261,63 @@ function confirm() {
               :show-indicator="false"
             )
             span {{ formatPercent(row.percent) }}
-        td.col-size {{ formatVolume(row.length, { fractionSize: 'auto' }) }}
+        .c-size {{ formatVolume(row.length, { fractionSize: 'auto' }) }}
+
+  n-empty(v-else :description="t('task.files.empty')")
 </template>
 
 <style scoped>
-.file-table {
-  width: 100%;
-  border-collapse: collapse;
+.vheader,
+.vrow {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 180px 110px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
   font-size: 13px;
 }
-.file-table th,
-.file-table td {
-  padding: 6px 10px;
-  text-align: left;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.15);
-}
-.file-table thead th {
+.vheader {
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
   font-weight: 600;
   opacity: 0.7;
 }
-.file-table tbody tr:nth-child(odd) {
+.vrow {
+  border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+}
+.vrow.is-alt {
   background: rgba(128, 128, 128, 0.05);
 }
-.is-dir td {
+.vrow.is-dir {
   font-weight: 600;
 }
-.col-check {
+.c-check {
   width: 32px;
 }
-.col-progress {
-  width: 180px;
+.c-name {
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
-.col-size {
-  width: 110px;
+.c-progress {
+  display: flex;
+  align-items: center;
+}
+.c-size {
   text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.file-name {
+  display: inline-block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 .dir-toggle {
   width: 18px;
@@ -230,20 +327,8 @@ function confirm() {
   color: #2080f0;
   cursor: pointer;
 }
-.file-name {
-  display: inline-block;
-  max-width: 100%;
-  vertical-align: bottom;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.file-progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.file-progress :deep(.n-progress) {
-  flex: 1;
+.tip-danger {
+  font-size: 12px;
+  color: #d03050;
 }
 </style>

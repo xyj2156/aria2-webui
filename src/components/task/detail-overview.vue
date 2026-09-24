@@ -2,11 +2,11 @@
 /**
  * 详情页概览 tab（对齐 project 的 DetailOverview）：字段表 + 单任务速度图 + tracker 折叠。
  * 纯展示：数据全从 props 进来（task 是 TaskVM、healthPercent、stats 来自 monitor store）。
+ * 速度图依赖 echarts，较重，做成异步组件——只有真的渲染到速度图时才拉 echarts 分片。
  */
-import { computed, ref } from 'vue';
+import { computed, defineAsyncComponent, ref } from 'vue';
 import { t } from '@/i18n/index.js';
 import { getTaskErrorMessage } from '@/rpc';
-import SpeedChart from '@/components/chart/speed-chart.vue';
 import {
   formatDateTime,
   formatPercent,
@@ -16,6 +16,8 @@ import {
   formatVolume,
   MORE_THAN_A_DAY_TOKEN,
 } from '@/utils/format.js';
+
+const SpeedChart = defineAsyncComponent(() => import('@/components/chart/speed-chart.vue'));
 
 const props = defineProps({
   task: { type: Object, required: true },

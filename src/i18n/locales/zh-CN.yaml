@@ -105,8 +105,11 @@ task:
     uncompleted: 未完成
     info: '已完成 {completed} / 共 {total} 片'
   files:
-    choose: 选择文件
     name: 文件名
+    edit: 更改下载文件
+    empty: 暂无文件
+    restart-tip: 下载中修改会使该任务重新开始
+    none-selected: 至少选择一个文件
     select-all: 全选
     select-none: 全不选
     select-invert: 反选
@@ -119,8 +122,6 @@ task:
     upload: 上传
     empty: 暂无已连接的邻居
   detail:
-    title: 任务详情
-    back: 返回列表
     auto-refresh-hint: 已暂停自动刷新
     invalid-url: 无效的任务地址
     task-not-found: 找不到该任务

@@ -11,8 +11,7 @@
  * 网络动作全部走 invokeBatch（一次往返处理多选），单行操作复用同一条路径，
  * 只是 gids 传一个。反馈统一 useMessage，危险操作 useDialog 二次确认。
  */
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useDialog, useMessage } from 'naive-ui';
 import {
   PauseOutline,
@@ -23,6 +22,8 @@ import {
 } from '@vicons/ionicons5';
 import { t } from '@/i18n/index.js';
 import TaskListRow from '@/components/task/task-list-row.vue';
+// 详情弹窗（含 echarts 等重依赖）做成异步组件：点行打开时才拉该分片，列表首屏不背这份代码
+const TaskDetailDialog = defineAsyncComponent(() => import('@/components/task/task-detail-dialog.vue'));
 import { processTaskList } from '@/services/task-service.js';
 import { usePolling } from '@/composables/use-polling.js';
 import {
@@ -55,11 +56,16 @@ const isStopped = computed(() => pageType.value === 'stopped');
 
 const message = useMessage();
 const dialog = useDialog();
-const router = useRouter();
 
-/** 左键点某一行 → 进任务详情 */
+// =================================================================== 详情弹窗
+/** 当前打开详情的任务 gid 与显隐；点行左键赋值并弹出 */
+const detailGid = ref('');
+const detailShow = ref(false);
+
+/** 左键点某一行 → 弹出任务详情（弹窗内嵌在列表里，按 status 自动裁剪内容） */
 function openDetail(task) {
-  void router.push({ name: 'task-detail', params: { gid: task.gid } });
+  detailGid.value = task.gid;
+  detailShow.value = true;
 }
 
 // =================================================================== 数据与状态
@@ -409,6 +415,9 @@ onUnmounted(() => {
     @select="onMenuSelect"
     @clickoutside="menu.show = false"
   )
+
+  // ---------- 任务详情弹窗（点行弹出；弹窗内动作改完抢跑一轮列表刷新） ----------
+  task-detail-dialog(v-model:show="detailShow" :gid="detailGid" @refresh="polling.trigger()")
 </template>
 
 <style scoped>

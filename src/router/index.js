@@ -38,13 +38,6 @@ const routes = [{
       meta:      {title: 'menu.settings'},
       component: () => import('@/views/settings.vue'),
     },
-    {
-      // 任务详情：作为壳层子路由，保留侧栏；点列表某一项进入
-      path:      '/task/detail/:gid',
-      name:      'task-detail',
-      meta:      {title: 'task.detail.title'},
-      component: () => import('@/views/task/detail.vue'),
-    },
   ],
 }];
 
