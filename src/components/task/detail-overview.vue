@@ -63,19 +63,27 @@ const rows = computed(() => {
   if (task.isBT) {
     list.push({ label: t('task.field.health'), value: formatPercent(props.healthPercent) });
   }
-  list.push(
-    {
-      label: t('task.field.download'),
-      value: `${formatVolume(task.completedLength, { fractionSize: 'auto' })} / ${formatSpeed(task.downloadSpeed)}`,
-    },
-    {
-      label: t('task.field.upload'),
-      value: `${formatVolume(task.uploadLength, { fractionSize: 'auto' })} / ${formatSpeed(task.uploadSpeed)}`,
-    },
-    { label: t('task.field.share-ratio'), value: formatRatio(task.shareRatio) },
-    { label: t('task.field.remaining'), value: remain(task) },
-    { label: t('task.field.seeders-connections'), value: `${task.numSeeders} / ${task.connections}` },
-  );
+  // 上传/分享率/种子·连接仅对 BT 有意义，常规 http 不展示；剩余时间在完成/暂停态无意义
+  const hideRemain = task.status === 'complete' || task.status === 'paused';
+  list.push({
+    label: t('task.field.download'),
+    value: `${formatVolume(task.completedLength, { fractionSize: 'auto' })} / ${formatSpeed(task.downloadSpeed)}`,
+  });
+  if (task.isBT) {
+    list.push(
+      {
+        label: t('task.field.upload'),
+        value: `${formatVolume(task.uploadLength, { fractionSize: 'auto' })} / ${formatSpeed(task.uploadSpeed)}`,
+      },
+      { label: t('task.field.share-ratio'), value: formatRatio(task.shareRatio) },
+    );
+  }
+  if (!hideRemain) {
+    list.push({ label: t('task.field.remaining'), value: remain(task) });
+  }
+  if (task.isBT) {
+    list.push({ label: t('task.field.seeders-connections'), value: `${task.numSeeders} / ${task.connections}` });
+  }
 
   const creationDate = task.raw?.bittorrent?.creationDate;
   if (creationDate) {
@@ -100,12 +108,12 @@ const trackers = computed(() => {
 
 <template lang="pug">
 .flex.flex-col.gap-3
-  n-descriptions.bordered(:column="1" size="small" label-style="width: 160px")
-    n-descriptions-item(v-for="row in rows" :key="row.label" :label="row.label")
-      .flex.items-center.gap-2
-        span.truncate(:title="row.tooltip || row.value") {{ row.value }}
-        n-button(class="text-[#2080f0]" v-if="row.jump" text size="tiny" @click="emit('jump', row.jump)")
-          | {{ t('task.action.view') }}
+  div(v-for="row in rows" :key="row.label" class="grid grid-cols-[160px_minmax(0,1fr)] items-start gap-x-3 py-1.5 border-b border-[#808080]/15 text-[13px]")
+    div(class="opacity-70") {{ row.label }}
+    div(class="min-w-0 break-words")
+      span(:title="row.tooltip") {{ row.value }}
+      n-button(class="text-[#2080f0]" v-if="row.jump" text size="tiny" @click="emit('jump', row.jump)")
+        | {{ t('task.action.view') }}
 
   div(v-if="showSpeedChart" class="flex flex-col gap-[6px] p-3 rounded-lg bg-[#808080]/6")
     div(class="flex items-center gap-2 text-[13px] font-semibold") {{ t('task.field.speed') }}
