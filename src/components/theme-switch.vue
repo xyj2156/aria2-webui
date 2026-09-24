@@ -11,7 +11,7 @@ import { nextTick } from 'vue';
 import { MoonOutline, SunnyOutline } from '@vicons/ionicons5';
 
 import { t } from '@/i18n/index.js';
-import { isDark, toggleDark } from '@/composables/useThemeMode.js';
+import { isDark, toggleDark } from '@/composables/use-theme-mode.js';
 
 function handleClick(event) {
   const { clientX, clientY } = event;

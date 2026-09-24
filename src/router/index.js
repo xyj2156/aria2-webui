@@ -1,28 +1,29 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 
 const routes = [{
-  path: '/',
-  name: 'index',
+  path:      '/',
+  name:      'index',
   component: () => import('@/layout/index.vue'),
-  children: [
+  redirect:  {name: 'downloading'},
+  children:  [
     {
-      path: '/',
-      name: 'downloading',
+      path:      '/downloading',
+      name:      'downloading',
       component: () => import('@/views/index.vue'),
     },
     {
-      path: '/waiting',
-      name: 'waiting',
+      path:      '/waiting',
+      name:      'waiting',
       component: () => import('@/views/waiting.vue'),
     },
     {
-      path: '/stopped',
-      name: 'stopped',
+      path:      '/stopped',
+      name:      'stopped',
       component: () => import('@/views/stopped.vue'),
     },
     {
-      path: '/settings',
-      name: 'settings',
+      path:      '/settings',
+      name:      'settings',
       component: () => import('@/views/settings.vue'),
     },
   ],

@@ -7,7 +7,7 @@
 //
 // 主题的亮/暗状态是单例，放在 @/composables/useThemeMode.js：这里只用它派生 NConfigProvider 的 :theme，
 // 切换按钮与换肤动画整体封装在 <ThemeSwitch /> 组件里（自动导入，见 components/ThemeSwitch.vue）。
-import { computed, h, ref } from 'vue';
+import { computed, h, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { darkTheme, NIcon } from 'naive-ui';
 import {
@@ -22,7 +22,7 @@ import {
 
 import { t } from '@/i18n/index.js';
 import { naiveDateLocale, naiveLocale } from '@/i18n/naive.js';
-import { isDark } from '@/composables/useThemeMode.js';
+import { isDark } from '@/composables/use-theme-mode.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -38,9 +38,29 @@ function renderIcon(icon) {
   return () => h(NIcon, null, { default: () => h(icon) });
 }
 
+// 路由 name → 所属菜单父级 group key 的对查表
+const routeToGroup = {
+  downloading: 'group-task',
+  waiting: 'group-task',
+  stopped: 'group-task',
+  settings: 'group-system',
+};
+
 // 折叠态（展开/收缩）：父级带 children 就是可展开子菜单，点父级标题收放。
-// 用 ref 受控并初始全展开。侧栏本身折叠（collapsed）时 Naive 把菜单压成图标栏、走悬浮弹层。
-const expandedKeys = ref(['group-task', 'group-system']);
+// 初始根据当前路由展开对应分组；手动收放后由 v-model 接管覆盖。
+// 侧栏本身折叠（collapsed）时 Naive 把菜单压成图标栏、走悬浮弹层。
+const expandedKeys = ref([routeToGroup[route.name] ?? 'group-task']);
+
+// 路由切换时自动展开当前路由所属的菜单分组（已展开的不关闭）
+watch(
+  () => route.name,
+  (name) => {
+    const group = routeToGroup[name];
+    if (group && !expandedKeys.value.includes(group)) {
+      expandedKeys.value = [...expandedKeys.value, group];
+    }
+  },
+);
 
 // 叶子 key 直接取路由 name，切换时按 name 跳转、按 name 高亮；父级 key 不对应路由、不可选
 const menuOptions = computed(() => [
@@ -111,9 +131,9 @@ function handleMenuSelect(key) {
             // 顶栏左侧：当前页标题，给 header 一个实际用途
             .text-lg.font-medium {{ activeLabel }}
             // 顶栏右侧：主题切换（独立组件，含 element-plus 同款换肤动画）+ 语言切换
-            .flex.items-center.gap-2
-              ThemeSwitch
-              LangSwitch
+            .flex.items-center.gap-3
+              theme-switch
+              lang-switch
         //- 内容区先让页面自己滚，等列表页做完再决定要不要换成 n-layout-content 的内部滚动
         n-layout-content(:content-style="{ padding: '1rem', overflow: 'auto' }")
           router-view
