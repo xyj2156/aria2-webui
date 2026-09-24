@@ -16,7 +16,21 @@
     <style>
       html, body, #app { height: 100%; }
       body { margin: 0; }
-      html.dark, html.dark body, html.dark #app { background-color: #18181c; }
+      html {
+        background-color: #fff;
+        color-scheme: light;
+      }
+      html.dark {
+        background-color: #18181c !important;
+        color-scheme: dark;
+      }
+      html.dark body,
+      html.dark #app {
+        background-color: #18181c !important;
+      }
+      html.dark #app * {
+        color-scheme: dark;
+      }
     </style>
   </head>
   <body>
