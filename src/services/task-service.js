@@ -332,8 +332,12 @@ export function processTaskList(raws, options = {}) {
 }
 
 /**
- * peer 加工：aria2 给的 speed 是「该 peer 的下载速率」，即本机的上行贡献，
- * 所以展示上与我方下载速率互换位置（旧实现同处理）。
+ * peer 加工（字段名以 aria2 源码 RpcMethodImpl.cc::gatherPeer 为准）。
+ *
+ * getPeers 每个 peer 的真实键：peerId / ip / port / bitfield / amChoking / peerChoking /
+ * downloadSpeed / uploadSpeed / seeder。注意没有 peerAddress/peerPort，也没有单一 speed 字段——
+ * 旧实现用 peer.peerAddress、peer.speed 取值，全取到 undefined → 地址列「undefined:undefined」、
+ * 且速度恒 0。downloadSpeed/uploadSpeed 已由 aria2 按「我方 ↔ 该 peer」方向标好，直接映射，不互换。
  * @param {Array<Record<string, unknown>>} peers
  * @param {Pick<ReturnType<typeof processDownloadTask>, 'numPieces'|'completePercent'|'bitfield'|'completedPieces'|'pieceLength'>} task
  * @param {boolean} [includeLocalPeer]
@@ -344,17 +348,16 @@ export function processBtPeers(peers, task, includeLocalPeer = false) {
   const result = list.map((peer) => {
     const completed = countCompletedPieces(peer.bitfield, task.numPieces);
     const completePercent = task.numPieces > 0 ? Math.floor((completed / task.numPieces) * 100) : 0;
-    const speed = toInt(peer.speed);
     return {
       peerId: peer.peerId,
-      name: `${peer.peerAddress}:${peer.peerPort}`,
+      name: `${peer.ip ?? ''}:${peer.port ?? ''}`,
       clientName: clientDisplayName(peer.peerId),
       bitfield: peer.bitfield ?? '',
       completedLength: completed * (task.pieceLength ?? 0),
       completePercent: completed === task.completedPieces ? localPercent : completePercent,
-      downloadSpeed: 0,
-      uploadSpeed: speed,
-      seeder: task.numPieces > 0 && completed === task.numPieces,
+      downloadSpeed: toInt(peer.downloadSpeed),
+      uploadSpeed: toInt(peer.uploadSpeed),
+      seeder: isTrue(peer.seeder) || (task.numPieces > 0 && completed === task.numPieces),
     };
   });
 
