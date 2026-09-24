@@ -117,6 +117,7 @@ task:
     status: Status
     download: Download
     upload: Upload
+    local: This client
     empty: No connected peers
   detail:
     auto-refresh-hint: Auto refresh paused

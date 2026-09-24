@@ -120,6 +120,7 @@ task:
     status: 状态
     download: 下载
     upload: 上传
+    local: 本机
     empty: 暂无已连接的邻居
   detail:
     auto-refresh-hint: 已暂停自动刷新

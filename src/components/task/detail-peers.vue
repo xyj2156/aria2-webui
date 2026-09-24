@@ -27,9 +27,9 @@ div
     tbody
       tr(v-for="peer in peers" :key="peer.name" class="odd:bg-[#808080]/5")
         td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15")
-          span {{ peer.name }}
+          span {{ peer.local ? t('task.peers.local') : peer.name }}
           span(v-if="peer.seeder" class="ml-1.5 px-2 py-0 rounded-[10px] text-[11px] text-white bg-[#18a058]") {{ t('task.status.seeding') }}
-        td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15") {{ peer.clientName }}
+        td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15") {{ peer.clientName || '—' }}
         td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15")
           div(class="flex items-center gap-2")
             piece-bar(class="!w-[120px]" :bit-field="peer.bitfield" :piece-count="numPieces" :height="6")

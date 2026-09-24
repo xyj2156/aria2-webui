@@ -339,7 +339,7 @@ export function processTaskList(raws, options = {}) {
  * 旧实现用 peer.peerAddress、peer.speed 取值，全取到 undefined → 地址列「undefined:undefined」、
  * 且速度恒 0。downloadSpeed/uploadSpeed 已由 aria2 按「我方 ↔ 该 peer」方向标好，直接映射，不互换。
  * @param {Array<Record<string, unknown>>} peers
- * @param {Pick<ReturnType<typeof processDownloadTask>, 'numPieces'|'completePercent'|'bitfield'|'completedPieces'|'pieceLength'>} task
+ * @param {Pick<ReturnType<typeof processDownloadTask>, 'numPieces'|'completePercent'|'bitfield'|'completedPieces'|'pieceLength'|'downloadSpeed'|'uploadSpeed'|'completedLength'>} task
  * @param {boolean} [includeLocalPeer]
  */
 export function processBtPeers(peers, task, includeLocalPeer = false) {
@@ -362,9 +362,14 @@ export function processBtPeers(peers, task, includeLocalPeer = false) {
   });
 
   if (includeLocalPeer) {
-    result.push({
-      name: '(local)', clientName: '(local)', bitfield: task.bitfield, completedLength: 0,
-      completePercent: localPercent, downloadSpeed: 0, uploadSpeed: 0, seeder: false, local: true,
+    // 本机自己：getPeers 只返回远端邻居，这里补一条把任务实时上下行速率显出来。
+    // 纯数据层不给译文——name 作稳定 key，展示文案由界面按 local 标记 t() 出来。
+    result.unshift({
+      name: 'local', clientName: '', bitfield: task.bitfield,
+      completedLength: task.completedLength,
+      completePercent: localPercent,
+      downloadSpeed: task.downloadSpeed, uploadSpeed: task.uploadSpeed,
+      seeder: false, local: true,
     });
   }
   return result;
