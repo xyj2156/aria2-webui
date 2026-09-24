@@ -7,16 +7,28 @@ theme:
 menu:
   group:
     task: Tasks
-    system: System
+    aria2-settings: Aria2 Settings
   webui-settings: WebUI Settings
   downloading: Downloading
   waiting: Waiting
   stopped: Stopped
   settings: Settings
 connection:
+  name: Connection Name
+  host: Hostname
+  port: Port
+  path: Path
+  protocol: Protocol
+  secret: Secret
+
   status:
     idle: Not connected
     connecting: Connecting
     connected: Connected
     reconnecting: Reconnecting
     error: Connection error
+  remove:
+    title: Confirm Deletion
+    content: Are you sure you want to delete this connection?
+    positive: Delete
+    negative: Cancel

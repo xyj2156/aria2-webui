@@ -17,6 +17,7 @@ export default defineConfig({
     AutoImport({
       dirs: [
         src('rpc', 'index.js'),
+        src('store'),
       ],
       imports: [
         'vue', 'vue-router', 'pinia', '@vueuse/core',

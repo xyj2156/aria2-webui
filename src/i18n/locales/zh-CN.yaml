@@ -7,16 +7,38 @@ theme:
 menu:
   group:
     task: 任务
-    system: 系统
+    aria2-settings: Aria2 设置
   webui-settings: WebUI 设置
   downloading: 下载中
   waiting: 等待中
   stopped: 已停止
-  settings: 设置
+
+  #  Aria2 设置
+  base-settings: 基础设置
+  protocol-settings: HTTP/FTP/SFTP 设置
+  http-setting: HTTP 设置
+  ftp-sftp-setting: FTP/SFTP 设置
+  bittorrent-setting: BitTorrent 设置
+  metalink-setting: Metalink 设置
+  rpc-setting: RPC 设置
+  advanced-setting: 高级设置
+
 connection:
+  name: 连接名
+  host: 主机名
+  port: 端口
+  path: 路径
+  protocol: 协议
+  secret: 密钥
+
   status:
     idle: 未连接
     connecting: 连接中
     connected: 已连接
     reconnecting: 重连中
     error: 连接异常
+  remove:
+    title: 确认删除
+    content: 确定要删除该连接吗？
+    positive: 删除
+    negative: 取消

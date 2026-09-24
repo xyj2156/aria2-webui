@@ -43,7 +43,8 @@ const routeToGroup = {
   downloading: 'group-task',
   waiting: 'group-task',
   stopped: 'group-task',
-  settings: 'group-system',
+  settings: 'aria2-settings',
+  'webui-settings': '',
 };
 
 // 折叠态（展开/收缩）：父级带 children 就是可展开子菜单，点父级标题收放。
@@ -75,11 +76,15 @@ const menuOptions = computed(() => [
     ],
   },
   {
-    label: t('menu.group.system'),
-    key: 'group-system',
+    label: t('menu.webui-settings'),
+    key: 'webui-settings',
+  },
+  {
+    label: t('menu.group.aria2-settings'),
+    key: 'aria2-settings',
     icon: renderIcon(BuildOutline),
     children: [
-      { label: t('menu.settings'), key: 'settings', icon: renderIcon(SettingsOutline) },
+      { label: t('menu.base-settings'), key: 'base-settings', icon: renderIcon(SettingsOutline) },
     ],
   },
 ]);

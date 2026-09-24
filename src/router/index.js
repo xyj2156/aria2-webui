@@ -27,6 +27,12 @@ const routes = [{
       component: () => import('@/views/stopped.vue'),
     },
     {
+      path:      '/webui-settings',
+      name:      'webui-settings',
+      meta:      {title: 'menu.webui-settings'},
+      component: () => import('@/views/webui-settings.vue'),
+    },
+    {
       path:      '/settings',
       name:      'settings',
       meta:      {title: 'menu.settings'},
