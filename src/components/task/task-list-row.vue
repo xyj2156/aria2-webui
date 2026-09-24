@@ -92,8 +92,9 @@ const statusIcon = computed(() => {
 </script>
 
 <template lang="pug">
-.row.flex.items-center.gap-3.px-3.py-2.rounded-lg.select-none(
-  :class="{ 'row--active': selected }"
+div(
+  class="flex items-center gap-3 px-3 py-2 rounded-lg select-none transition-colors duration-150 ease-[ease] hover:bg-[#808080]/10"
+  :class="{ 'bg-[#2080f0]/12': selected }"
   @contextmenu.prevent="emit('contextmenu', $event)"
 )
   n-checkbox.shrink-0.cursor-default(:checked="selected" @update:checked="emit('toggle')" @click.stop)
@@ -132,7 +133,7 @@ const statusIcon = computed(() => {
         span(v-if="task.downloadSpeed > 0") ↓ {{ formatSpeed(task.downloadSpeed) }}
         span(v-if="task.uploadSpeed > 0") ↑ {{ formatSpeed(task.uploadSpeed) }}
         span(v-if="remainText !== '-'") {{ t('task.meta.remain') }} {{ remainText }}
-      span.error-text(v-if="task.status === 'error' && task.errorCode") {{ t('task.meta.error-code') }} {{ task.errorCode }}
+      span(v-if="task.status === 'error' && task.errorCode" class="text-[#d03050]") {{ t('task.meta.error-code') }} {{ task.errorCode }}
 
   // 行内操作：按可操作性出现
   .flex.items-center.gap-1.shrink-0(@click.stop)
@@ -143,18 +144,3 @@ const statusIcon = computed(() => {
     n-button(text type="error" size="small" :title="t('task.action.remove')" @click.stop="emit('remove')")
       n-icon(:component="TrashOutline")
 </template>
-
-<style scoped>
-.row {
-  transition: background-color 0.15s ease;
-}
-.row:hover {
-  background-color: rgba(128, 128, 128, 0.1);
-}
-.row--active {
-  background-color: rgba(32, 128, 240, 0.12);
-}
-.error-text {
-  color: #d03050;
-}
-</style>

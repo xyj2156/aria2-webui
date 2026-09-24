@@ -17,50 +17,13 @@ const completedCount = computed(() => getPieceStatus(props.bitField, props.numPi
 
 <template lang="pug">
 .flex.flex-col.gap-3
-  .legend
-    span.legend-item
-      i.piece-done
+  div(class="flex items-center gap-4 text-[12px] opacity-75")
+    span(class="inline-flex items-center gap-[6px]")
+      i(class="w-[10px] h-[10px] border border-[#a3c644] bg-[#b8dd69] [.dark_&]:border-[#6f9a2a] [.dark_&]:bg-[#8fbc3f]")
       | {{ t('task.pieces.completed') }}: {{ completedCount }}
-    span.legend-item
-      i.piece-todo
+    span(class="inline-flex items-center gap-[6px]")
+      i(class="w-[10px] h-[10px] border border-[#d0d0d0] bg-[#f0f0f0] [.dark_&]:border-[#3a3a3a] [.dark_&]:bg-[#242424]")
       | {{ t('task.pieces.uncompleted') }}: {{ numPieces - completedCount }}
-    span.legend-count {{ t('task.pieces.info', { completed: completedCount, total: numPieces }) }}
+    span(class="ml-auto") {{ t('task.pieces.info', { completed: completedCount, total: numPieces }) }}
   piece-map(:bit-field="bitField" :piece-count="numPieces")
 </template>
-
-<style scoped>
-.legend {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: 12px;
-  opacity: 0.75;
-}
-.legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.legend-count {
-  margin-left: auto;
-}
-.piece-done,
-.piece-todo {
-  width: 10px;
-  height: 10px;
-  border: 1px solid #a3c644;
-  background: #b8dd69;
-}
-.piece-todo {
-  border-color: #d0d0d0;
-  background: #f0f0f0;
-}
-:global(html.dark) .piece-done {
-  border-color: #6f9a2a;
-  background: #8fbc3f;
-}
-:global(html.dark) .piece-todo {
-  border-color: #3a3a3a;
-  background: #242424;
-}
-</style>

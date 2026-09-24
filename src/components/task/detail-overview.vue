@@ -104,57 +104,20 @@ const trackers = computed(() => {
     n-descriptions-item(v-for="row in rows" :key="row.label" :label="row.label")
       .flex.items-center.gap-2
         span.truncate(:title="row.tooltip || row.value") {{ row.value }}
-        n-button.text-btn(v-if="row.jump" text size="tiny" @click="emit('jump', row.jump)")
+        n-button(class="text-[#2080f0]" v-if="row.jump" text size="tiny" @click="emit('jump', row.jump)")
           | {{ t('task.action.view') }}
 
-  .panel-box(v-if="showSpeedChart")
-    .section-title {{ t('task.field.speed') }}
+  div(v-if="showSpeedChart" class="flex flex-col gap-[6px] p-3 rounded-lg bg-[#808080]/6")
+    div(class="flex items-center gap-2 text-[13px] font-semibold") {{ t('task.field.speed') }}
     speed-chart(:data="stats" height="180px")
 
-  .panel-box(v-if="trackers.length")
-    .section-title.cursor-pointer(@click="trackersExpanded = !trackersExpanded")
+  div(v-if="trackers.length" class="flex flex-col gap-[6px] p-3 rounded-lg bg-[#808080]/6")
+    div(class="flex items-center gap-2 text-[13px] font-semibold cursor-pointer" @click="trackersExpanded = !trackersExpanded")
       span {{ t('task.field.tracker-servers') }}
       span  ({{ trackers.length }})
-      span.expand-hint {{ trackersExpanded ? t('task.action.collapse') : t('task.action.expand') }}
-    ul.tracker-list(v-if="trackersExpanded")
+      span(class="ml-auto font-normal text-[#2080f0]") {{ trackersExpanded ? t('task.action.collapse') : t('task.action.expand') }}
+    ul(v-if="trackersExpanded" class="m-0 pl-[18px] text-[12px] opacity-75")
       li(v-for="row in trackers" :key="row") {{ row }}
 
-  p.muted(v-else-if="!isSettled") {{ t('task.detail.auto-refresh-hint') }}
+  p(v-else-if="!isSettled" class="m-0 text-[12px] opacity-60") {{ t('task.detail.auto-refresh-hint') }}
 </template>
-
-<style scoped>
-.panel-box {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px;
-  border-radius: 8px;
-  background: rgba(128, 128, 128, 0.06);
-}
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-}
-.expand-hint {
-  margin-left: auto;
-  font-weight: 400;
-  color: #2080f0;
-}
-.tracker-list {
-  margin: 0;
-  padding-left: 18px;
-  font-size: 12px;
-  opacity: 0.75;
-}
-.muted {
-  margin: 0;
-  font-size: 12px;
-  opacity: 0.6;
-}
-.text-btn {
-  color: #2080f0;
-}
-</style>

@@ -16,63 +16,26 @@ defineProps({
 
 <template lang="pug">
 div
-  table.peer-table(v-if="peers.length")
+  table(v-if="peers.length" class="w-full border-collapse text-[13px]")
     thead
       tr
-        th {{ t('task.peers.address') }}
-        th {{ t('task.peers.client') }}
-        th {{ t('task.peers.status') }}
-        th {{ t('task.peers.download') }}
-        th {{ t('task.peers.upload') }}
+        th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.address') }}
+        th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.client') }}
+        th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.status') }}
+        th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.download') }}
+        th(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15 font-semibold opacity-70") {{ t('task.peers.upload') }}
     tbody
-      tr(v-for="peer in peers" :key="peer.name")
-        td
+      tr(v-for="peer in peers" :key="peer.name" class="odd:bg-[#808080]/5")
+        td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15")
           span {{ peer.name }}
-          span.seed-badge(v-if="peer.seeder") {{ t('task.status.seeding') }}
-        td {{ peer.clientName }}
-        td
-          .peer-progress
-            piece-bar(:bit-field="peer.bitfield" :piece-count="numPieces" :height="6")
+          span(v-if="peer.seeder" class="ml-1.5 px-2 py-0 rounded-[10px] text-[11px] text-white bg-[#18a058]") {{ t('task.status.seeding') }}
+        td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15") {{ peer.clientName }}
+        td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15")
+          div(class="flex items-center gap-2")
+            piece-bar(class="!w-[120px]" :bit-field="peer.bitfield" :piece-count="numPieces" :height="6")
             span {{ formatPercent(peer.completePercent) }}
-        td {{ formatSpeed(peer.downloadSpeed) }}
-        td {{ formatSpeed(peer.uploadSpeed) }}
+        td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15") {{ formatSpeed(peer.downloadSpeed) }}
+        td(class="px-2.5 py-1.5 text-left border-b border-[#808080]/15") {{ formatSpeed(peer.uploadSpeed) }}
 
   n-empty.mt-6(v-else :description="t('task.peers.empty')")
 </template>
-
-<style scoped>
-.peer-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.peer-table th,
-.peer-table td {
-  padding: 6px 10px;
-  text-align: left;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.15);
-}
-.peer-table thead th {
-  font-weight: 600;
-  opacity: 0.7;
-}
-.peer-table tbody tr:nth-child(odd) {
-  background: rgba(128, 128, 128, 0.05);
-}
-.seed-badge {
-  margin-left: 6px;
-  padding: 0 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  color: #fff;
-  background: #18a058;
-}
-.peer-progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.peer-progress :deep(.piece-bar) {
-  width: 120px;
-}
-</style>

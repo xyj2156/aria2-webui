@@ -377,7 +377,7 @@ onUnmounted(() => {
     // 弹性空隙：把搜索顶到最右
     .grow.shrink
 
-    n-input.search-input(size="small" clearable :placeholder="t('task.search.placeholder')" v-model:value="search")
+    n-input(class="w-[220px] max-w-[40vw] shrink" size="small" clearable :placeholder="t('task.search.placeholder')" v-model:value="search")
       template(#prefix)
         n-icon(:component="SearchOutline")
 
@@ -419,13 +419,3 @@ onUnmounted(() => {
   // ---------- 任务详情弹窗（点行弹出；弹窗内动作改完抢跑一轮列表刷新） ----------
   task-detail-dialog(v-model:show="detailShow" :gid="detailGid" @refresh="polling.trigger()")
 </template>
-
-<style scoped>
-/* 搜索框在 flex 单行里定宽：正常 220px，最宽不超过视口 40%，小屏自动缩，
-   保证「多选+操作」在左、搜索在右始终挤在一行不折行。 */
-.search-input {
-  width: 220px;
-  max-width: 40vw;
-  flex-shrink: 1;
-}
-</style>

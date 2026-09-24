@@ -252,7 +252,7 @@ n-modal(
   :title="task?.taskName || gid || t('task.loading')"
   @update:show="onModalShow"
 )
-  .detail-body
+  .flex.flex-col.gap-3
     // ---------- 头部操作（关闭交给右上角 X；此处只留真正的动作，全终态时整行隐藏） ----------
     .flex.items-center.gap-2.flex-wrap(v-if="canPause || isPaused || !isSettled")
       n-button(size="small" v-if="canPause" @click="toggleState") {{ t('task.action.pause') }}
@@ -260,7 +260,7 @@ n-modal(
       n-button(size="small" v-if="!isSettled" @click="retry") {{ t('task.action.retry') }}
 
     // ---------- 致命错误 ----------
-    p.fatal(v-if="fatal") {{ fatal }}
+    p(v-if="fatal" class="p-4 text-center text-[#d03050]") {{ fatal }}
 
     // ---------- tab ----------
     template(v-else-if="task")
@@ -298,15 +298,3 @@ n-modal(
             )
 </template>
 
-<style scoped>
-.detail-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.fatal {
-  padding: 16px;
-  text-align: center;
-  color: #d03050;
-}
-</style>

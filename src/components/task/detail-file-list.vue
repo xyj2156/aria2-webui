@@ -25,7 +25,7 @@ const props = defineProps({
 
 const emit = defineEmits(['apply']);
 
-/** 行高（px），必须与 .vrow 实际高度一致，NVirtualList 按它算窗口 */
+/** 行高（px），必须与每行实际渲染高度一致，NVirtualList 按它算窗口；模板里 :style 高度同源绑定 */
 const ROW_H = 34;
 
 const collapsed = reactive({});
@@ -33,9 +33,6 @@ const editing = ref(false);
 /** 草稿：编辑态下当前勾选的文件 index 集合 */
 const draft = ref(new Set());
 
-const isTree = computed(
-  () => props.task.isMultiFileBT && props.task.files.some((file) => file.type === 'dir'),
-);
 const fileNodes = computed(() => props.task.files.filter((file) => file.type !== 'dir'));
 
 /** 实时（后端已生效）已选文件 index 集合 */
@@ -212,123 +209,65 @@ function applyPreset(mode) {
 
 <template lang="pug">
 .flex.flex-col.gap-2.h-full
-  // ---------- 工具条：默认「更改下载文件」入口；编辑态给预设 + 取消/确认 + 重启提示 ----------
-  .flex.items-center.gap-2.flex-wrap.min-h-32px
-    template(v-if="!editing")
-      n-button(v-if="canEdit" size="small" @click="startEdit") {{ t('task.files.edit') }}
-    template(v-else)
+  // ---------- 工具条：仅可编辑时出现（只读任务不留空条）；默认「更改下载文件」，编辑态给预设 + 取消/确认 ----------
+  template(v-if="canEdit")
+    .flex.items-center.gap-2.flex-wrap(v-if="!editing")
+      n-button(size="small" @click="startEdit") {{ t('task.files.edit') }}
+    .flex.items-center.gap-2.flex-wrap(v-else)
       n-button(size="small" @click="applyPreset('all')") {{ t('task.files.select-all') }}
       n-button(size="small" @click="applyPreset('none')") {{ t('task.files.select-none') }}
       n-button(size="small" @click="applyPreset('invert')") {{ t('task.files.select-invert') }}
-      span.tip-danger(v-if="!canApply") {{ t('task.files.none-selected') }}
-      span.tip-danger(v-else-if="willRestart") {{ t('task.files.restart-tip') }}
+      span(class="text-[12px] text-[#d03050]" v-if="!canApply") {{ t('task.files.none-selected') }}
+      span(class="text-[12px] text-[#d03050]" v-else-if="willRestart") {{ t('task.files.restart-tip') }}
       .grow.shrink
       n-button(size="small" @click="cancelEdit") {{ t('task.confirm.negative') }}
       n-button(size="primary" small :disabled="!canApply" @click="applyEdit") {{ t('task.files.confirm') }}
 
   // ---------- 表头（非虚拟，固定） ----------
-  .vrow.vheader(:class="{ 'vheader--indented': isTree }")
-    .c-check
-    .c-name {{ t('task.files.name') }}
-    .c-progress {{ t('task.field.progress') }}
-    .c-size {{ t('task.field.size') }}
+  div(class="grid grid-cols-[32px_minmax(0,1fr)_180px_110px] items-center gap-[10px] px-[10px] text-[13px] font-semibold opacity-70 border-b border-[#808080]/20")
+    div
+    div {{ t('task.files.name') }}
+    div {{ t('task.field.progress') }}
+    div(class="text-right") {{ t('task.field.size') }}
 
   // ---------- 虚拟列表主体：只渲染视口内行 ----------
   n-virtual-list(v-if="visibleRows.length" :items="visibleRows" :item-size="ROW_H" :style="listStyle")
     template(#default="{ item: row, index }")
-      .vrow(:class="{ 'is-dir': row.isDir, 'is-alt': index % 2 === 1 }" :style="{ height: ROW_H + 'px' }")
-        .c-check
+      div(
+        class="grid grid-cols-[32px_minmax(0,1fr)_180px_110px] items-center gap-[10px] px-[10px] text-[13px] border-b border-[#808080]/10"
+        :class="{ 'font-semibold': row.isDir, 'bg-[#808080]/5': index % 2 === 1 }"
+        :style="{ height: ROW_H + 'px' }"
+      )
+        div
           n-checkbox(
             :checked="row.checked"
             :indeterminate="Boolean(row.indeterminate)"
             :disabled="!editing || row.locked"
             @update:checked="(value) => onToggle(row, value)"
           )
-        .c-name.min-w-0
-          span(:style="{ display: 'inline-block', width: `${row.level * 16}px` }")
-          button.dir-toggle(v-if="row.isDir" type="button" @click="toggleDir(row.path)") {{ collapsed[row.path] ? '+' : '-' }}
+        div(class="flex items-center min-w-0")
+          span(class="inline-block shrink-0" :style="{ width: `${row.level * 16}px` }")
+          button(
+            v-if="row.isDir"
+            type="button"
+            class="w-[18px] shrink-0 border-none bg-transparent p-0 text-[#2080f0] cursor-pointer"
+            @click="toggleDir(row.path)"
+          ) {{ collapsed[row.path] ? '+' : '-' }}
           n-tooltip(:show-arrow="false" trigger="hover")
             template(#trigger)
-              span.file-name {{ row.name }}
+              span(class="flex-1 min-w-0 truncate") {{ row.name }}
             span {{ row.path }}
-        .c-progress
-          .file-progress
-            n-progress.grow(
-              type="line"
-              :percentage="row.percent"
-              :height="6"
-              :border-radius="3"
-              :show-indicator="false"
-            )
-            span {{ formatPercent(row.percent) }}
-        .c-size {{ formatVolume(row.length, { fractionSize: 'auto' }) }}
+        div(class="flex items-center gap-2 min-w-0")
+          n-progress(
+            class="flex-1 min-w-0"
+            type="line"
+            :percentage="row.percent"
+            :height="6"
+            :border-radius="3"
+            :show-indicator="false"
+          )
+          span(class="shrink-0 tabular-nums") {{ formatPercent(row.percent) }}
+        div(class="text-right tabular-nums") {{ formatVolume(row.length, { fractionSize: 'auto' }) }}
 
   n-empty(v-else :description="t('task.files.empty')")
 </template>
-
-<style scoped>
-.vheader,
-.vrow {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) 180px 110px;
-  align-items: center;
-  gap: 10px;
-  padding: 0 10px;
-  font-size: 13px;
-}
-.vheader {
-  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
-  font-weight: 600;
-  opacity: 0.7;
-}
-.vrow {
-  border-bottom: 1px solid rgba(128, 128, 128, 0.1);
-}
-.vrow.is-alt {
-  background: rgba(128, 128, 128, 0.05);
-}
-.vrow.is-dir {
-  font-weight: 600;
-}
-.c-check {
-  width: 32px;
-}
-.c-name {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-.c-progress {
-  display: flex;
-  align-items: center;
-}
-.c-size {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.file-name {
-  display: inline-block;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.file-progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-.dir-toggle {
-  width: 18px;
-  margin-right: 4px;
-  border: none;
-  background: transparent;
-  color: #2080f0;
-  cursor: pointer;
-}
-.tip-danger {
-  font-size: 12px;
-  color: #d03050;
-}
-</style>
