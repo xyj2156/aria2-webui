@@ -61,12 +61,27 @@ export function formatVersion(digits) {
 }
 
 /**
+ * aria2 getPeers 的 peerId 经 torrentPercentEncode 编码（`-` 变 `%2D` 等），解析前先还原。
+ * 逐字节 String.fromCharCode，不能用 decodeURIComponent：后者按 UTF-8 解码，遇到 peerId 里的
+ * 非 UTF-8 字节序列（如 `%96%B8`）会抛 URIError。客户端识别只靠前缀 ASCII，尾部乱码不影响。
+ * @param {unknown} peerId
+ * @returns {string}
+ */
+export function decodePeerId(peerId) {
+  if (typeof peerId !== 'string') {
+    return '';
+  }
+  return peerId.replace(/%[0-9A-Fa-f]{2}/g, (token) => String.fromCharCode(parseInt(token.slice(1), 16)));
+}
+
+/**
  * 解析 peer id。
- * @param {string|undefined} peerId
+ * @param {string|undefined} rawPeerId aria2 原始（百分号编码）peerId
  * @returns {{ name: string, version: string, supported: boolean }}
  */
-export function parsePeerClient(peerId) {
+export function parsePeerClient(rawPeerId) {
   const fallback = { name: 'Unknown', version: '', supported: false };
+  const peerId = decodePeerId(rawPeerId);
   if (!peerId || peerId.length < 3) {
     return fallback;
   }
