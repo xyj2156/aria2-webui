@@ -335,9 +335,13 @@ export function processTaskList(raws, options = {}) {
  * peer 加工（字段名以 aria2 源码 RpcMethodImpl.cc::gatherPeer 为准）。
  *
  * getPeers 每个 peer 的真实键：peerId / ip / port / bitfield / amChoking / peerChoking /
- * downloadSpeed / uploadSpeed / seeder。注意没有 peerAddress/peerPort，也没有单一 speed 字段——
- * 旧实现用 peer.peerAddress、peer.speed 取值，全取到 undefined → 地址列「undefined:undefined」、
- * 且速度恒 0。downloadSpeed/uploadSpeed 已由 aria2 按「我方 ↔ 该 peer」方向标好，直接映射，不互换。
+ * downloadSpeed / uploadSpeed / seeder。注意没有 peerAddress/peerPort，也没有单一 speed 字段。
+ *
+ * 视角约定：邻居表每一行按「该行主体自身」的收发记账——
+ * aria2 的 peer.downloadSpeed = 对端→本机（本机从该邻居收）= 站在邻居角度是「它上传给我」；
+ * aria2 的 peer.uploadSpeed   = 本机→对端（本机发给该邻居）= 站在邻居角度是「它从我下载」。
+ * 所以远端邻居两列要相对 aria2 字段对调：展示「下载」取 peer.uploadSpeed、「上传」取 peer.downloadSpeed。
+ * 本机行（下面 unshift 的那条）是本机自身收发，直接用 task.downloadSpeed/uploadSpeed，不对调。
  * @param {Array<Record<string, unknown>>} peers
  * @param {Pick<ReturnType<typeof processDownloadTask>, 'numPieces'|'completePercent'|'bitfield'|'completedPieces'|'pieceLength'|'downloadSpeed'|'uploadSpeed'|'completedLength'>} task
  * @param {boolean} [includeLocalPeer]
@@ -355,8 +359,9 @@ export function processBtPeers(peers, task, includeLocalPeer = false) {
       bitfield: peer.bitfield ?? '',
       completedLength: completed * (task.pieceLength ?? 0),
       completePercent: completed === task.completedPieces ? localPercent : completePercent,
-      downloadSpeed: toInt(peer.downloadSpeed),
-      uploadSpeed: toInt(peer.uploadSpeed),
+      // 邻居自身视角：下载=它从本机取(aria2 uploadSpeed)，上传=它传给本机(aria2 downloadSpeed)
+      downloadSpeed: toInt(peer.uploadSpeed),
+      uploadSpeed: toInt(peer.downloadSpeed),
       seeder: isTrue(peer.seeder) || (task.numPieces > 0 && completed === task.numPieces),
     };
   });

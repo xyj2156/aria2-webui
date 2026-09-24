@@ -115,11 +115,8 @@ task:
     address: Address
     client: Client
     status: Status
-    download: My download
-    upload: My upload
-    speed-tip: >-
-      From this client's perspective: "My download" = rate received from this peer
-      (seeders usually show here), "My upload" = rate this client sends to the peer.
+    download: Download
+    upload: Upload
     local: This client
     empty: No connected peers
   detail:
