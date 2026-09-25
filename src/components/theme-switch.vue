@@ -41,11 +41,16 @@ function handleClick(event) {
     return;
   }
 
-  // 回调里改 theme 并 await nextTick，让同步监听器把 isDark 落到 html.dark、
-  // Vue 把 Naive 配色重渲染完，截到的新快照才是完整配色
+  // 回调里改 theme 并 await nextTick，让同步监听器把 isDark 落到 html.dark、Vue 把 Naive 配色重渲染完，
+  // 截到的新快照才是完整配色。
+  // 期间临时挂 transitions-disabled，掐掉 Naive 组件自带的 ~300ms 颜色过渡——否则它会与这条
+  // 450ms 圆形揭示抢拍（新快照停在半淡状态、VT 结束后再淡一次），观感上就是「时长不一致」。
   root.startViewTransition(async () => {
+    root.classList.add('transitions-disabled');
     flipTheme();
     await nextTick();
+    // 新快照已按无过渡定格终色；恢复交互过渡（hover 等）。浏览器在本 promise resolve 后截新快照
+    root.classList.remove('transitions-disabled');
   });
 }
 </script>
@@ -72,6 +77,15 @@ html {
 
 html.dark {
   background-color: #18181c;
+}
+
+/* 换肤期间挂到 <html>：掐掉一切 CSS 过渡（含 Naive 组件自带的 ~300ms 颜色过渡），
+   让新快照无过渡定格终色，屏幕上只剩下面声明的 450ms 圆形揭示这一条动画。 */
+.transitions-disabled,
+.transitions-disabled *,
+.transitions-disabled *::before,
+.transitions-disabled *::after {
+  transition: none !important;
 }
 
 /* 关掉浏览器默认的整页交叉淡入淡出，只跑下面声明的 clip-path 圆形揭示 */
