@@ -47,6 +47,9 @@ connection:
   path: 路径
   protocol: 协议
   secret: 密钥
+  test:
+    success: 已连接到 aria2
+    failed: 连接 aria2 失败
 
   status:
     idle: 未连接
@@ -2312,3 +2315,6 @@ webui:
     minutes: 分
     milliseconds: 毫秒
     disabled: 禁用
+  stat:
+    downloading: 下载中
+    upload: 上传速率

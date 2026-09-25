@@ -138,8 +138,9 @@ function handleMenuSelect(key) {
               .flex-x-between.px-4.h-14
                 // 顶栏左侧：当前页标题，给 header 一个实际用途
                 .text-lg.font-medium {{ activeLabel }}
-                // 顶栏右侧：主题切换（独立组件，含 element-plus 同款换肤动画）+ 语言切换
+                // 顶栏右侧：全局下载速率（主题按钮左侧）+ 主题切换（含 element-plus 同款换肤动画）+ 语言切换
                 .flex.items-center.gap-3
+                  global-stat-indicator
                   theme-switch
                   lang-switch
             n-layout.wh-full

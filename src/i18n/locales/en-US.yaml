@@ -44,6 +44,9 @@ connection:
   path: Path
   protocol: Protocol
   secret: Secret
+  test:
+    success: Connected to aria2
+    failed: Failed to connect to aria2
 
   status:
     idle: Not connected
@@ -5763,3 +5766,6 @@ webui:
     minutes: Minutes
     milliseconds: Milliseconds
     disabled: Disabled
+  stat:
+    downloading: Downloading
+    upload: Upload speed
