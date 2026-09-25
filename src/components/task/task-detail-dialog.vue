@@ -22,6 +22,7 @@ import { processDownloadTask, processBtPeers, estimateHealthPercentFromPeers } f
 import { getAvailableTaskOptionKeys, getSpecifiedOptions } from '@/services/option-service.js';
 import { usePolling } from '@/composables/use-polling.js';
 import { useMonitorStore } from '@/store/monitor.js';
+import { useWebuiSettingsStore } from '@/store/webui-settings.js';
 import {
   getTask,
   getTaskOptions,
@@ -41,7 +42,10 @@ const props = defineProps({
 
 const emit = defineEmits(['update:show', 'refresh']);
 
-const POLL_INTERVAL_MS = 5000;
+/** 任务详情刷新间隔：读全局设置 downloadTaskRefreshInterval（0 = 关闭自动刷新）；
+ *  用函数每轮现取，改设置即时生效。列表与详情共用同一设置项。 */
+const webuiSettings = useWebuiSettingsStore();
+const intervalMs = () => Number(webuiSettings.options.downloadTaskRefreshInterval) || 0;
 // 分片方块图 DOM 上限：超过就不画，避免上千个方块拖垮弹窗（阈值后续接设置项）
 const PIECE_CAP = 4000;
 
@@ -111,7 +115,7 @@ async function loadOptions() {
   }
 }
 
-const polling = usePolling(refresh, POLL_INTERVAL_MS, { immediate: true });
+const polling = usePolling(refresh, intervalMs, { immediate: true });
 
 function startLoop() {
   if (!gid.value) {
@@ -121,9 +125,26 @@ function startLoop() {
   monitor.resetStat(gid.value);
   raw.value = null;
   fatal.value = '';
-  polling.start();
+  // 间隔>0 起周期刷新（start 内 immediate 会先跑一次）；=0 关闭自动刷新，仍加载一次当前详情
+  if (intervalMs() > 0) {
+    polling.start();
+  } else {
+    void refresh();
+  }
   void loadOptions();
 }
+
+/** 弹窗打开时改间隔即时生效：>0 起轮询，0 停表（保留已加载数据）。 */
+watch(intervalMs, () => {
+  if (!props.show) {
+    return;
+  }
+  if (intervalMs() > 0) {
+    polling.start();
+  } else {
+    polling.stop();
+  }
+});
 
 function close() {
   emit('update:show', false);
