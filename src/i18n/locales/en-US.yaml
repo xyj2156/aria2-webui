@@ -96,6 +96,9 @@ task:
     collapse: Collapse all
   retry:
     not-retryable: 'This task cannot be recreated (torrent / metalink files are not kept by aria2). Please add it again.'
+  notify:
+    completed: Download completed
+    failed: Download failed
   tab:
     overview: Overview
     pieces: Pieces
@@ -5718,6 +5721,9 @@ webui:
   debug-mode: Debug Mode
   page-title: Page Title
   page-title-help: 'Placeholders: ${title} (current page), ${rpcprofile} (connection name), ${downspeed}, ${upspeed}, ${downloading}, ${waiting}, ${stopped}. Speeds accept a scale modifier, e.g. ${downspeed:scale=1}; prefix=X / suffix=X add surrounding text.'
+  notif-granted: Browser notifications enabled
+  notif-denied: Notification permission not granted; cannot enable
+  notif-unsupported: This browser does not support desktop notifications
   browser-notification: Enable Browser Notification
   browser-notification-sound: Browser Notification Sound
   browser-notification-frequency: Browser Notification Frequency

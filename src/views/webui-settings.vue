@@ -3,6 +3,7 @@ import { CloseOutline } from '@vicons/ionicons5';
 import { useDialog, useMessage } from 'naive-ui';
 import { t, LANGUAGES } from '@/i18n/index.js';
 import { useWebuiSettingsStore } from '@/store/webui-settings.js';
+import { requestNotificationPermission } from '@/composables/use-browser-notification.js';
 import { getTimeOptions, REFRESH_INTERVAL_OPTIONS } from '@/utils/interval-options.js';
 // 版本号直接取工程 package.json（Vite 支持 JSON 具名导入），供「版本」只读行展示
 import { version as appVersion } from '../../package.json';
@@ -53,6 +54,29 @@ function onLanguageChange(code) {
 
 function onThemeChange(value) {
   upd('theme', value);
+}
+
+/**
+ * 浏览器通知开关：点「开」必须在用户手势里申请 Notification 权限，
+ * 只有 granted 才持久化 true；被拒或不支持 → 回退 false 并提示。关则直接置 false。
+ * @param {boolean} value
+ */
+async function onBrowserNotificationChange(value) {
+  if (!value) {
+    upd('browserNotification', false);
+    return;
+  }
+  const permission = await requestNotificationPermission();
+  if (permission === 'granted') {
+    upd('browserNotification', true);
+    message.success(t('webui.notif-granted'));
+  } else if (permission === 'unsupported') {
+    upd('browserNotification', false);
+    message.error(t('webui.notif-unsupported'));
+  } else {
+    upd('browserNotification', false);
+    message.warning(t('webui.notif-denied'));
+  }
 }
 
 const languageOptions = computed(() => LANGUAGES.map((item) => ({label: item.label, value: item.code})));
@@ -198,7 +222,7 @@ function addConnection() {
         setting-field(:label="t('webui.page-title')" description-key="webui.page-title-help")
           n-input(:value="opts.title" @update:value="(v) => upd('title', v)")
         setting-field(:label="t('webui.browser-notification')")
-          n-switch(:value="opts.browserNotification" @update:value="(v) => upd('browserNotification', v)")
+          n-switch(:value="opts.browserNotification" @update:value="onBrowserNotificationChange")
         setting-field(:label="t('webui.browser-notification-sound')")
           n-switch(:value="opts.browserNotificationSound" @update:value="(v) => upd('browserNotificationSound', v)")
         setting-field(:label="t('webui.browser-notification-frequency')")

@@ -99,6 +99,9 @@ task:
     collapse: 收起全部
   retry:
     not-retryable: '该任务无法重建（种子 / metalink 文件 aria2 不留存），请重新添加'
+  notify:
+    completed: 下载完成
+    failed: 下载失败
   tab:
     overview: 概览
     pieces: 分块
@@ -2267,6 +2270,9 @@ webui:
   debug-mode: 调试模式
   page-title: 页面标题
   page-title-help: '支持占位符：${title}（当前页面名）、${rpcprofile}（连接名）、${downspeed}、${upspeed}、${downloading}、${waiting}、${stopped}。速率可加修饰符控制小数位，如 ${downspeed:scale=1}；也可用 prefix=X / suffix=X 加前后缀。'
+  notif-granted: 已开启浏览器通知
+  notif-denied: 未授予通知权限，无法开启
+  notif-unsupported: 当前浏览器不支持桌面通知
   browser-notification: 启用浏览器通知
   browser-notification-sound: 浏览器通知声音
   browser-notification-frequency: 浏览器通知频次
