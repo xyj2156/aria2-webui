@@ -29,6 +29,7 @@ const TaskDetailDialog = defineAsyncComponent(() => import('@/components/task/ta
 const NewTaskDialog = defineAsyncComponent(() => import('@/components/task/new-task-dialog.vue'));
 import { processTaskList } from '@/services/task-service.js';
 import { usePolling } from '@/composables/use-polling.js';
+import { useWebuiSettingsStore } from '@/store/webui-settings.js';
 import {
   canPushEvents,
   clearFinishedResults,
@@ -45,8 +46,12 @@ const props = defineProps({
   type: { type: String, default: 'downloading' },
 });
 
-/** 轮询间隔（毫秒）。TODO(07→05)：等 setting store 落地后改成读配置。 */
-const POLL_INTERVAL_MS = 5000;
+/**
+ * 任务列表刷新间隔（毫秒）：读全局设置 downloadTaskRefreshInterval（单一事实源），
+ * 0 = 关闭自动刷新。用函数每轮现取，改设置即时生效。
+ */
+const webuiSettings = useWebuiSettingsStore();
+const intervalMs = () => Number(webuiSettings.options.downloadTaskRefreshInterval) || 0;
 
 const FETCHERS = {
   downloading: getDownloadingTasks,
@@ -117,8 +122,8 @@ async function refresh() {
   }
 }
 
-// immediate:true：进入页面立刻发第一轮请求（不等一个间隔），首轮结束后再按间隔排后续。
-const polling = usePolling(refresh, POLL_INTERVAL_MS, { immediate: true });
+// immediate:true：polling.start() 时立刻发第一轮请求（不等一个间隔），首轮结束后再按间隔排后续。
+const polling = usePolling(refresh, intervalMs, { immediate: true });
 
 // =================================================================== 选择
 const selectedCount = computed(() => selected.size);
@@ -358,9 +363,26 @@ watch(
   },
 );
 
+/**
+ * 按间隔起停轮询：>0 起周期刷新，0 停表（自动刷新关闭）。
+ * 改设置即时生效。首屏数据另由 onMounted 保证，不受此开关影响。
+ */
+function syncRunning() {
+  if (intervalMs() > 0) {
+    polling.start();
+  } else {
+    polling.stop();
+  }
+}
+watch(intervalMs, syncRunning);
+
 const eventDisposers = [];
 onMounted(() => {
-  polling.start();
+  syncRunning();
+  // 间隔为 0（关闭自动刷新）时 polling.start() 不会跑，仍需手动加载一次，避免空表
+  if (intervalMs() <= 0) {
+    void refresh();
+  }
   // WS / 有推送时才订阅事件，收到即抢跑一轮（HTTP 通道收不到，纯靠轮询）
   if (canPushEvents()) {
     eventDisposers.push(onDownloadEvent(() => polling.trigger()));
