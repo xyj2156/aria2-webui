@@ -196,7 +196,7 @@ function addConnection() {
           needs-reload
         )
           n-select(:value="opts.webSocketReconnectInterval" :options="wsIntervalOptions" class="w-[200px]" @update:value="(v) => upd('webSocketReconnectInterval', v)")
-        setting-field(:label="t('webui.title-refresh-interval')" needs-reload)
+        setting-field(:label="t('webui.title-refresh-interval')")
           n-select(:value="opts.titleRefreshInterval" :options="titleIntervalOptions" class="w-[200px]" @update:value="(v) => upd('titleRefreshInterval', v)")
         setting-field(:label="t('webui.global-stat-refresh-interval')" needs-reload)
           n-select(:value="opts.globalStatRefreshInterval" :options="statIntervalOptions" class="w-[200px]" @update:value="(v) => upd('globalStatRefreshInterval', v)")

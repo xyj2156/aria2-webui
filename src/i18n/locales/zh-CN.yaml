@@ -2264,7 +2264,7 @@ webui:
   theme-system: 跟随系统
   debug-mode: 调试模式
   page-title: 页面标题
-  page-title-help: '支持占位符：${title}、${downspeed}、${upspeed}、${rpcprofile}（需页面标题引擎接入后才实时生效）'
+  page-title-help: '支持占位符：${title}（当前页面名）、${rpcprofile}（连接名）、${downspeed}、${upspeed}、${downloading}、${waiting}、${stopped}。速率可加修饰符控制小数位，如 ${downspeed:scale=1}；也可用 prefix=X / suffix=X 加前后缀。'
   browser-notification: 启用浏览器通知
   browser-notification-sound: 浏览器通知声音
   browser-notification-frequency: 浏览器通知频次

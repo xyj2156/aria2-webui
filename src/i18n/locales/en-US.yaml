@@ -5715,7 +5715,7 @@ webui:
   theme-system: Follow system settings
   debug-mode: Debug Mode
   page-title: Page Title
-  page-title-help: 'Supports placeholders: ${title}, ${downspeed}, ${upspeed}, ${rpcprofile} (takes live effect only after the page-title engine is wired up)'
+  page-title-help: 'Placeholders: ${title} (current page), ${rpcprofile} (connection name), ${downspeed}, ${upspeed}, ${downloading}, ${waiting}, ${stopped}. Speeds accept a scale modifier, e.g. ${downspeed:scale=1}; prefix=X / suffix=X add surrounding text.'
   browser-notification: Enable Browser Notification
   browser-notification-sound: Browser Notification Sound
   browser-notification-frequency: Browser Notification Frequency

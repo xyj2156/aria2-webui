@@ -1,5 +1,4 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
-import { t } from '@/i18n/index.js';
 import Layout from '@/layout/index.vue';
 
 const routes = [{
@@ -46,13 +45,8 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(function (to, from) {
-  document.title = 'Loading ...';
-  console.log('beforeEach', to, from);
-});
-router.afterEach(function (to, from) {
-  document.title = t(to?.meta?.title || 'Aria2 Web UI');
-  console.log('afterEach', to, from);
-});
+// 浏览器标签标题（document.title）改由页面标题引擎统一管理
+// （@/composables/use-page-title.js 监听 currentRoute.meta.title 即时重渲染）。
+// 这里不再直接写 document.title，避免路由与标题引擎两处互相覆盖。
 
 export default router;
