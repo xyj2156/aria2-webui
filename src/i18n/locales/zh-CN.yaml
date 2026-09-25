@@ -97,6 +97,8 @@ task:
     view: 查看
     expand: 展开全部
     collapse: 收起全部
+  retry:
+    not-retryable: '该任务无法重建（种子 / metalink 文件 aria2 不留存），请重新添加'
   tab:
     overview: 概览
     pieces: 分块

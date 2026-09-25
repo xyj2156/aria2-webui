@@ -32,6 +32,7 @@ import {
   resumeTask,
   saveTaskOptions,
 } from '@/rpc';
+import { buildRetryPayload, retryTask } from '@/services/retry-service.js';
 
 const props = defineProps({
   /** 显隐（配合 v-model:show） */
@@ -40,7 +41,7 @@ const props = defineProps({
   gid: { type: String, default: '' },
 });
 
-const emit = defineEmits(['update:show', 'refresh']);
+const emit = defineEmits(['update:show', 'refresh', 'retried']);
 
 /** 任务详情刷新间隔：读全局设置 downloadTaskRefreshInterval（0 = 关闭自动刷新）；
  *  用函数每轮现取，改设置即时生效。列表与详情共用同一设置项。 */
@@ -188,6 +189,51 @@ async function toggleState() {
   }
 }
 
+// =================================================================== 重试（重建下载）
+/**
+ * 当前任务能否重建：settled 任务打开时探一次（buildRetryPayload 拿原 URIs 判可重建性），
+ * 结果缓存在 canRetryNow，避免每轮刷新重复 RPC。纯种子/metalink 文件取不回 → 不可重建 → 不显示入口。
+ */
+const canRetryNow = ref(false);
+
+async function probeRetry() {
+  const g = gid.value;
+  if (!g || !isSettled.value) {
+    canRetryNow.value = false;
+    return;
+  }
+  const p = await buildRetryPayload(g);
+  // 探测期间可能已切换任务，回来时校验 gid 一致再落值
+  if (g === gid.value) {
+    canRetryNow.value = Boolean(p.ok);
+  }
+}
+watch(() => [gid.value, isSettled.value], () => { void probeRetry(); }, { immediate: true });
+
+const canRetry = computed(() => isSettled.value && canRetryNow.value);
+
+/**
+ * 重试：重新 addUri 原任务，是否删旧记录由 removeOldTaskAfterRetrying 决定。
+ * 成功 emit('retried')（父级按 afterRetryingTask 处理去向）并关闭本弹窗。
+ */
+async function retryCurrentTask() {
+  try {
+    const res = await retryTask(gid.value, {
+      removeOld: Boolean(webuiSettings.options.removeOldTaskAfterRetrying),
+    });
+    if (!res.ok) {
+      message.warning(t('task.retry.not-retryable'));
+      void probeRetry();
+      return;
+    }
+    message.success(`${t('task.action.retry')} ✓`);
+    emit('retried');
+    close();
+  } catch (e) {
+    message.error(e?.message || String(e));
+  }
+}
+
 /** 应用文件选择：草稿态攒好后一次性写回 select-file（只发一次 changeOption），失败提示、成功后刷新并通知列表 */
 async function applyFileSelection(indexes) {
   try {
@@ -266,6 +312,7 @@ n-modal(
       span.font-semibold.truncate(class="text-[17px]") {{ task?.taskName || gid || t('task.loading') }}
       n-button(size="small" shrink-0 v-if="canPause" @click="toggleState") {{ t('task.action.pause') }}
       n-button(size="small" shrink-0 v-else-if="isPaused" @click="toggleState") {{ t('task.action.resume') }}
+      n-button(size="small" shrink-0 v-if="canRetry" @click="retryCurrentTask") {{ t('task.action.retry') }}
 
   .flex.flex-col.gap-3
     // ---------- 致命错误 ----------

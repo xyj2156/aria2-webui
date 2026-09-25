@@ -94,6 +94,8 @@ task:
     view: View
     expand: Expand all
     collapse: Collapse all
+  retry:
+    not-retryable: 'This task cannot be recreated (torrent / metalink files are not kept by aria2). Please add it again.'
   tab:
     overview: Overview
     pieces: Pieces

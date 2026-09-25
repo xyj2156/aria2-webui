@@ -29,6 +29,7 @@ const TaskDetailDialog = defineAsyncComponent(() => import('@/components/task/ta
 // 新建任务弹窗同样懒加载：只在点「新建」时才拉分片
 const NewTaskDialog = defineAsyncComponent(() => import('@/components/task/new-task-dialog.vue'));
 import { processTaskList } from '@/services/task-service.js';
+import { retryTask } from '@/services/retry-service.js';
 import { usePolling } from '@/composables/use-polling.js';
 import { useWebuiSettingsStore } from '@/store/webui-settings.js';
 import {
@@ -219,6 +220,15 @@ const resumableSelectedGids = computed(() =>
 );
 /** 是否有可恢复的勾选项：决定「开始」入口是否可用 */
 const hasResumable = computed(() => resumableSelectedGids.value.length > 0);
+/**
+ * 可重建（重试）的判定：列表层用 `!isBT` 作稳妥启发式——HTTP/FTP 直链一定能用原 URIs 重建；
+ * BT 里磁链能重建、纯种子文件不能，行级拿不到 URIs 无法区分，故列表入口只给非 BT，
+ * 磁链的重试走详情弹窗（详情会实际拉 URIs 判定）。真正的可重建性最终由 retry-service 兜底。
+ */
+const retryableSelectedGids = computed(() =>
+  visibleRows.value.filter((task) => selected.has(task.gid) && !task.isBT).map((task) => task.gid),
+);
+const hasRetryableSelection = computed(() => retryableSelectedGids.value.length > 0);
 
 // =================================================================== 动作
 /**
@@ -314,6 +324,86 @@ function removeSelected() {
   confirmRemoveThen(selectedGids.value);
 }
 
+/**
+ * 重试成功后按设置 afterRetryingTask 决定去向（单一事实源，改值即时生效）：
+ *   task-list-downloading / task-list → 跳下载列表（新任务已进下载队列）
+ *   refresh-page → 留在本页并刷新
+ *   stay-current-page → 不动（用户显式要求保持当前视图）
+ */
+function applyAfterRetry() {
+  const mode = webuiSettings.options.afterRetryingTask;
+  if (mode === 'task-list-downloading' || mode === 'task-list') {
+    gotoDownloading();
+  } else if (mode === 'refresh-page') {
+    polling.trigger();
+  }
+}
+
+/**
+ * 批量重试：逐个用原 URIs 重新下单，是否顺带删旧记录由 removeOldTaskAfterRetrying 决定。
+ * 不可重建（纯种子/metalink 文件）的任务由 retry-service 回退，这里计入「无法重建」不误报失败。
+ * @param {string[]} gids
+ */
+async function retryGids(gids) {
+  if (!gids.length) {
+    return;
+  }
+  const removeOld = Boolean(webuiSettings.options.removeOldTaskAfterRetrying);
+  let ok = 0;
+  let skipped = 0;
+  let failed = 0;
+  let firstErr = '';
+  for (const gid of gids) {
+    try {
+      const res = await retryTask(gid, { removeOld });
+      if (res.ok) {
+        ok += 1;
+      } else {
+        skipped += 1;
+      }
+    } catch (e) {
+      failed += 1;
+      firstErr = e?.message || String(e);
+    }
+  }
+
+  const label = t('task.action.retry');
+  const parts = [`${label}：成功 ${ok}`];
+  if (skipped) {
+    parts.push(`无法重建 ${skipped}`);
+  }
+  if (failed) {
+    parts.push(`失败 ${failed}${firstErr ? `（${firstErr}）` : ''}`);
+  }
+  const text = parts.join('，');
+  if (failed) {
+    message.warning(text);
+  } else if (ok) {
+    message.success(text);
+  } else {
+    message.warning(text); // 一条都没能重建
+  }
+
+  selected.clear();
+  if (ok) {
+    applyAfterRetry();
+  }
+}
+
+function retryOne(task) {
+  void retryGids([task.gid]);
+}
+function retrySelected() {
+  void retryGids(retryableSelectedGids.value);
+}
+
+/** 详情弹窗重试成功：关窗、刷新本页，并按 afterRetryingTask 决定去向。 */
+function onDetailRetried() {
+  detailShow.value = false;
+  polling.trigger();
+  applyAfterRetry();
+}
+
 function clearCompleted() {
   dialog.warning({
     title: t('task.confirm.clear.title'),
@@ -340,6 +430,7 @@ const menuOptions = computed(() => {
   const items = [];
   if (isStopped.value) {
     items.push({ key: 'start', label: t('task.action.resume'), disabled: !hasResumable.value });
+    items.push({ key: 'retry', label: t('task.action.retry'), disabled: !hasRetryableSelection.value });
   } else if (isWaiting.value) {
     items.push({ key: 'now', label: t('task.action.resume'), disabled: !hasSelection.value });
   } else {
@@ -371,6 +462,9 @@ function onMenuSelect(key) {
   switch (key) {
     case 'start':
       resumeSelected();
+      break;
+    case 'retry':
+      retrySelected();
       break;
     case 'now':
       startNowSelected();
@@ -509,6 +603,10 @@ onUnmounted(() => {
       template(#icon)
         n-icon(:component="PlayOutline")
       | {{ t('task.action.resume') }}
+    n-button(size="small" shrink-0 v-if="isStopped" :disabled="!hasRetryableSelection" :title="t('task.action.retry')" @click="retrySelected")
+      template(#icon)
+        n-icon(:component="RefreshOutline")
+      | {{ t('task.action.retry') }}
     n-button(size="small" type="error" secondary shrink-0 :disabled="!hasSelection" @click="removeSelected")
       template(#icon)
         n-icon(:component="TrashOutline")
@@ -563,7 +661,7 @@ onUnmounted(() => {
   )
 
   // ---------- 任务详情弹窗（点行弹出；弹窗内动作改完抢跑一轮列表刷新） ----------
-  task-detail-dialog(v-model:show="detailShow" :gid="detailGid" @refresh="polling.trigger()")
+  task-detail-dialog(v-model:show="detailShow" :gid="detailGid" @refresh="polling.trigger()" @retried="onDetailRetried")
 
   // ---------- 新建任务弹窗（工具栏「新建」弹出；创建成功后抢跑一轮列表刷新） ----------
   new-task-dialog(v-model:show="newTaskShow" @created="applyAfterNewTask")
