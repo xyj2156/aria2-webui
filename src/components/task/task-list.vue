@@ -223,8 +223,35 @@ function startNowOne(task) {
   // 立即开始 = aria2.changePosition 移到队首（POS_SET, 0），尽快排到下载
   void runOnGids([task.gid], 'changePosition', t('task.action.resume'), [0, 'POS_SET']);
 }
+/** 执行删除：单行 / 批量共用。 */
+function doRemove(gids) {
+  void runOnGids(gids, removeMethod(), t('task.action.remove'));
+}
+
+/**
+ * 「先确认后删除」统一入口，受全局设置 confirmTaskRemoval 门控：
+ * 关闭时（false）直接执行；开启时（默认 true）弹二次确认。
+ * 单行 × 与批量删除共用此函数，让「删除前确认」的字面语义在两处一致生效。
+ */
+function confirmRemoveThen(gids) {
+  if (!gids.length) {
+    return;
+  }
+  if (!webuiSettings.options.confirmTaskRemoval) {
+    doRemove(gids);
+    return;
+  }
+  dialog.warning({
+    title: t('task.confirm.remove.title'),
+    content: t('task.confirm.remove.content', { count: gids.length }),
+    positiveText: t('task.confirm.remove.positive'),
+    negativeText: t('task.confirm.negative'),
+    onPositiveClick: () => doRemove(gids),
+  });
+}
+
 function removeOne(task) {
-  void runOnGids([task.gid], removeMethod(), t('task.action.remove'));
+  confirmRemoveThen([task.gid]);
 }
 
 function pauseSelected() {
@@ -240,17 +267,7 @@ function startNowSelected() {
 }
 
 function removeSelected() {
-  const gids = selectedGids.value;
-  if (!gids.length) {
-    return;
-  }
-  dialog.warning({
-    title: t('task.confirm.remove.title'),
-    content: t('task.confirm.remove.content', { count: gids.length }),
-    positiveText: t('task.confirm.remove.positive'),
-    negativeText: t('task.confirm.negative'),
-    onPositiveClick: () => void runOnGids(gids, removeMethod(), t('task.action.remove')),
-  });
+  confirmRemoveThen(selectedGids.value);
 }
 
 function clearCompleted() {
