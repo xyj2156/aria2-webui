@@ -12,6 +12,7 @@
  * 只是 gids 传一个。反馈统一 useMessage，危险操作 useDialog 二次确认。
  */
 import { computed, defineAsyncComponent, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useDialog, useMessage } from 'naive-ui';
 import {
   AddOutline,
@@ -66,6 +67,8 @@ const isWaiting = computed(() => pageType.value === 'waiting');
 
 const message = useMessage();
 const dialog = useDialog();
+const route = useRoute();
+const router = useRouter();
 
 // =================================================================== 详情弹窗
 /** 当前打开详情的任务 gid 与显隐；点行左键赋值并弹出 */
@@ -80,6 +83,47 @@ const newTaskShow = ref(false);
 function openDetail(task) {
   detailGid.value = task.gid;
   detailShow.value = true;
+}
+
+/** 直接按 gid 打开详情弹窗（供新建/重试的 ?detail= 桥接复用）。 */
+function openDetailByGid(gid) {
+  if (!gid) {
+    return;
+  }
+  detailGid.value = String(gid);
+  detailShow.value = true;
+}
+
+/** 跳到下载列表页；已在该页则只刷一次。 */
+function gotoDownloading() {
+  if (route.name === 'downloading') {
+    polling.trigger();
+  } else {
+    router.push({ name: 'downloading' });
+  }
+}
+
+/**
+ * 新建成功后按设置 afterCreatingNewTask 决定去向（单一事实源，改值即时生效）：
+ *   task-detail                    → 跳下载列表并打开首条新任务详情
+ *   task-list / task-list-downloading → 跳下载列表
+ *   stay-current-page / 无 gid 兜底 → 留在本页刷一次
+ */
+function applyAfterNewTask(gids) {
+  const mode = webuiSettings.options.afterCreatingNewTask;
+  const first = Array.isArray(gids) ? gids[0] : '';
+  if (mode === 'task-detail' && first) {
+    if (route.name === 'downloading') {
+      polling.trigger();
+      openDetailByGid(first);
+    } else {
+      router.push({ name: 'downloading', query: { detail: String(first) } });
+    }
+  } else if (mode === 'task-list' || mode === 'task-list-downloading') {
+    gotoDownloading();
+  } else {
+    polling.trigger();
+  }
 }
 
 // =================================================================== 数据与状态
@@ -393,6 +437,21 @@ function syncRunning() {
 }
 watch(intervalMs, syncRunning);
 
+/**
+ * 下载列表被 ?detail=<gid> 打开时（新建「跳详情」的跨页桥接）：挂载即弹详情，随后清掉 query，
+ * 避免刷新 / 回退重复弹出。仅 downloading 路由响应。
+ */
+watch(
+  () => route.query.detail,
+  (gid) => {
+    if (gid && route.name === 'downloading') {
+      openDetailByGid(gid);
+      router.replace({ name: 'downloading', query: { ...route.query, detail: undefined } });
+    }
+  },
+  { immediate: true },
+);
+
 const eventDisposers = [];
 onMounted(() => {
   syncRunning();
@@ -507,5 +566,5 @@ onUnmounted(() => {
   task-detail-dialog(v-model:show="detailShow" :gid="detailGid" @refresh="polling.trigger()")
 
   // ---------- 新建任务弹窗（工具栏「新建」弹出；创建成功后抢跑一轮列表刷新） ----------
-  new-task-dialog(v-model:show="newTaskShow" @refresh="polling.trigger()")
+  new-task-dialog(v-model:show="newTaskShow" @created="applyAfterNewTask")
 </template>

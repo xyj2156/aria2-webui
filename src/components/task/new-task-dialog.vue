@@ -26,7 +26,7 @@ const props = defineProps({
   show: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:show', 'refresh']);
+const emit = defineEmits(['update:show', 'refresh', 'created']);
 
 const message = useMessage();
 const global = useGlobalOptions();
@@ -179,20 +179,26 @@ async function submit(pause) {
   }
 
   try {
+    /** 本次新建成功的所有 gid，交给父级按「新建后动作」设置决定跳转/开详情 */
+    const created = [];
     if (isTorrent.value) {
       const { content, kind } = upload.value;
-      if (kind === 'metalink') {
-        await addMetalinkTask(content, [], options);
-      } else {
-        await addTorrentTask(content, [], options);
-      }
-      message.success(t('task.new.result.success', { count: 1 }));
+      const result = kind === 'metalink'
+        ? await addMetalinkTask(content, [], options)
+        : await addTorrentTask(content, [], options);
+      created.push(...(Array.isArray(result) ? result : [result]));
+      message.success(t('task.new.result.success', { count: created.length || 1 }));
     } else {
       const urls = parsed.value.urls;
       // 每行一个任务：一个 addUri 子调用，一次 multicall 往返全建完
       const results = await invokeBatch(urls.map((url) => ({ method: 'addUri', params: [[url], options] })));
       const failed = results.filter((row) => !row.ok);
       const ok = results.length - failed.length;
+      for (const row of results) {
+        if (row.ok) {
+          created.push(...(Array.isArray(row.value) ? row.value : [row.value]));
+        }
+      }
       if (failed.length) {
         const first = failed[0]?.error?.message || '';
         message.warning(`${t('task.new.result.success', { count: ok })}${first ? `（${first}）` : ''}`);
@@ -200,7 +206,7 @@ async function submit(pause) {
         message.success(t('task.new.result.success', { count: ok }));
       }
     }
-    emit('refresh');
+    emit('created', created.filter(Boolean));
     close();
   } catch (e) {
     message.error(t('task.new.result.failed', { message: e?.message || String(e) }));
