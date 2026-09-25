@@ -2269,6 +2269,7 @@ webui:
   browser-notification-sound: 浏览器通知声音
   browser-notification-frequency: 浏览器通知频次
   ws-reconnect-interval: WebSocket 自动重连时间
+  ws-reconnect-interval-help: '自动重连的起始等待时间（毫秒），之后每次翻倍、封顶约 30 秒；设为 0 关闭自动重连。仅 WebSocket 连接有效。'
   title-refresh-interval: 页面标题更新间隔
   global-stat-refresh-interval: 全局状态更新间隔
   task-refresh-interval: 任务信息更新间隔

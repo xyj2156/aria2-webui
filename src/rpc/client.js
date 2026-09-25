@@ -7,7 +7,7 @@
  * 上层禁止 import 本文件。
  */
 
-import { RPC_STATUS, isWebSocketProtocol } from './constants.js';
+import { RPC_STATUS, WS_RECONNECT_BASE_MS, isWebSocketProtocol } from './constants.js';
 import { assertNotMixedContent, normalizeConfig, qualifyMethod } from './payload.js';
 import { createHttpTransport } from './transport-http.js';
 import { createWsTransport } from './transport-ws.js';
@@ -34,6 +34,12 @@ export function createRpcEngine(initialConfig = {}) {
   let transport = null;
   /** @type {import('./types.js').RpcStatus} */
   let status = RPC_STATUS.IDLE;
+  /**
+   * WS 自动重连的指数退避「首个间隔基数」（毫秒）；<=0 关闭自动重连。
+   * 缓存于此，保证 transport 因配置变化重建后仍沿用上层设定的值；默认取协议常量，
+   * 运行期由 setReconnectInterval 从应用层（设置项）注入——rpc 层不 import store。
+   */
+  let reconnectBaseMs = WS_RECONNECT_BASE_MS;
   /** @type {Set<(status: import('./types.js').RpcStatus) => void>} */
   const statusListeners = new Set();
   /** @type {Map<string, Set<(params: unknown[]) => void>>} 推送方法名 → 处理函数集合 */
@@ -95,6 +101,10 @@ export function createRpcEngine(initialConfig = {}) {
       })
                 : createHttpTransport(() => config, setStatus);
 
+    // 新建通道后补一次当前重连基数（HTTP 无此方法，可选调用即 no-op），
+    // 保证配置变化重建 transport 时仍沿用设置里的值。
+    transport.setReconnectInterval?.(reconnectBaseMs);
+
     return transport;
   }
 
@@ -117,6 +127,18 @@ export function createRpcEngine(initialConfig = {}) {
         transport = null;
         setStatus(RPC_STATUS.IDLE);
       }
+    },
+
+    /**
+     * 设置 WS 自动重连的指数退避首个间隔基数（毫秒）；<=0 关闭自动重连。
+     * 值缓存在引擎，之后重建的 transport 会沿用；对当前 transport 立即生效。
+     * 由应用层从设置项 webSocketReconnectInterval 注入（rpc 层不读 store）。
+     * @param {number} ms
+     */
+    setReconnectInterval(ms) {
+      const next = Number(ms);
+      reconnectBaseMs = Number.isFinite(next) ? next : WS_RECONNECT_BASE_MS;
+      transport?.setReconnectInterval?.(reconnectBaseMs);
     },
 
     /** @returns {import('./types.js').RpcConfig} 副本，改它不影响引擎内部 */

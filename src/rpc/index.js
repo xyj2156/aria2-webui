@@ -68,6 +68,16 @@ export function getConnection() {
 }
 
 /**
+ * 设置 WS 通道自动重连的指数退避「首个间隔基数」（毫秒）；<=0 关闭自动重连。
+ * 由应用层把设置项 webSocketReconnectInterval 注入进来，rpc 层自身不认识 store。
+ * 引擎会缓存该值，transport 因切换连接而重建时仍沿用。
+ * @param {number} ms
+ */
+export function setWsReconnectInterval(ms) {
+  engine.setReconnectInterval(ms);
+}
+
+/**
  * 当前连接状态。onConnectionChange 注册时会自动回放一次，所以界面上一般只用订阅，
  * 这个留给不需要响应式的场合（比如导出诊断信息）。
  * @returns {import('./types.js').RpcStatus}

@@ -5720,6 +5720,7 @@ webui:
   browser-notification-sound: Browser Notification Sound
   browser-notification-frequency: Browser Notification Frequency
   ws-reconnect-interval: WebSocket Auto Reconnect Interval
+  ws-reconnect-interval-help: 'Initial delay (ms) before an automatic reconnect; it doubles each retry and is capped at ~30s. Set to 0 to disable auto-reconnect. WebSocket connections only.'
   title-refresh-interval: Updating Page Title Interval
   global-stat-refresh-interval: Updating Global Stat Interval
   task-refresh-interval: Updating Task Information Interval

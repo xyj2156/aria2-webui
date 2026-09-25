@@ -29,6 +29,8 @@
  * @property {(method: string, params?: unknown[]) => Promise<unknown>} call  发一次调用，成功时 resolve 出
  *   result
  * @property {() => void} close                                               主动关闭；调用后 WS 不再自动重连
+ * @property {(ms: number) => void} [setReconnectInterval]                     仅 WS 通道实现：设置自动重连
+ *   的指数退避「首个间隔基数」（毫秒），<=0 表示关闭自动重连。HTTP 通道无此方法。
  */
 
 /**

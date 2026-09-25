@@ -193,7 +193,7 @@ function addConnection() {
         setting-field(
           v-if="settings.isCurrentRpcUseWebSocket"
           :label="t('webui.ws-reconnect-interval')"
-          needs-reload
+          description-key="webui.ws-reconnect-interval-help"
         )
           n-select(:value="opts.webSocketReconnectInterval" :options="wsIntervalOptions" class="w-[200px]" @update:value="(v) => upd('webSocketReconnectInterval', v)")
         setting-field(:label="t('webui.title-refresh-interval')")

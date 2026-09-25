@@ -41,6 +41,11 @@ export function createWsTransport(getConfig, handlers) {
   let reconnectTimer = null;
   /** 已经重连到第几轮，决定本次等待多久；连上后归零 */
   let attempt = 0;
+  /**
+   * 自动重连指数退避的「首个间隔基数」（毫秒）；<=0 关闭自动重连。
+   * 默认取协议常量，运行期由 setReconnectInterval 用设置项 webSocketReconnectInterval 覆盖。
+   */
+  let reconnectBaseMs = WS_RECONNECT_BASE_MS;
   /** 本端调过 close() 后不再自动重连。切换连接配置时 client 会新建一个通道，所以不必复位 */
   let disposed = false;
 
@@ -157,7 +162,14 @@ export function createWsTransport(getConfig, handlers) {
       return;
     }
 
-    const delay = Math.min(WS_RECONNECT_BASE_MS * 2 ** attempt, WS_RECONNECT_MAX_MS);
+    // 基数 <=0 = 关闭自动重连（设置项 webSocketReconnectInterval 的语义）：不再排下一轮，
+    // 状态标为 error 让顶栏显示「连接异常」，等用户主动重试（再次调用 / 切换连接）。
+    if (reconnectBaseMs <= 0) {
+      setStatus(RPC_STATUS.ERROR);
+      return;
+    }
+
+    const delay = Math.min(reconnectBaseMs * 2 ** attempt, WS_RECONNECT_MAX_MS);
     attempt += 1;
     setStatus(RPC_STATUS.RECONNECTING);
     reconnectTimer = setTimeout(() => {
@@ -269,5 +281,20 @@ export function createWsTransport(getConfig, handlers) {
     setStatus(RPC_STATUS.IDLE);
   }
 
-  return { kind: 'ws', call, close };
+  /**
+   * 运行期调整自动重连的指数退避首个间隔基数（毫秒）。值来自设置项 webSocketReconnectInterval，
+   * 由引擎转发进来（rpc 层不 import store）。<=0 关闭自动重连，并立即撤掉已排定的重连；
+   * 新的正数在下一次断线排程时生效。
+   * @param {number} ms
+   */
+  function setReconnectInterval(ms) {
+    const next = Number(ms);
+    reconnectBaseMs = Number.isFinite(next) ? next : 0;
+    if (reconnectBaseMs <= 0 && reconnectTimer !== null) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+  }
+
+  return { kind: 'ws', call, close, setReconnectInterval };
 }

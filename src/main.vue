@@ -3,12 +3,15 @@ import { onConnectionChange } from '@/rpc';
 import { debugLog } from '@/utils/debug.js';
 import { useThemeSync } from '@/composables/use-theme-sync.js';
 import { useLanguageSync } from '@/composables/use-language-sync.js';
+import { useWsReconnectSync } from '@/composables/use-ws-reconnect-sync.js';
 import { startGlobalStat } from '@/composables/use-global-status.js';
 import { startPageTitle } from '@/composables/use-page-title.js';
 
 // 主题 / 语言都以设置 store 为单一事实源，启动即同步到 isDark 与 i18n（各应用一次即可）
 useThemeSync();
 useLanguageSync();
+// WS 自动重连间隔同样以设置 store 为单一事实源，启动即同步、改设置即时生效（注入 rpc 引擎）
+useWsReconnectSync();
 
 // 尝试连接
 const connectionStore = useConnectionStore();
