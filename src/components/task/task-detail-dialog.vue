@@ -46,8 +46,16 @@ const emit = defineEmits(['update:show', 'refresh']);
  *  用函数每轮现取，改设置即时生效。列表与详情共用同一设置项。 */
 const webuiSettings = useWebuiSettingsStore();
 const intervalMs = () => Number(webuiSettings.options.downloadTaskRefreshInterval) || 0;
-// 分片方块图 DOM 上限：超过就不画，避免上千个方块拖垮弹窗（阈值后续接设置项）
-const PIECE_CAP = 4000;
+// 设置项 showPiecesInfoInTaskDetailPage → 允许显示「分片」tab 的最大分片数。
+// never=0（永不显示）、always=不限；大数量的 DOM 渲染成本由 detail-pieces 内部切画布兜底。
+const PIECES_MAX_BY_MODE = {
+  never: 0,
+  le1024: 1024,
+  le10240: 10240,
+  le102400: 102400,
+  always: Number.POSITIVE_INFINITY,
+};
+const piecesThreshold = (mode) => PIECES_MAX_BY_MODE[mode] ?? PIECES_MAX_BY_MODE.le10240;
 
 const message = useMessage();
 const monitor = useMonitorStore();
@@ -65,9 +73,15 @@ const isSettled = computed(() => ['complete', 'error', 'removed'].includes(task.
 const showSpeedChart = computed(() => task.value?.status === 'active' || task.value?.status === 'waiting');
 const showPeers = computed(() => isBT.value && task.value?.status === 'active');
 const hasFiles = computed(() => (task.value?.raw.files?.length ?? 0) > 0);
-const showPieces = computed(
-  () => Boolean(task.value?.bitfield) && (task.value?.numPieces ?? 0) > 0 && (task.value?.numPieces ?? 0) <= PIECE_CAP,
-);
+const showPieces = computed(() => {
+  const numPieces = task.value?.numPieces ?? 0;
+  if (!task.value?.bitfield || numPieces <= 0) {
+    return false;
+  }
+  // 「是否显示分片 tab」由全局设置的阈值决定（never→隐藏、always→不限）；
+  // 改设置即时生效。大数量渲染走 detail-pieces 内部的画布兜底，这里不再限 DOM。
+  return numPieces <= piecesThreshold(webuiSettings.options.showPiecesInfoInTaskDetailPage);
+});
 // 完成/移除：设置改了没意义，直接隐藏设置 tab；活动/等待/暂停/错误保留可编辑。
 const showSettings = computed(() => Boolean(task.value) && !['complete', 'removed'].includes(task.value?.status));
 
