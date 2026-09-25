@@ -22,9 +22,6 @@ import { load } from 'js-yaml';
 // 兜底语言静态导入，永远立即可用
 import zhCNYaml from './locales/zh-CN.yaml?raw';
 
-/** 语言代码存本地，刷新后保持。key 带工程前缀，避免同域下与别的工程串味 */
-const STORAGE_KEY = 'aria2-webui.locale';
-
 /** 兜底语言：新增语言时只改这一处 */
 const FALLBACK_LOCALE = 'zh-CN';
 
@@ -94,29 +91,12 @@ export function resolveBrowserLocale(browserLanguage) {
 }
 
 /**
- * 读上次选过的语言。隐私模式下 localStorage 会抛，SSR 下压根没有，包一层。
- * @returns {string}
+ * 当前语言：模块级 ref，全应用共享一份。
+ *
+ * 持久化不在这里做——语言以设置 store 的 language 为单一事实源，由 @/composables/use-language-sync
+ * 在启动/切换时调 setLocale 同步进来；本模块只负责解析浏览器语言作为初值、持有当前值与切包。
  */
-function readStoredLocale() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return findLanguage(stored) ? stored : '';
-  } catch {
-    return '';
-  }
-}
-
-/** @param {string} code */
-function writeStoredLocale(code) {
-  try {
-    localStorage.setItem(STORAGE_KEY, code);
-  } catch {
-    // 存不下只影响下次访问的默认值，本次切换照样生效
-  }
-}
-
-/** 当前语言：模块级 ref，全应用共享一份，不必动用 pinia */
-const current = ref(readStoredLocale() || resolveBrowserLocale());
+const current = ref(resolveBrowserLocale());
 
 // 初始语言如果不是兜底语言，触发异步加载
 ensureMessages(current.value);
@@ -181,7 +161,6 @@ export async function setLocale(code) {
   await ensureMessages(code);
 
   current.value = code;
-  writeStoredLocale(code);
 
   if (typeof document !== 'undefined') {
     document.documentElement.lang = code;

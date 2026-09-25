@@ -2245,3 +2245,70 @@ options:
       自定义
       User
       Agent
+
+# ── WebUI（前端自身）设置页：全局 tab 及通用文案
+common:
+  confirm: 确认
+  cancel: 取消
+
+webui:
+  global: 全局
+  version: 版本
+  language: 语言
+  theme: 主题
+  theme-light: 浅色
+  theme-dark: 深色
+  theme-system: 跟随系统
+  debug-mode: 调试模式
+  page-title: 页面标题
+  page-title-help: '支持占位符：${title}、${downspeed}、${upspeed}、${rpcprofile}（需页面标题引擎接入后才实时生效）'
+  browser-notification: 启用浏览器通知
+  browser-notification-sound: 浏览器通知声音
+  browser-notification-frequency: 浏览器通知频次
+  ws-reconnect-interval: WebSocket 自动重连时间
+  title-refresh-interval: 页面标题更新间隔
+  global-stat-refresh-interval: 全局状态更新间隔
+  task-refresh-interval: 任务信息更新间隔
+  keyboard-shortcuts: 键盘快捷键
+  keyboard-shortcuts-help: 支持的键盘快捷键
+  swipe-gesture: 滑动手势
+  drag-and-drop-tasks: 拖拽任务排序
+  rpc-list-display-order: RPC 列表显示顺序
+  independent-display-order: 各任务列表页面使用独立显示顺序
+  after-creating-new-task: 创建新任务后执行操作
+  after-retrying-task: 重试任务后执行操作
+  remove-old-task-after-retrying: 重试任务后删除原任务
+  confirm-task-removal: 任务删除前确认
+  include-prefix-when-copying: 任务详情页复制时包括前缀
+  show-pieces-info: 任务详情页显示区块信息
+  unlimited: 无限制
+  freq-high: 高 (最多 10 条通知 / 每分钟)
+  freq-middle: 中 (最多 1 条通知 / 每分钟)
+  freq-low: 低 (最多 1 条通知 / 每5分钟)
+  recently-used: 最近使用
+  rpc-alias: RPC 别名
+  goto-task-list: 转到任务列表页面
+  goto-task-detail: 转到任务详情页面
+  goto-downloading: 转到正在下载列表页面
+  stay-current: 留在当前页面
+  refresh-current-page: 刷新当前页面
+  always: 始终
+  never: 从不
+  pieces-le: '区块数量小于等于 {value}'
+  import-settings: 导入设置
+  export-settings: 导出设置
+  reset-settings: 重置设置
+  confirm-reset: 确定要重置所有设置吗？
+  import: 导入
+  copy: 复制
+  download: 下载
+  operation-succeeded: 操作成功
+  copy-failed: 复制失败
+  import-invalid: 设置数据格式无效！
+  setting:
+    reload-hint: 需刷新页面生效
+  time:
+    seconds: 秒
+    minutes: 分
+    milliseconds: 毫秒
+    disabled: 禁用

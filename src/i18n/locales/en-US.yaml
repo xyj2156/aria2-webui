@@ -5696,3 +5696,70 @@ options:
       Custom
       User
       Agent
+
+# ── WebUI settings page: global tab & shared texts
+common:
+  confirm: Confirm
+  cancel: Cancel
+
+webui:
+  global: Global
+  version: Version
+  language: Language
+  theme: Theme
+  theme-light: Light
+  theme-dark: Dark
+  theme-system: Follow system settings
+  debug-mode: Debug Mode
+  page-title: Page Title
+  page-title-help: 'Supports placeholders: ${title}, ${downspeed}, ${upspeed}, ${rpcprofile} (takes live effect only after the page-title engine is wired up)'
+  browser-notification: Enable Browser Notification
+  browser-notification-sound: Browser Notification Sound
+  browser-notification-frequency: Browser Notification Frequency
+  ws-reconnect-interval: WebSocket Auto Reconnect Interval
+  title-refresh-interval: Updating Page Title Interval
+  global-stat-refresh-interval: Updating Global Stat Interval
+  task-refresh-interval: Updating Task Information Interval
+  keyboard-shortcuts: Keyboard Shortcuts
+  keyboard-shortcuts-help: Supported Keyboard Shortcuts
+  swipe-gesture: Swipe Gesture
+  drag-and-drop-tasks: Change Tasks Order by Drag-and-drop
+  rpc-list-display-order: RPC List Display Order
+  independent-display-order: Each Task List Page Uses Independent Display Order
+  after-creating-new-task: Action After Creating New Tasks
+  after-retrying-task: Action After Retrying Task
+  remove-old-task-after-retrying: Remove Old Tasks After Retrying
+  confirm-task-removal: Confirm Task Removal
+  include-prefix-when-copying: Include Prefix When Copying From Task Details
+  show-pieces-info: Show Pieces Info In Task Detail Page
+  unlimited: Unlimited
+  freq-high: High (Up to 10 Notifications / 1 Minute)
+  freq-middle: Middle (Up to 1 Notification / 1 Minute)
+  freq-low: Low (Up to 1 Notification / 5 Minutes)
+  recently-used: Recently Used
+  rpc-alias: RPC Alias
+  goto-task-list: Navigate to Task List Page
+  goto-task-detail: Navigate to Task Detail Page
+  goto-downloading: Navigate to Downloading Tasks Page
+  stay-current: Stay on Current Page
+  refresh-current-page: Refresh current page
+  always: Always
+  never: Never
+  pieces-le: 'Pieces Amount is Less than or Equal to {value}'
+  import-settings: Import Settings
+  export-settings: Export Settings
+  reset-settings: Reset Settings
+  confirm-reset: Are you sure you want to reset all settings?
+  import: Import
+  copy: Copy
+  download: Download
+  operation-succeeded: Operation Succeeded
+  copy-failed: Copy failed
+  import-invalid: Invalid settings data format!
+  setting:
+    reload-hint: Requires page refresh to take effect
+  time:
+    seconds: Seconds
+    minutes: Minutes
+    milliseconds: Milliseconds
+    disabled: Disabled

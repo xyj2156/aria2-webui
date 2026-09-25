@@ -1,13 +1,23 @@
-import { useDark, useToggle } from '@vueuse/core';
+import { ref, watch } from 'vue';
 
 /**
- * 主题亮/暗状态单例，模块作用域只建一次，全应用共享。
+ * 主题亮/暗显示态单例，模块作用域只建一次，全应用共享。
  *
- * 为什么必须集中：useDark 每个调用点各自持有一个 ref 实例，如果在 layout 和切换按钮里分别
- * useDark，一处切换不会同步另一处的 ref（它们各自只认自己的写入 + storage 事件），
- * 结果就是 NConfigProvider 的 :theme 和按钮图标对不上。所以这里建好导出，
- * layout 读 isDark 派生 :theme，ThemeSwitch 读 isDark/toggleDark 做切换与动画。
+ * isDark 只是「显示态」：layout 读它派生 NConfigProvider 的 :theme，theme-switch 读它选图标，
+ * 本模块还负责把它镜像到 <html class="dark">（供换肤动画与根底色等 CSS 使用）。
+ *
+ * 它不再是持久化来源。主题以设置 store 的 theme（light/dark/system）为单一事实源，
+ * 由 @/composables/use-theme-sync 监听 store 变化并写入 isDark（ThemeSwitch / 设置页都只改 store.theme）。
+ * 因此这里不再用 useDark，也不再往 localStorage 写独立的 theme 键（原 aria2-webui.theme-dark 已废弃清除）。
  */
-export const isDark = useDark({ storageKey: 'aria2-webui.theme-dark' });
+export const isDark = ref(false);
 
-export const toggleDark = useToggle(isDark);
+// 同步到 <html> 的 dark 类；sync flush 让 isDark 一变、类立即翻转，
+// 与换肤动画 startViewTransition 回调里的 await nextTick 时序一致。
+watch(
+  isDark,
+  (dark) => {
+    document.documentElement.classList.toggle('dark', dark);
+  },
+  { flush: 'sync', immediate: true },
+);

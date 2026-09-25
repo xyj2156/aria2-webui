@@ -1,17 +1,26 @@
 <script setup>
 // 主题切换按钮 + element-plus 官网同款圆形换肤动画。
-// 状态来自 @/composables/useThemeMode 的单例 isDark（layout 的 :theme 也读同一个）。
+// 状态是「单一事实源」：点击只写设置 store 的 theme（light/dark），isDark 由 @/composables/use-theme-sync
+// 的监听器统一应用（layout 的 :theme 与图标都读 isDark）。这样顶栏按钮与 WebUI 设置页的主题行永远同步。
 //
 // 换肤动画刻意用「CSS style 形式」而非 JS documentElement.animate()：
-// JS 只做两件事——把圆心/半径写进三个 CSS 自定义属性、在 startViewTransition 回调里切
-// html.dark；真正的 clip-path 圆形揭示完全声明在下方 <style> 的 @keyframes 里，
+// JS 只做两件事——把圆心/半径写进三个 CSS 自定义属性、在 startViewTransition 回调里改 theme；
+// 真正的 clip-path 圆形揭示完全声明在下方 <style> 的 @keyframes 里，
 // 图层顺序也由 html.dark 决定。JS 全程不碰任何「翻层类」，因此连点不会残留脏类，
 // 也就不会出现「上一次动画的临时类破坏这一次过渡」那类时序问题。
 import { nextTick } from 'vue';
 import { MoonOutline, SunnyOutline } from '@vicons/ionicons5';
 
 import { t } from '@/i18n/index.js';
-import { isDark, toggleDark } from '@/composables/use-theme-mode.js';
+import { isDark } from '@/composables/use-theme-mode.js';
+import { useWebuiSettingsStore } from '@/store/webui-settings.js';
+
+const settings = useWebuiSettingsStore();
+
+/** 写 store：亮↔暗二值翻转（当前是暗→写 light，否则写 dark；system 也按实际明暗翻转） */
+function flipTheme() {
+  settings.set('theme', isDark.value ? 'light' : 'dark');
+}
 
 function handleClick(event) {
   const { clientX, clientY } = event;
@@ -28,13 +37,14 @@ function handleClick(event) {
 
   // 不支持 View Transitions（Safari / 旧内核）→ 直接切，无动画，不卡住
   if (typeof root.startViewTransition !== 'function') {
-    toggleDark();
+    flipTheme();
     return;
   }
 
-  // 回调里切主题并 await nextTick，让 Vue 把 Naive 配色重渲染完，截到的新快照才是完整配色
+  // 回调里改 theme 并 await nextTick，让同步监听器把 isDark 落到 html.dark、
+  // Vue 把 Naive 配色重渲染完，截到的新快照才是完整配色
   root.startViewTransition(async () => {
-    toggleDark();
+    flipTheme();
     await nextTick();
   });
 }
