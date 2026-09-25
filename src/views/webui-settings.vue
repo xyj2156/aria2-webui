@@ -200,7 +200,7 @@ function addConnection() {
           n-select(:value="opts.titleRefreshInterval" :options="titleIntervalOptions" class="w-[200px]" @update:value="(v) => upd('titleRefreshInterval', v)")
         setting-field(:label="t('webui.global-stat-refresh-interval')" needs-reload)
           n-select(:value="opts.globalStatRefreshInterval" :options="statIntervalOptions" class="w-[200px]" @update:value="(v) => upd('globalStatRefreshInterval', v)")
-        setting-field(:label="t('webui.task-refresh-interval')" needs-reload)
+        setting-field(:label="t('webui.task-refresh-interval')")
           n-select(:value="opts.downloadTaskRefreshInterval" :options="titleIntervalOptions" class="w-[200px]" @update:value="(v) => upd('downloadTaskRefreshInterval', v)")
         setting-field(:label="t('webui.keyboard-shortcuts')" description-key="webui.keyboard-shortcuts-help")
           n-switch(:value="opts.keyboardShortcuts" @update:value="(v) => upd('keyboardShortcuts', v)")
