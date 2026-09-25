@@ -1,5 +1,6 @@
 <script setup>
 import { onConnectionChange } from '@/rpc';
+import { debugLog } from '@/utils/debug.js';
 import { useThemeSync } from '@/composables/use-theme-sync.js';
 import { useLanguageSync } from '@/composables/use-language-sync.js';
 import { startGlobalStat } from '@/composables/use-global-status.js';
@@ -20,7 +21,7 @@ startGlobalStat();
 startPageTitle();
 
 onConnectionChange(function (status) {
-  console.log('connection change', status);
+  debugLog('connection change', status);
 });
 </script>
 
