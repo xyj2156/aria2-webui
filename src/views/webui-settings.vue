@@ -33,6 +33,19 @@ function upd(key, value) {
   settings.set(key, value);
 }
 
+/**
+ * 连接 tab 的展示顺序，受设置 rpcListDisplayOrder 驱动（单一事实源，改值即时生效）：
+ *  - recentlyUsed：最近激活的在前（依赖 connections store 的 lastUsedAt）；从未激活的按创建序垫底（sort 稳定）
+ *  - rpcAlias：按连接名字典序（数字感知、忽略大小写）
+ */
+const sortedConnections = computed(() => {
+  const list = [...connections.connections];
+  if (settings.options.rpcListDisplayOrder === 'rpcAlias') {
+    return list.sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), undefined, { numeric: true, sensitivity: 'base' }));
+  }
+  return list.sort((a, b) => (Number(b.lastUsedAt) || 0) - (Number(a.lastUsedAt) || 0));
+});
+
 /** 语言 / 主题：只写 store；分别由 use-language-sync、use-theme-sync 的监听器同步到 i18n 与 isDark */
 function onLanguageChange(code) {
   upd('language', code);
@@ -208,7 +221,7 @@ function addConnection() {
           n-switch(:value="opts.swipeGesture" @update:value="(v) => upd('swipeGesture', v)")
         setting-field(:label="t('webui.drag-and-drop-tasks')")
           n-switch(:value="opts.dragAndDropTasks" @update:value="(v) => upd('dragAndDropTasks', v)")
-        setting-field(:label="t('webui.rpc-list-display-order')" needs-reload)
+        setting-field(:label="t('webui.rpc-list-display-order')")
           n-select(:value="opts.rpcListDisplayOrder" :options="rpcOrderOptions" class="w-[200px]" @update:value="(v) => upd('rpcListDisplayOrder', v)")
         setting-field(:label="t('webui.independent-display-order')")
           n-switch(:value="opts.taskListIndependentDisplayOrder" @update:value="(v) => upd('taskListIndependentDisplayOrder', v)")
@@ -230,7 +243,7 @@ function addConnection() {
           n-button(size="small" type="error" @click="resetAll") {{ t('webui.reset-settings') }}
 
     // ══════════════════════════════════════════════════ 连接（RPC Profile）
-    n-tab-pane(v-for="item in connections.connections" :key="item.id" :name="item.id")
+    n-tab-pane(v-for="item in sortedConnections" :key="item.id" :name="item.id")
       template(#tab)
         .flex.items-center.gap-1
           span {{ item.name }}

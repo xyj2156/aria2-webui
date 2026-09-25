@@ -18,8 +18,9 @@
 /**
  * 本 store 中一条完整的连接记录，在 RpcConfig 基础上附加了 UI 管理字段。
  * @typedef {import('../rpc/types.js').RpcConfig & {
- *   id:   string
- *   name: string
+ *   id:         string
+ *   name:       string
+ *   lastUsedAt: number   最近一次被激活的时间戳（ms），供「RPC 列表显示顺序=最近使用」排序；0=从未激活
  * }} Connection
  */
 
@@ -52,13 +53,14 @@ function generateId() {
  */
 function createConnection(overrides = {}) {
   return {
-    id:       generateId(),
-    name:     'localhost',
-    host:     'localhost',
-    port:     6800,
-    path:     '/jsonrpc',
-    protocol: 'http',
-    secret:   '',
+    id:         generateId(),
+    name:       'localhost',
+    host:       'localhost',
+    port:       6800,
+    path:       '/jsonrpc',
+    protocol:   'http',
+    secret:     '',
+    lastUsedAt: 0,
     ...overrides,
   };
 }
@@ -182,12 +184,14 @@ export const useConnectionStore = defineStore('connections', function () {
    * @returns {boolean} 是否设置成功（ID 不存在时返回 false）
    */
   function setActive(id) {
-    const exists = connections.value.some((conn) => conn.id === id);
-    if (!exists) {
+    const conn = connections.value.find((c) => c.id === id);
+    if (!conn) {
       return false;
     }
     activeId.value = id;
-    setConnection(getById(id));
+    // 记一次「最近使用时间」，供 rpcListDisplayOrder=recentlyUsed 排序（useStorage 自动持久化）
+    conn.lastUsedAt = Date.now();
+    setConnection(conn);
     return true;
   }
 
