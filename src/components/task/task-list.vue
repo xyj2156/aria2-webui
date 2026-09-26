@@ -233,6 +233,15 @@ const retryableSelectedGids = computed(() =>
 );
 const hasRetryableSelection = computed(() => retryableSelectedGids.value.length > 0);
 
+/**
+ * 能否拖拽排序：受 dragAndDropTasks 开关门控，且仅限「等待中」页、搜索未过滤时——
+ * aria2 的队列顺序只对等待队列有意义（下载中在跑、已停止是历史），搜索过滤后行序与
+ * 队列真实位置不再对应，故这两种情况禁用拖拽（对齐参考实现）。
+ */
+const canDrag = computed(
+  () => Boolean(webuiSettings.options.dragAndDropTasks) && isWaiting.value && !search.value.trim(),
+);
+
 // =================================================================== 动作
 /**
  * 对一批 gid 发同一个方法，统一处理计数、反馈、清选、即时刷新。
@@ -405,6 +414,62 @@ function onDetailRetried() {
   detailShow.value = false;
   polling.trigger();
   applyAfterRetry();
+}
+
+// =================================================================== 拖拽排序（waiting 页，受 dragAndDropTasks）
+/** 拖起行的原索引；-1 表示当前没在拖。 */
+const dragFrom = ref(-1);
+
+/** 把某等待任务移到队列绝对位置 toIndex（aria2 changePosition POS_SET，仅对等待队列有效）。 */
+async function moveTaskByDrag(gid, toIndex) {
+  try {
+    await invokeBatch([{ method: 'changePosition', params: [gid, toIndex, 'POS_SET'] }]);
+    polling.trigger();
+  } catch (e) {
+    message.error(e?.message || String(e));
+  }
+}
+
+function onDragStart(index, event) {
+  if (!canDrag.value) {
+    return;
+  }
+  dragFrom.value = index;
+  polling.setPaused(true); // 拖拽期间停轮询，避免行序被刷新打断
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    try {
+      event.dataTransfer.setData('text/plain', String(index));
+    } catch {
+      // 个别浏览器 setData 受限，忽略
+    }
+  }
+}
+
+function onDragOver(event) {
+  if (!canDrag.value || dragFrom.value < 0) {
+    return;
+  }
+  event.preventDefault(); // 允许落放
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
+  }
+}
+
+function onDrop(index) {
+  const from = dragFrom.value;
+  if (from < 0 || from === index) {
+    return;
+  }
+  const moved = visibleRows.value[from];
+  if (moved) {
+    void moveTaskByDrag(moved.gid, index);
+  }
+}
+
+function onDragEnd() {
+  dragFrom.value = -1;
+  polling.setPaused(false); // 恢复轮询并立刻补跑一轮，落到 aria2 返回的最新顺序
 }
 
 function clearCompleted() {
@@ -644,11 +709,16 @@ onUnmounted(() => {
   n-spin.grow(:show="loading" :description="t('task.loading')" content-class="flex flex-col")
     ul.list-none.m-0.p-0.flex.flex-col.gap-1.overflow-auto
       task-list-row(
-        v-for="task in visibleRows"
+        v-for="(task, index) in visibleRows"
         :key="task.gid"
         :task="task"
         :selected="isSelected(task.gid)"
         :page-type="pageType"
+        :draggable="canDrag ? 'true' : 'false'"
+        @dragstart="onDragStart(index, $event)"
+        @dragover="onDragOver($event)"
+        @drop="onDrop(index)"
+        @dragend="onDragEnd"
         @toggle="toggleSelect(task.gid)"
         @contextmenu="openContextMenu($event, task)"
         @open="openDetail(task)"
