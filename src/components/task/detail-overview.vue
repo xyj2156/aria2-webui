@@ -5,8 +5,10 @@
  * 速度图依赖 echarts，较重，做成异步组件——只有真的渲染到速度图时才拉 echarts 分片。
  */
 import { computed, defineAsyncComponent, ref } from 'vue';
+import { useMessage } from 'naive-ui';
 import { t } from '@/i18n/index.js';
 import { getTaskErrorMessage } from '@/rpc';
+import { useWebuiSettingsStore } from '@/store/webui-settings.js';
 import {
   formatDateTime,
   formatPercent,
@@ -30,6 +32,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['jump']);
+
+const message = useMessage();
+const webuiSettings = useWebuiSettingsStore();
 
 const trackersExpanded = ref(false);
 
@@ -104,10 +109,31 @@ const trackers = computed(() => {
   const announce = props.task.raw?.bittorrent?.announceList ?? [];
   return announce.flat().filter(Boolean);
 });
+
+/**
+ * 复制概览全部字段（对齐参考 copyRows）：受 includePrefixWhenCopyingFromTaskDetails 决定
+ * 每行是「标签: 值」还是仅「值」；多行以换行拼接。写剪贴板失败给提示。
+ */
+async function copyOverview() {
+  const withPrefix = Boolean(webuiSettings.options.includePrefixWhenCopyingFromTaskDetails);
+  const text = rows.value
+    .map((row) => (withPrefix ? `${row.label}: ${row.value}` : row.value))
+    .join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    message.success(`${t('webui.copy')} ✓`);
+  } catch {
+    message.error(t('webui.copy-failed'));
+  }
+}
 </script>
 
 <template lang="pug">
 .flex.flex-col.gap-3
+  .flex.justify-end.-mb-1
+    n-button(text size="tiny" class="text-[#2080f0]" @click="copyOverview")
+      | {{ t('webui.copy') }}
+
   div(v-for="row in rows" :key="row.label" class="grid grid-cols-[160px_minmax(0,1fr)] items-start gap-x-3 py-1.5 border-b border-[#808080]/15 text-[13px]")
     div(class="opacity-70") {{ row.label }}
     div(class="min-w-0 break-words")
