@@ -68,6 +68,9 @@ export function startPageTitle() {
 
   function syncRunning() {
     if (intervalMs() > 0) {
+      // 先 stop 清掉可能挂着的旧定时器，再 start 按当前（新）间隔重排——
+      // usePolling 的 scheduleNext 遇已挂起 timer 会跳过，不改值就会等旧一轮才生效。
+      polling.stop();
       polling.start();
     } else {
       polling.stop();
