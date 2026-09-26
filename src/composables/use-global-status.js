@@ -73,10 +73,12 @@ export function startGlobalStat() {
   let running = false;
   function syncRunning() {
     const shouldRun = globalStat.connected && intervalMs() > 0;
-    if (shouldRun && !running) {
+    if (shouldRun) {
       running = true;
+      // 不加「!running」守卫：每次都用当前间隔重排定时器（start 内部会 clearTimeout 旧的再排新的），
+      // 这样在轮询已运行时改设置也能立即按新间隔生效，无需等旧的一轮、更无需重载。
       polling.start();
-    } else if (!shouldRun && running) {
+    } else if (running) {
       running = false;
       polling.stop();
       resetStat();
