@@ -23,9 +23,13 @@ import {
 import { t } from '@/i18n/index.js';
 import { naiveDateLocale, naiveLocale } from '@/i18n/naive.js';
 import { isDark } from '@/composables/use-theme-mode.js';
+import { useKeyboardShortcuts } from '@/composables/use-keyboard-shortcuts.js';
 
 const route = useRoute();
 const router = useRouter();
+
+// 全局键盘快捷键监听：在壳层装一次（捕获阶段），具体动作由各页面注册表登记
+useKeyboardShortcuts();
 
 // 侧栏折叠态：受控绑定，触发条点它时 n-menu 一起收窄成图标条（否则菜单会溢出到 64px 里）
 const collapsed = ref(false);

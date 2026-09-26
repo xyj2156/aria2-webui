@@ -2282,7 +2282,7 @@ webui:
   global-stat-refresh-interval: 全局状态更新间隔
   task-refresh-interval: 任务信息更新间隔
   keyboard-shortcuts: 键盘快捷键
-  keyboard-shortcuts-help: 支持的键盘快捷键
+  keyboard-shortcuts-help: '开启后可用快捷键：Ctrl/Cmd+A 全选，Delete 删除选中，Ctrl/Cmd+F 聚焦搜索框（焦点在输入框时不误触全选/删除）'
   swipe-gesture: 滑动手势
   drag-and-drop-tasks: 拖拽任务排序
   rpc-list-display-order: RPC 列表显示顺序

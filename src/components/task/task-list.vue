@@ -31,6 +31,7 @@ const NewTaskDialog = defineAsyncComponent(() => import('@/components/task/new-t
 import { processTaskList } from '@/services/task-service.js';
 import { retryTask } from '@/services/retry-service.js';
 import { usePolling } from '@/composables/use-polling.js';
+import { setKeyAction } from '@/composables/use-keyboard-shortcuts.js';
 import { useWebuiSettingsStore } from '@/store/webui-settings.js';
 import {
   canPushEvents,
@@ -132,6 +133,8 @@ const rows = ref([]);
 const loading = ref(true);
 const error = ref('');
 const search = ref('');
+/** 搜索框实例，供 Ctrl/Cmd+F 快捷键聚焦 */
+const searchEl = ref(null);
 /** 勾选的 gid 集合（reactive Set，add/delete 均被 Vue 追踪） */
 const selected = reactive(new Set());
 
@@ -559,9 +562,18 @@ onMounted(() => {
   }
   document.addEventListener('click', closeContextMenu);
   document.addEventListener('keydown', onKeydown);
+
+  // 注册本页快捷键动作（Ctrl/Cmd+A 全选、Delete 删除选中、Ctrl/Cmd+F 聚焦搜索）；
+  // 是否真正响应由 use-keyboard-shortcuts 里的 keyboardShortcuts 开关 + 文本框守卫决定。
+  setKeyAction('selectAll', () => selectWhere(() => true));
+  setKeyAction('delete', () => removeSelected());
+  setKeyAction('find', () => searchEl.value?.focus());
 });
 
 onUnmounted(() => {
+  setKeyAction('selectAll', null);
+  setKeyAction('delete', null);
+  setKeyAction('find', null);
   for (const dispose of eventDisposers) {
     dispose();
   }
@@ -620,7 +632,7 @@ onUnmounted(() => {
     // 弹性空隙：把搜索顶到最右
     .grow.shrink
 
-    n-input(class="w-[220px] max-w-[40vw] shrink" size="small" clearable :placeholder="t('task.search.placeholder')" v-model:value="search")
+    n-input(ref="searchEl" class="w-[220px] max-w-[40vw] shrink" size="small" clearable :placeholder="t('task.search.placeholder')" v-model:value="search")
       template(#prefix)
         n-icon(:component="SearchOutline")
 

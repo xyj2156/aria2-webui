@@ -5733,7 +5733,7 @@ webui:
   global-stat-refresh-interval: Updating Global Stat Interval
   task-refresh-interval: Updating Task Information Interval
   keyboard-shortcuts: Keyboard Shortcuts
-  keyboard-shortcuts-help: Supported Keyboard Shortcuts
+  keyboard-shortcuts-help: 'When enabled: Ctrl/Cmd+A select all, Delete remove selected, Ctrl/Cmd+F focus the search box (typing in an input does not trigger select-all / delete)'
   swipe-gesture: Swipe Gesture
   drag-and-drop-tasks: Change Tasks Order by Drag-and-drop
   rpc-list-display-order: RPC List Display Order
