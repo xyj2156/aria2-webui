@@ -99,6 +99,7 @@ task:
   notify:
     completed: Download completed
     failed: Download failed
+  chart-loading: Loading chart...
   tab:
     overview: Overview
     pieces: Pieces
@@ -109,6 +110,14 @@ task:
     completed: Completed
     uncompleted: Uncompleted
     info: '{completed} of {total} pieces completed'
+    view-distribution: Distribution
+    view-pie: Completion Pie
+    group-auto: Auto group
+    group-step: '{size} pieces / bar'
+    summary-per-piece: '{total} original pieces, shown per piece'
+    summary-grouped: '{total} original pieces, {size} merged per bar, {bars} bars'
+    cell-single: 'Piece {index} · {state}'
+    cell-range: 'Pieces {start}-{end} · {done}/{count} done ({pct}%)'
   files:
     name: File Name
     empty: No files
@@ -5743,7 +5752,8 @@ webui:
   remove-old-task-after-retrying: Remove Old Tasks After Retrying
   confirm-task-removal: Confirm Task Removal
   include-prefix-when-copying: Include Prefix When Copying From Task Details
-  show-pieces-info: Show Pieces Info In Task Detail Page
+  show-pieces-info: Per-piece Threshold on Task Detail Page
+  show-pieces-info-help: Pieces within this threshold are drawn one per cell; beyond it several pieces are merged into one cell. The cell count is always capped so the browser stays responsive, and this no longer hides the pieces view - pick "Never Show Pieces" to hide it entirely.
   unlimited: Unlimited
   freq-high: High (Up to 10 Notifications / 1 Minute)
   freq-middle: Middle (Up to 1 Notification / 1 Minute)
@@ -5755,9 +5765,9 @@ webui:
   goto-downloading: Navigate to Downloading Tasks Page
   stay-current: Stay on Current Page
   refresh-current-page: Refresh current page
-  always: Always
-  never: Never
-  pieces-le: 'Pieces Amount is Less than or Equal to {value}'
+  always: Always Draw Per Piece
+  never: Never Show Pieces
+  pieces-le: 'Draw Per Piece up to {value} Pieces'
   import-settings: Import Settings
   export-settings: Export Settings
   reset-settings: Reset Settings
@@ -5778,3 +5788,8 @@ webui:
   stat:
     downloading: Downloading
     upload: Upload speed
+  speed-float:
+    close: Close speed chart
+    drag-hint: Drag to move
+    click-hint: Click to view the speed chart
+    load-failed: Failed to load the speed chart

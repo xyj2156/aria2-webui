@@ -43,4 +43,23 @@ export default defineConfig({
       '@': src(),
     },
   },
+
+  build: {
+    rollupOptions: {
+      output: {
+        /**
+         * echarts / zrender 必须独立成组。不指定的话 rollup 会按「模块使用集合」自动分组，
+         * 把图表引擎和 Naive UI 的静态依赖（date locale 那批）合进同一个 chunk —— 结果是首屏
+         * 只要加载 Naive 的 Input chunk 就会顺带拉下几百 KB 的图表引擎，三个图表组件的
+         * defineAsyncComponent / 动态 import 全部白做。显式分组后图表引擎只随图表 chunk 走。
+         */
+        manualChunks(id) {
+          if (/[\\/](echarts|zrender)[\\/]/.test(id)) {
+            return 'echarts';
+          }
+          return null;
+        },
+      },
+    },
+  },
 });

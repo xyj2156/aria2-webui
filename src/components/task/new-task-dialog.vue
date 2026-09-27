@@ -26,7 +26,7 @@ const props = defineProps({
   show: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update:show', 'refresh', 'created']);
+const emit = defineEmits(['update:show', 'refresh', 'created', 'after-leave']);
 
 const message = useMessage();
 const global = useGlobalOptions();
@@ -103,6 +103,8 @@ watch(
       optionsMaxHeight.value = '';
     }
   },
+  // 同上：异步组件可能在 setup 之前就已是打开态，必须 immediate 才会去量测配置区高度
+  { immediate: true },
 );
 
 onBeforeUnmount(() => resizeObserver?.disconnect());
@@ -240,6 +242,8 @@ function onModalShow(visible) {
 }
 
 // 打开时拉一次全局选项做回显；关闭即重置，下次点开是干净表单。
+// immediate 是必需的：本组件是异步组件，父级把 v-if 与 show 排在同一帧时，setup 时 show 已经是
+// true，没有 false→true 的变化可等，不加 immediate 就永远不会去拉回显数据。
 watch(
   () => props.show,
   (visible) => {
@@ -249,6 +253,7 @@ watch(
       resetForm();
     }
   },
+  { immediate: true },
 );
 </script>
 
@@ -262,6 +267,7 @@ n-modal(
   :title="t('task.new.title')"
   :style="{ width: '720px', maxWidth: '92vw' }"
   @update:show="onModalShow"
+  @after-leave="emit('after-leave')"
 )
   .flex.flex-col.gap-4
 

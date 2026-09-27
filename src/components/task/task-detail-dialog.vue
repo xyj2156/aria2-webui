@@ -41,14 +41,15 @@ const props = defineProps({
   gid: { type: String, default: '' },
 });
 
-const emit = defineEmits(['update:show', 'refresh', 'retried']);
+const emit = defineEmits(['update:show', 'refresh', 'retried', 'after-leave']);
 
 /** 任务详情刷新间隔：读全局设置 downloadTaskRefreshInterval（0 = 关闭自动刷新）；
  *  用函数每轮现取，改设置即时生效。列表与详情共用同一设置项。 */
 const webuiSettings = useWebuiSettingsStore();
 const intervalMs = () => Number(webuiSettings.options.downloadTaskRefreshInterval) || 0;
-// 设置项 showPiecesInfoInTaskDetailPage → 允许显示「分片」tab 的最大分片数。
-// never=0（永不显示）、always=不限；大数量的 DOM 渲染成本由 detail-pieces 内部切画布兜底。
+// 设置项 showPiecesInfoInTaskDetailPage → 「逐片展示」允许的最大分片数（语义已改：不再决定分片 tab
+// 显不显示，只决定超过多少片就自动聚合；只有 never 才彻底不显示该 tab）。
+// 聚合与渲染成本由 detail-pieces 自己收住（echarts 单 canvas + 柱数硬护栏）。
 const PIECES_MAX_BY_MODE = {
   never: 0,
   le1024: 1024,
@@ -79,10 +80,11 @@ const showPieces = computed(() => {
   if (!task.value?.bitfield || numPieces <= 0) {
     return false;
   }
-  // 「是否显示分片 tab」由全局设置的阈值决定（never→隐藏、always→不限）；
-  // 改设置即时生效。大数量渲染走 detail-pieces 内部的画布兜底，这里不再限 DOM。
-  return numPieces <= piecesThreshold(webuiSettings.options.showPiecesInfoInTaskDetailPage);
+  // 语义变更后只有 never 会隐藏该 tab；片数多少不再影响可见性，只影响逐片/聚合。
+  return webuiSettings.options.showPiecesInfoInTaskDetailPage !== 'never';
 });
+/** 交给分片图当「逐片上限」：阈值内逐片，超过自动聚合 */
+const piecesPerPieceCap = computed(() => piecesThreshold(webuiSettings.options.showPiecesInfoInTaskDetailPage));
 // 完成/移除：设置改了没意义，直接隐藏设置 tab；活动/等待/暂停/错误保留可编辑。
 const showSettings = computed(() => Boolean(task.value) && !['complete', 'removed'].includes(task.value?.status));
 
@@ -165,7 +167,10 @@ function close() {
   emit('update:show', false);
 }
 
-/** n-modal 内部（X / Esc）请求关闭时同步到父级 */
+/**
+ * 关闭动画结束后 emit('after-leave')：父级用 v-if 挂载本组件（异步组件不渲染就不会解析、
+ * 也就不会把详情相关的 chunk 连同 echarts 一起拉下来），必须等动画走完才卸载。
+ */
 function onModalShow(visible) {
   if (!visible) {
     close();
@@ -286,6 +291,9 @@ watch(
       polling.stop();
     }
   },
+  // 本组件是异步组件：父级 v-if 挂载与 show 置 true 可能落在同一帧，setup 时 props.show 已是 true，
+  // 没有 false→true 的变化可监听。必须 immediate，否则首帧即打开的场景下永远不会去取任务详情。
+  { immediate: true },
 );
 // 打开状态下换任务（切换查看不同 gid）重起一轮。
 watch(gid, () => {
@@ -296,6 +304,8 @@ watch(gid, () => {
 </script>
 
 <template lang="pug">
+//- 弹窗高度固定写在包装层 .detail-shell 上，而不是 n-modal 的 content-style：
+//- 2.45 的 Modal 运行时并不透传该 prop（类型声明里有、实现里没有），写上去只会静默失效。
 n-modal(
   :show="props.show"
   preset="card"
@@ -305,6 +315,7 @@ n-modal(
   size="huge"
   :style="{ width: '900px', maxWidth: '92vw' }"
   @update:show="onModalShow"
+  @after-leave="emit('after-leave')"
 )
   // ---------- 自定义标题行：标题 + 合适间距 + 暂停/继续，整块 flex-1 靠左，关闭 X 留在最右不挤 ----------
   template(#header)
@@ -314,13 +325,22 @@ n-modal(
       n-button(size="small" shrink-0 v-else-if="isPaused" @click="toggleState") {{ t('task.action.resume') }}
       n-button(size="small" shrink-0 v-if="canRetry" @click="retryCurrentTask") {{ t('task.action.retry') }}
 
-  .flex.flex-col.gap-3
+  .detail-shell.flex.flex-col.gap-3
     // ---------- 致命错误 ----------
     p(v-if="fatal" class="p-4 text-center text-[#d03050]") {{ fatal }}
 
     // ---------- tab ----------
     template(v-else-if="task")
-      n-tabs(v-model:value="activeTab" type="line" animated :pane-style="{ maxHeight: '60vh', overflowY: 'auto' }")
+      // 高度链：n-tabs 撑满内容区（flex-1 min-h-0），pane-wrapper 用官方 props 传递 flex 约束，
+      // pane 固定 100% 高、超出自己滚——切 tab 时弹窗高度不变，只有 pane 内部滚动位置变化。
+      n-tabs(
+        v-model:value="activeTab"
+        type="line"
+        animated
+        class="flex-1 min-h-0"
+        :pane-wrapper-style="{ flex: '1', minHeight: '0' }"
+        :pane-style="{ height: '100%', boxSizing: 'border-box', overflowY: 'auto' }"
+      )
         n-tab-pane(:tab="t('task.tab.overview')" name="overview")
           detail-overview(
             :task="task"
@@ -333,7 +353,7 @@ n-modal(
           )
 
         n-tab-pane(:tab="t('task.tab.pieces')" name="pieces" v-if="showPieces")
-          detail-pieces(:bit-field="task.bitfield" :num-pieces="task.numPieces")
+          detail-pieces(:bit-field="task.bitfield" :num-pieces="task.numPieces" :per-piece-cap="piecesPerPieceCap")
 
         n-tab-pane(:tab="t('task.tab.files')" name="filelist" v-if="hasFiles")
           detail-file-list(:task="task" @apply="applyFileSelection")
@@ -353,4 +373,14 @@ n-modal(
               @change="onSettingChange"
             )
 </template>
+
+<style scoped>
+/*
+ * 内容区固定高度：切 tab 时弹窗不再忽高忽低，超出部分交给 tab pane 内部滚动。
+ * clamp 的下限保证矮屏上也不会缩成一两行，上限避免在大屏上撑出大片空白。
+ */
+.detail-shell {
+  height: clamp(360px, 60vh, 700px);
+}
+</style>
 

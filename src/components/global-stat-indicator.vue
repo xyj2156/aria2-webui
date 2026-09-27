@@ -14,8 +14,11 @@
  *
  * 速率数据本身来自 use-global-status 的共享快照（它按设置里的间隔轮询 getGlobalStat）；
  * 本组件只负责展示与一次性连通性探测，不自己起轮询。
+ *
+ * 点击已连接态的速率 → 打开全局速率浮层（global-speed-float）。浮层连同 echarts 分片是
+ * 首次点击时才动态 import 的（shallowRef 缓存组件对象），所以 echarts 在点开前不进主线程。
  */
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, shallowRef, watch } from 'vue';
 import { useMessage } from 'naive-ui';
 import { AlertCircleOutline } from '@vicons/ionicons5';
 
@@ -27,6 +30,35 @@ import { globalStat } from '@/composables/use-global-status.js';
 
 const message = useMessage();
 const connections = useConnectionStore();
+
+/** 浮层组件对象：null = 尚未加载；首次点击才 import，之后复用同一个组件 */
+const SpeedFloat = shallowRef(null);
+const floatVisible = ref(false);
+const floatLoading = ref(false);
+
+async function openSpeedFloat() {
+  if (!globalStat.connected || floatVisible.value) {
+    return;
+  }
+  if (!SpeedFloat.value) {
+    floatLoading.value = true;
+    try {
+      const mod = await import('@/components/chart/global-speed-float.vue');
+      SpeedFloat.value = mod.default;
+    } catch {
+      // 分片拉取失败（多为弱网/离线）：不动浮层，提示一次即可
+      message.error(t('webui.speed-float.load-failed'));
+      return;
+    } finally {
+      floatLoading.value = false;
+    }
+  }
+  floatVisible.value = true;
+}
+
+function closeSpeedFloat() {
+  floatVisible.value = false;
+}
 
 /** 最近一次探测的失败原因，用于 hover 详情 */
 const lastError = ref('');
@@ -61,7 +93,7 @@ const offlineColor = computed(() =>
 
 const tooltip = computed(() =>
   globalStat.connected
-    ? `${t('webui.stat.downloading')}: ${globalStat.downloading}  ${t('webui.stat.upload')}: ${formatSpeed(globalStat.uploadSpeed)}`
+    ? `${t('webui.stat.downloading')}: ${globalStat.downloading}  ${t('webui.stat.upload')}: ${formatSpeed(globalStat.uploadSpeed)}  ·  ${t('webui.speed-float.click-hint')}`
     : (lastError.value || statusLabel.value),
 );
 </script>
@@ -69,7 +101,7 @@ const tooltip = computed(() =>
 <template lang="pug">
 n-tooltip(trigger="hover" :show-arrow="false")
   template(#trigger)
-    span.cursor-default.flex.items-center.gap-2(class="text-[13px]")
+    span.flex.items-center.gap-2(class="text-[13px]" :class="globalStat.connected ? (floatLoading ? 'cursor-wait' : 'cursor-pointer') : 'cursor-default'" @click="openSpeedFloat")
       template(v-if="globalStat.connected")
         span.w-2.h-2.rounded-full(class="bg-[#18a058]")
         span.tabular-nums ↓ {{ formatSpeed(globalStat.downloadSpeed) }}
@@ -78,4 +110,7 @@ n-tooltip(trigger="hover" :show-arrow="false")
         n-icon(:component="AlertCircleOutline" :size="15" :style="{ color: offlineColor }")
         span(:style="{ color: offlineColor }") {{ statusLabel }}
   | {{ tooltip }}
+
+//- 全局速率浮层：组件对象首次点击才加载，v-if 控制开合（Teleport 在浮层内部，放这里不影响挂载位置）
+component(v-if="floatVisible && SpeedFloat" :is="SpeedFloat" @close="closeSpeedFloat")
 </template>

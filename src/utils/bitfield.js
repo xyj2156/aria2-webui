@@ -61,4 +61,53 @@ export function getPieceStatus(bitfield, numPieces) {
   return status;
 }
 
+/**
+ * 按固定组大小聚合位图 —— 分片方块图的降 DOM 手段：一格代表 groupSize 个原始分片，
+ * 组内完成数与比例留给上层决定怎么画（全完成 / 部分完成 / 全未完成）。
+ * 末组可能不足 groupSize 片，count 如实返回，格数 = ceil(numPieces / groupSize)。
+ * @param {string|undefined} bitfield
+ * @param {number} numPieces
+ * @param {number} [groupSize=1] 每格代表的原始片数，1 = 逐片
+ * @returns {{ index:number, start:number, end:number, count:number, completed:number, ratio:number }[]}
+ *   start 含、end 不含（数组切片语义），start/end 是 0 基片索引
+ */
+export function getGroupedPieces(bitfield, numPieces, groupSize = 1) {
+  const groups = [];
+  const size = Math.max(1, Math.floor(groupSize) || 1);
+  if (!bitfield || numPieces <= 0) {
+    return groups;
+  }
+  for (let start = 0; start < numPieces; start += size) {
+    const end = Math.min(start + size, numPieces);
+    let completed = 0;
+    for (let piece = start; piece < end; piece += 1) {
+      if (isPieceCompleted(bitfield, piece)) {
+        completed += 1;
+      }
+    }
+    groups.push({
+      index: groups.length,
+      start,
+      end,
+      count: end - start,
+      completed,
+      ratio: completed / (end - start),
+    });
+  }
+  return groups;
+}
+
+/**
+ * 由「期望格数上限」反推组大小：至少 1（即逐片）。
+ * @param {number} numPieces
+ * @param {number} targetCells
+ * @returns {number}
+ */
+export function resolveGroupSize(numPieces, targetCells) {
+  if (!(numPieces > 0) || !(targetCells > 0)) {
+    return 1;
+  }
+  return Math.max(1, Math.ceil(numPieces / targetCells));
+}
+
 export { HEX_DIGITS };

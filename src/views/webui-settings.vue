@@ -259,7 +259,7 @@ function addConnection() {
           n-switch(:value="opts.confirmTaskRemoval" @update:value="(v) => upd('confirmTaskRemoval', v)")
         setting-field(:label="t('webui.include-prefix-when-copying')")
           n-switch(:value="opts.includePrefixWhenCopyingFromTaskDetails" @update:value="(v) => upd('includePrefixWhenCopyingFromTaskDetails', v)")
-        setting-field(:label="t('webui.show-pieces-info')")
+        setting-field(:label="t('webui.show-pieces-info')" description-key="webui.show-pieces-info-help")
           n-select(:value="opts.showPiecesInfoInTaskDetailPage" :options="piecesOptions" class="w-[260px]" @update:value="(v) => upd('showPiecesInfoInTaskDetailPage', v)")
         .flex.gap-2.p-3
           n-button(size="small" @click="importVisible = true") {{ t('webui.import-settings') }}

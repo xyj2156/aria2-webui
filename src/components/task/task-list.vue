@@ -11,7 +11,7 @@
  * 网络动作全部走 invokeBatch（一次往返处理多选），单行操作复用同一条路径，
  * 只是 gids 传一个。反馈统一 useMessage，危险操作 useDialog 二次确认。
  */
-import { computed, defineAsyncComponent, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDialog, useMessage } from 'naive-ui';
 import {
@@ -81,10 +81,32 @@ const detailShow = ref(false);
 /** 「新建」按钮显隐；创建成功后子组件 emit refresh → 抢跑一轮列表 */
 const newTaskShow = ref(false);
 
+/**
+ * 两个弹窗组件是否挂载（详情、新建各自一个标志）。这是 echarts 不进首屏的关键：
+ * defineAsyncComponent 只在组件首次渲染时才解析 import，若像原来那样常驻模板，
+ * 列表一挂载就会把详情弹窗连同它依赖的图表 chunk 一起拖下来。
+ * 关闭要等 n-modal 的 after-leave（动画走完）再置 false，否则关闭过渡会被截断。
+ */
+const detailMounted = ref(false);
+const newTaskMounted = ref(false);
+
+/**
+ * 打开弹窗必须分两步：先挂载（此刻 show 仍是 false），下一帧再置 show=true。
+ * 一步到位会让 n-modal 首次拿到 show=true 时看不到 false→true 的变化，进入动画不触发、
+ * 内容区一直不渲染（实测弹窗只剩 12 个 DOM 节点的空壳）。
+ * @param {{mount: () => void, open: () => void}} actions
+ */
+function mountThenOpen({ mount, open }) {
+  mount();
+  nextTick(open);
+}
+
 /** 左键点某一行 → 弹出任务详情（弹窗内嵌在列表里，按 status 自动裁剪内容） */
 function openDetail(task) {
-  detailGid.value = task.gid;
-  detailShow.value = true;
+  mountThenOpen({
+    mount: () => { detailGid.value = task.gid; detailMounted.value = true; },
+    open: () => { detailShow.value = true; },
+  });
 }
 
 /** 直接按 gid 打开详情弹窗（供新建/重试的 ?detail= 桥接复用）。 */
@@ -92,8 +114,18 @@ function openDetailByGid(gid) {
   if (!gid) {
     return;
   }
-  detailGid.value = String(gid);
-  detailShow.value = true;
+  mountThenOpen({
+    mount: () => { detailGid.value = String(gid); detailMounted.value = true; },
+    open: () => { detailShow.value = true; },
+  });
+}
+
+/** 工具栏「新建」 */
+function openNewTask() {
+  mountThenOpen({
+    mount: () => { newTaskMounted.value = true; },
+    open: () => { newTaskShow.value = true; },
+  });
 }
 
 /** 跳到下载列表页；已在该页则只刷一次。 */
@@ -662,7 +694,7 @@ onUnmounted(() => {
       | {{ t('task.count', { selected: selectedCount, total: rows.length }) }}
 
     // 新建任务：secondary 浅底（与「移除」同层级、不显笨重），置于操作按钮前并与之拉开一段距离
-    n-button(size="small" type="primary" secondary shrink-0 class="ml-2" @click="newTaskShow = true")
+    n-button(size="small" type="primary" secondary shrink-0 class="ml-2" @click="openNewTask")
       template(#icon)
         n-icon(:component="AddOutline")
       | {{ t('task.new.button') }}
@@ -743,8 +775,8 @@ onUnmounted(() => {
   )
 
   // ---------- 任务详情弹窗（点行弹出；弹窗内动作改完抢跑一轮列表刷新） ----------
-  task-detail-dialog(v-model:show="detailShow" :gid="detailGid" @refresh="polling.trigger()" @retried="onDetailRetried")
+  task-detail-dialog(v-if="detailMounted" v-model:show="detailShow" :gid="detailGid" @refresh="polling.trigger()" @retried="onDetailRetried" @after-leave="detailMounted = false")
 
   // ---------- 新建任务弹窗（工具栏「新建」弹出；创建成功后抢跑一轮列表刷新） ----------
-  new-task-dialog(v-model:show="newTaskShow" @created="applyAfterNewTask")
+  new-task-dialog(v-if="newTaskMounted" v-model:show="newTaskShow" @created="applyAfterNewTask" @after-leave="newTaskMounted = false")
 </template>

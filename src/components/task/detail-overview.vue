@@ -9,6 +9,7 @@ import { useMessage } from 'naive-ui';
 import { t } from '@/i18n/index.js';
 import { getTaskErrorMessage } from '@/rpc';
 import { useWebuiSettingsStore } from '@/store/webui-settings.js';
+import ChartLoading from '@/components/chart/chart-loading.vue';
 import {
   formatDateTime,
   formatPercent,
@@ -19,7 +20,12 @@ import {
   MORE_THAN_A_DAY_TOKEN,
 } from '@/utils/format.js';
 
-const SpeedChart = defineAsyncComponent(() => import('@/components/chart/speed-chart.vue'));
+// 加载期用同高度的占位顶住，echarts 分片到位前后弹窗不抖
+const SpeedChart = defineAsyncComponent({
+  loader: () => import('@/components/chart/speed-chart.vue'),
+  loadingComponent: ChartLoading,
+  loadingDelay: 0,
+});
 
 const props = defineProps({
   task: { type: Object, required: true },
