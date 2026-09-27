@@ -59,32 +59,44 @@ onMounted(() => void global.load());
 </script>
 
 <template lang="pug">
-.flex.flex-col.gap-3
-  .head
+//- 与 WebUI 设置页同一套「固定视口 + 内部滚动」配方：页面根节点收住可视高度并 overflow-hidden，
+//- 标题区（.head）与 tab 栏都在滚动区之上、天然固定，滚动条只出现在当前分类的设置项列表里。
+//- n-tabs 自身撑满剩余高度（flex-1 min-h-0），pane-wrapper / pane 用 Naive 官方
+//- pane-wrapper-style / pane-style 两个 props 传递高度约束，不去穿透 .n-tabs-* 内部类名。
+.flex.flex-col.gap-3.overflow-hidden(class="h-[calc(100vh-5.5rem)]")
+  .head.shrink-0
     h2.title {{ t('menu.group.aria2-settings') }}
     .subtitle {{ t('settings.immediate-hint') }}
 
-  n-tabs(type="line" animated v-model:value="activeCategory")
+  n-tabs(
+    type="line"
+    animated
+    v-model:value="activeCategory"
+    class="flex-1 min-h-0"
+    :pane-wrapper-style="{ flex: '1', minHeight: '0' }"
+    :pane-style="{ height: '100%', boxSizing: 'border-box' }"
+  )
     n-tab-pane(
       v-for="category in GLOBAL_CATEGORIES"
       :key="category"
       :name="category"
       :tab="t(CATEGORY_LABEL_KEYS[category] || category)"
     )
-      .pane(:style="category === activeCategory ? '' : 'display:none'")
-        n-spin(:show="global.loading.value && !global.loaded.value")
-          p.connect-error(v-if="!global.loaded.value && !global.loading.value")
-            | {{ t('settings.connect-error') }}
-            n-button(size="small" @click="retry") {{ t('task.action.retry') }}
-          form(v-else)
-            setting-item(
-              v-for="item in itemsByCategory[category]"
-              :key="item.key"
-              :ref="(el) => setItemRef(el, item.key)"
-              :option="item"
-              :model-value="global.valueOf(item.key)"
-              @change="onItemChange"
-            )
+      .pane.h-full.box-border(:style="category === activeCategory ? '' : 'display:none'")
+        n-scrollbar(class="h-full")
+          n-spin(:show="global.loading.value && !global.loaded.value")
+            p.connect-error(v-if="!global.loaded.value && !global.loading.value")
+              | {{ t('settings.connect-error') }}
+              n-button(size="small" @click="retry") {{ t('task.action.retry') }}
+            form(v-else)
+              setting-item(
+                v-for="item in itemsByCategory[category]"
+                :key="item.key"
+                :ref="(el) => setItemRef(el, item.key)"
+                :option="item"
+                :model-value="global.valueOf(item.key)"
+                @change="onItemChange"
+              )
 </template>
 
 <style scoped>
