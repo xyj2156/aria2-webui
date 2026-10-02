@@ -37,12 +37,37 @@
 // ═══════════════════════════════════════════════════════════════ 工具函数
 
 /**
- * 生成一个简短唯一 ID，用于标识每条连接记录。
- * 使用 crypto.randomUUID() 截取前 8 位，足够在百条级别的连接列表中保证唯一。
+ * 生成一个唯一 ID，用于标识每条连接记录。
+ *
+ * crypto.randomUUID() 只在安全上下文（HTTPS / localhost）暴露，HTTP 局域网部署时为
+ * undefined，直接调用会抛 TypeError，因此按可用性降级：
+ *   1. crypto.randomUUID（安全上下文首选）
+ *   2. crypto.getRandomValues 拼 UUID v4（该 API 在非安全上下文也可用，覆盖 HTTP 部署）
+ *   3. Math.random 兜底（极老浏览器 crypto 整体缺失时；仅作记录标识，不承担安全职责）
  * @returns {string}
  */
 function generateId() {
-  return crypto.randomUUID();
+  // 注意：不能用 typeof crypto?.xxx 判存——可选链只防 null/undefined，不防 crypto 未声明的
+  // ReferenceError；经 globalThis 取属性访问则天然安全（缺失时得到 undefined）。
+  const cryptoApi = globalThis.crypto;
+
+  if (typeof cryptoApi?.randomUUID === 'function') {
+    return cryptoApi.randomUUID();
+  }
+
+  if (typeof cryptoApi?.getRandomValues === 'function') {
+    const bytes = crypto.getRandomValues(new Uint8Array(16));
+    // 按 RFC 4122 置 version 4（高 4 位 0100）与 variant 10 位
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
+
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
 }
 
 /**
