@@ -59,6 +59,9 @@ connection:
     content: Are you sure you want to delete this connection?
     positive: Delete
     negative: Cancel
+  switch:
+    tooltip: Switch aria2 connection
+    none: No connection
 
 task:
   loading: Loading…

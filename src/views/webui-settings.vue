@@ -3,6 +3,7 @@ import { CloseOutline } from '@vicons/ionicons5';
 import { useDialog, useMessage } from 'naive-ui';
 import { t, LANGUAGES } from '@/i18n/index.js';
 import { useWebuiSettingsStore } from '@/store/webui-settings.js';
+import { useSortedConnections } from '@/composables/use-sorted-connections.js';
 import { requestNotificationPermission } from '@/composables/use-browser-notification.js';
 import { getTimeOptions, REFRESH_INTERVAL_OPTIONS } from '@/utils/interval-options.js';
 // 版本号直接取工程 package.json（Vite 支持 JSON 具名导入），供「版本」只读行展示
@@ -35,17 +36,10 @@ function upd(key, value) {
 }
 
 /**
- * 连接 tab 的展示顺序，受设置 rpcListDisplayOrder 驱动（单一事实源，改值即时生效）：
- *  - recentlyUsed：最近激活的在前（依赖 connections store 的 lastUsedAt）；从未激活的按创建序垫底（sort 稳定）
- *  - rpcAlias：按连接名字典序（数字感知、忽略大小写）
+ * 连接 tab 的展示顺序与顶栏连接切换器共用一个实现（见 useSortedConnections），
+ * 两处永远排得一样；改 rpcListDisplayOrder 即时生效。
  */
-const sortedConnections = computed(() => {
-  const list = [...connections.connections];
-  if (settings.options.rpcListDisplayOrder === 'rpcAlias') {
-    return list.sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? ''), undefined, { numeric: true, sensitivity: 'base' }));
-  }
-  return list.sort((a, b) => (Number(b.lastUsedAt) || 0) - (Number(a.lastUsedAt) || 0));
-});
+const { sortedConnections } = useSortedConnections();
 
 /** 语言 / 主题：只写 store；分别由 use-language-sync、use-theme-sync 的监听器同步到 i18n 与 isDark */
 function onLanguageChange(code) {

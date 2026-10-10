@@ -62,6 +62,9 @@ connection:
     content: 确定要删除该连接吗？
     positive: 删除
     negative: 取消
+  switch:
+    tooltip: 切换 aria2 连接
+    none: 未配置连接
 
 task:
   loading: 加载中…

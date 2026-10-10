@@ -33,6 +33,7 @@ import { retryTask } from '@/services/retry-service.js';
 import { usePolling } from '@/composables/use-polling.js';
 import { setKeyAction } from '@/composables/use-keyboard-shortcuts.js';
 import { useWebuiSettingsStore } from '@/store/webui-settings.js';
+import { useConnectionStore } from '@/store/connections.js';
 import {
   canPushEvents,
   clearFinishedResults,
@@ -55,6 +56,7 @@ const props = defineProps({
  */
 const webuiSettings = useWebuiSettingsStore();
 const intervalMs = () => Number(webuiSettings.options.downloadTaskRefreshInterval) || 0;
+const connections = useConnectionStore();
 
 const FETCHERS = {
   downloading: getDownloadingTasks,
@@ -204,6 +206,22 @@ async function refresh() {
 
 // immediate:true：polling.start() 时立刻发第一轮请求（不等一个间隔），首轮结束后再按间隔排后续。
 const polling = usePolling(refresh, intervalMs, { immediate: true });
+
+// 切换连接 = 换一台服务器，旧数据必须先清掉：否则新连接取数失败时屏上还挂着上一台的任务，
+// 看着像「切了没反应」。清完抢跑一轮——trigger 内部会重新排定时器，所以连被旧连接
+// 「密钥被拒」停掉的表也一并救活（换成能连上的服务器就该继续自动刷新）。
+watch(
+  () => connections.activeId,
+  () => {
+    rows.value = [];
+    selected.clear();
+    error.value = '';
+    loading.value = true;
+    // 旧服务器的 gid 在新服务器上不存在，详情弹窗别留：只关 show，卸载交给 after-leave（不截断关闭动画）
+    detailShow.value = false;
+    polling.trigger();
+  },
+);
 
 // =================================================================== 选择
 const selectedCount = computed(() => selected.size);

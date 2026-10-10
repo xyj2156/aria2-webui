@@ -16,6 +16,7 @@ import { reactive, watch } from 'vue';
 import { getGlobalSummary, RPC_STATUS, onConnectionChange } from '@/rpc';
 import { useMonitorStore } from '@/store/monitor.js';
 import { useWebuiSettingsStore } from '@/store/webui-settings.js';
+import { useConnectionStore } from '@/store/connections.js';
 import { usePolling } from '@/composables/use-polling.js';
 
 /** 顶栏与任意组件共享的全局状态快照。 */
@@ -52,6 +53,7 @@ export function startGlobalStat() {
 
   const settings = useWebuiSettingsStore();
   const monitor = useMonitorStore();
+  const connections = useConnectionStore();
 
   async function refresh() {
     try {
@@ -94,4 +96,14 @@ export function startGlobalStat() {
 
   // 刷新间隔变动（含切到/切离 0）
   watch(intervalMs, syncRunning);
+
+  // 切换连接 = 换一台服务器：速率曲线不能把两台的采样点连成一条折线（浮层里会看到一段假的
+  // 突降/突升），显示值也归零等重连。缓冲清在这里而不是各组件，GLOBAL_STAT_KEY 只有本模块写。
+  watch(
+    () => connections.activeId,
+    () => {
+      monitor.resetStat(monitor.GLOBAL_STAT_KEY);
+      resetStat();
+    },
+  );
 }
