@@ -183,7 +183,12 @@ jobs:
       - uses: softprops/action-gh-release@v3
         with:
           files: aria2-*.zip
+          name: "Aria2 WebUI ${{ github.ref_name }} (内嵌 aria2 ${{ needs.meta.outputs.aria2_tag }})"
           body: |
-            aria2c with the Aria2 WebUI embedded (single binary per platform).
-            aria2 base: ${{ needs.meta.outputs.aria2_tag }}  ·  WebUI: ${{ github.ref_name }}
-            Windows: run start.bat; Linux/macOS: run ./start.sh, then open http://localhost:6800/
+            每个平台一个把 Web UI 内嵌进 `aria2c` 的单文件二进制。
+            A single-binary `aria2c` per platform with the Web UI embedded.
+
+            - 内嵌的 aria2 版本 / Embedded aria2 version: `${{ needs.meta.outputs.aria2_tag }}`
+            - Web UI 版本 / Web UI version: `${{ github.ref_name }}`
+
+            用法 / Usage: Windows 运行 `start.bat`；Linux/macOS 运行 `./start.sh`，然后打开 http://localhost:6800/
