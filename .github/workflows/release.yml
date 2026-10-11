@@ -1,0 +1,189 @@
+name: Release (aria2c + embedded Web UI, multi-platform)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      build_windows:
+        description: 'Build Windows (win-x64)'
+        type: boolean
+        default: true
+      build_linux:
+        description: 'Build Linux (musl static)'
+        type: boolean
+        default: true
+      build_macos:
+        description: 'Build macOS (arm64)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+env:
+  ARIA2_REPO: xyj2156/aria2-original
+
+jobs:
+  # Resolve which aria2 tag to build against (the fork's latest release tag).
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      aria2_tag: ${{ steps.t.outputs.tag }}
+    steps:
+      - id: t
+        run: |
+          # git ls-remote cannot sort by creatordate/committerdate (those need
+          # object data); sort on the ref name with version ordering instead.
+          TAG=$(git ls-remote --tags --sort=-v:refname "https://github.com/${ARIA2_REPO}" \
+                | grep -E 'refs/tags/release-' | grep -v '\^{}' \
+                | sed 's#.*refs/tags/##' | head -1)
+          if [ -z "$TAG" ]; then
+            echo "::error::could not resolve an aria2 'release-*' tag from ${ARIA2_REPO}"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "resolved aria2 tag: $TAG"
+
+  # Build the Web UI once; every platform job embeds this dist.
+  webui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: webui-dist
+          path: dist
+
+  build-windows:
+    needs: [meta, webui]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_windows }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with: { name: webui-dist, path: dist }
+      - name: Clone aria2
+        run: git clone --depth 1 --branch "${{ needs.meta.outputs.aria2_tag }}" "https://github.com/${ARIA2_REPO}" aria2
+      - name: Build image (mingw cross + static deps)
+        run: docker build -f docker/Dockerfile.win -t aria2-webui-win .
+      - name: Compile aria2c.exe (static, WinTLS)
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE":/w \
+            -e ARIA2_SRC=/w/aria2 -e WEBUI_DIST=/w/dist -e OUT=/w/out/win \
+            -e PKG_MODE=win -e STRIP=x86_64-w64-mingw32-strip \
+            -e CONF_EXTRA="--host=x86_64-w64-mingw32 --build=x86_64-pc-linux-gnu --prefix=/usr/local/x86_64-w64-mingw32 --without-included-gettext --disable-nls --with-libcares --without-gnutls --without-openssl --with-sqlite3 --without-libxml2 --with-libexpat --with-libz --with-libgmp --with-libssh2 --without-libgcrypt --without-libnettle ARIA2_STATIC=yes CPPFLAGS=-I/usr/local/x86_64-w64-mingw32/include LDFLAGS=-L/usr/local/x86_64-w64-mingw32/lib PKG_CONFIG_LIBDIR=/usr/local/x86_64-w64-mingw32/lib/pkgconfig" \
+            aria2-webui-win bash /w/patches/build-aria2-webui.sh
+      - name: Fix ownership
+        run: sudo chown -R "$(id -u):$(id -g)" out
+      - uses: actions/upload-artifact@v7
+        with:
+          name: win-x64
+          path: out/win
+
+  build-linux:
+    needs: [meta, webui]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_linux }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with: { name: webui-dist, path: dist }
+      - name: Clone aria2
+        run: git clone --depth 1 --branch "${{ needs.meta.outputs.aria2_tag }}" "https://github.com/${ARIA2_REPO}" aria2
+      - name: Build image (alpine/musl static)
+        run: docker build -f docker/Dockerfile.linux -t aria2-webui-linux .
+      - name: Compile aria2c (static musl, OpenSSL)
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE":/w \
+            -e ARIA2_SRC=/w/aria2 -e WEBUI_DIST=/w/dist -e OUT=/w/out/linux \
+            -e PKG_MODE=unix \
+            -e CONF_EXTRA="--enable-static --disable-shared --disable-nls --with-openssl --without-gnutls --with-libexpat --without-libxml2 --with-libcares --with-libssh2 --with-sqlite3 --with-zlib --with-libgmp --without-libgcrypt --without-libnettle LDFLAGS=-static CFLAGS=-static CXXFLAGS=-static" \
+            aria2-webui-linux bash /w/patches/build-aria2-webui.sh
+      - name: Fix ownership
+        run: sudo chown -R "$(id -u):$(id -g)" out
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-x64
+          path: out/linux
+
+  build-macos:
+    needs: [meta, webui]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_macos }}
+    # Single Apple Silicon runner.  macos-13 (Intel) is near-retired / heavily
+    # queued (a prior run waited ~3h then got cancelled), and Homebrew arm64
+    # bottles carry no x86_64 slice, so a native universal build isn't practical
+    # here.  Ship arm64; revisit Intel only if there's real demand.
+    runs-on: macos-14
+    env:
+      # `brew update` was the ~3h sink and a known CI flake; skip it plus the
+      # cleanup/env-hint noise.  git + node already ship on the runner.
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_ENV_HINTS: 1
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with: { name: webui-dist, path: dist }
+      - name: Install deps
+        run: brew install autoconf automake libtool pkg-config gettext openssl@3 expat sqlite libssh2 c-ares gmp zlib
+      - name: Clone aria2
+        run: git clone --depth 1 --branch "${{ needs.meta.outputs.aria2_tag }}" "https://github.com/${ARIA2_REPO}" aria2
+      - name: Compile aria2c (static deps, OpenSSL)
+        run: |
+          # PKG_CONFIG_PATH must be exported in-shell: a step's `env:` map does
+          # NOT go through the shell, so `$(brew --prefix)` there stays literal
+          # (a latent bug in the previous version).  Set all three here.
+          BREW="$(brew --prefix)"
+          # gettext (keg-only) m4 discovery is handled centrally in
+          # patches/build-aria2-webui.sh via ACLOCAL_PATH.
+          export PKG_CONFIG_PATH="$BREW/lib/pkgconfig:$BREW/opt/openssl@3/lib/pkgconfig"
+          export CPPFLAGS="-I$BREW/include -I$BREW/opt/openssl@3/include"
+          export LDFLAGS="-L$BREW/lib -L$BREW/opt/openssl@3/lib"
+          ARIA2_SRC="$PWD/aria2" WEBUI_DIST="$PWD/dist" OUT="$PWD/out/macos-arm64" \
+          PKG_MODE=unix \
+          CONF_EXTRA="--enable-static --disable-shared --disable-nls --with-openssl --without-gnutls --with-libexpat --without-libxml2 --with-libcares --with-libssh2 --with-sqlite3 --with-zlib --with-libgmp --without-libgcrypt --without-libnettle" \
+          bash patches/build-aria2-webui.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos-arm64
+          path: out/macos-arm64
+
+  release:
+    # Only publish a GitHub Release on real version tags (v*).
+    # A workflow_dispatch run stays on branch refs (GITHUB_REF_NAME="main"),
+    # which would otherwise create a mis-named / failing Release, so we skip it
+    # here and let dispatch exercise just the multi-platform build jobs.
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [meta, build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with: { path: artifacts }
+      - name: Zip each platform
+        run: |
+          cd artifacts
+          for d in */; do
+            name="${d%/}"
+            ( cd "$name" && zip -qr "$GITHUB_WORKSPACE/aria2-${{ needs.meta.outputs.aria2_tag }}-webui-${GITHUB_REF_NAME}-${name}.zip" . )
+          done
+          ls -la "$GITHUB_WORKSPACE"/*.zip
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: aria2-*.zip
+          body: |
+            aria2c with the Aria2 WebUI embedded (single binary per platform).
+            aria2 base: ${{ needs.meta.outputs.aria2_tag }}  ·  WebUI: ${{ github.ref_name }}
+            Windows: run start.bat; Linux/macOS: run ./start.sh, then open http://localhost:6800/

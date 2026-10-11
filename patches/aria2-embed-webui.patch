@@ -1,0 +1,224 @@
+diff --git a/src/HttpServerCommand.cc b/src/HttpServerCommand.cc
+index 68293b39..11cf79ae 100644
+--- a/src/HttpServerCommand.cc
++++ b/src/HttpServerCommand.cc
+@@ -53,6 +53,7 @@
+ #include "base64.h"
+ #include "MessageDigest.h"
+ #include "message_digest_helper.h"
++#include "WebUiServer.h"
+ #ifdef ENABLE_WEBSOCKET
+ #  include "WebSocketResponseCommand.h"
+ #endif // ENABLE_WEBSOCKET
+@@ -208,6 +209,29 @@ bool HttpServerCommand::execute()
+         e_->setNoWait(true);
+         return true;
+       }
++      // Serve the bundled Web UI over the same listener as the JSON-RPC
++      // endpoint.  Only plain GET requests for files that actually exist are
++      // handled here; anything else (RPC POST, WebSocket upgrade, missing file)
++      // falls through to the normal processing below.
++      if (httpServer_->getMethod() == "GET") {
++        std::string contentType;
++        std::string body;
++        if (WebUiServer::serve(httpServer_->getRequestPath(), contentType,
++                               body)) {
++          // aria2's feedResponse advertises "Content-Encoding: gzip" when the
++          // client accepts gzip but does not compress the body it is given, so
++          // a plain file body would reach the browser labelled as gzip and fail
++          // to decode (ERR_CONTENT_DECODING_FAILED).  Serve the Web UI
++          // uncompressed and let the browser cache handle repeated requests.
++          httpServer_->disableGZip();
++          httpServer_->feedResponse(200, "Cache-Control: no-cache\r\n",
++                                    std::move(body), contentType);
++          e_->addCommand(make_unique<HttpServerResponseCommand>(
++              getCuid(), httpServer_, e_, socket_));
++          e_->setNoWait(true);
++          return true;
++        }
++      }
+       auto& header = httpServer_->getRequestHeader();
+       if (header->fieldContains(HttpHeader::UPGRADE, "websocket") &&
+           header->fieldContains(HttpHeader::CONNECTION, "upgrade")) {
+diff --git a/src/Makefile.am b/src/Makefile.am
+index cb6e3b7c..54049b1f 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -133,7 +133,7 @@ SRCS =  \
+ 	HttpResponseCommand.cc HttpResponseCommand.h\
+ 	HttpServer.cc HttpServer.h\
+ 	HttpServerBodyCommand.cc HttpServerBodyCommand.h\
+-	HttpServerCommand.cc HttpServerCommand.h\
++	HttpServerCommand.cc HttpServerCommand.h WebUiServer.cc WebUiServer.h WebUiBlob.cc\
+ 	HttpServerResponseCommand.cc HttpServerResponseCommand.h\
+ 	HttpSkipResponseCommand.cc HttpSkipResponseCommand.h\
+ 	IndexedList.h\
+diff --git a/src/WebUiServer.cc b/src/WebUiServer.cc
+new file mode 100644
+index 00000000..41895b1c
+--- /dev/null
++++ b/src/WebUiServer.cc
+@@ -0,0 +1,127 @@
++#include "WebUiServer.h"
++
++#include "common.h"
++
++#include "base64.h"
++
++#include <cstring>
++#include <map>
++
++#include <zlib.h>
++
++namespace aria2 {
++
++// Defined (generated) in WebUiBlob.cc.
++extern const char WEBUI_BLOB_B64[];
++extern const unsigned int WEBUI_BLOB_B64_LEN;
++
++namespace {
++
++struct Entry {
++  std::string mime;
++  const char* data;
++  size_t len;
++};
++
++uint32_t readU32(const char* p) {
++  return static_cast<uint32_t>(static_cast<unsigned char>(p[0])) |
++         (static_cast<uint32_t>(static_cast<unsigned char>(p[1])) << 8) |
++         (static_cast<uint32_t>(static_cast<unsigned char>(p[2])) << 16) |
++         (static_cast<uint32_t>(static_cast<unsigned char>(p[3])) << 24);
++}
++
++// Owns the inflated archive; Entry::data points into it.  Never mutated after
++// init(), so the pointers stay valid for the process lifetime.
++std::string g_blob;
++std::map<std::string, Entry> g_map;
++bool g_ready = false;
++
++void init() {
++  if (g_ready) {
++    return;
++  }
++  g_ready = true;
++
++  std::string b64(WEBUI_BLOB_B64, WEBUI_BLOB_B64_LEN);
++  std::string container = base64::decode(b64.begin(), b64.end());
++  if (container.size() < 4) {
++    return;
++  }
++  uint32_t rawLen = readU32(container.data());
++  if (rawLen < 12 || rawLen > 512u * 1024u * 1024u) {
++    return;
++  }
++  g_blob.resize(rawLen);
++  uLongf dstLen = rawLen;
++  int rc = uncompress(reinterpret_cast<Bytef*>(&g_blob[0]), &dstLen,
++                      reinterpret_cast<const Bytef*>(container.data()) + 4,
++                      container.size() - 4);
++  if (rc != Z_OK || dstLen != rawLen) {
++    g_blob.clear();
++    return;
++  }
++
++  const char* b = g_blob.data();
++  size_t n = g_blob.size();
++  if (std::memcmp(b, "AWEB", 4) != 0) {
++    g_blob.clear();
++    return;
++  }
++  size_t p = 4;
++  p += 4; // skip version
++  uint32_t count = readU32(b + p);
++  p += 4;
++  for (uint32_t i = 0; i < count; ++i) {
++    if (p + 4 > n) {
++      break;
++    }
++    uint32_t pathLen = readU32(b + p);
++    p += 4;
++    std::string path(b + p, pathLen);
++    p += pathLen;
++    uint32_t mimeLen = readU32(b + p);
++    p += 4;
++    std::string mime(b + p, mimeLen);
++    p += mimeLen;
++    uint32_t dataLen = readU32(b + p);
++    p += 4;
++    const char* data = b + p;
++    p += dataLen;
++    g_map[path] = Entry{std::move(mime), data, dataLen};
++  }
++}
++
++} // namespace
++
++bool WebUiServer::serve(const std::string& requestPath,
++                        std::string& contentType, std::string& body) {
++  init();
++  if (g_map.empty()) {
++    return false;
++  }
++  std::string path = requestPath.substr(0, requestPath.find_first_of("?#"));
++  if (path.empty() || path == "/") {
++    path = "/index.html";
++  }
++  if (path == "/jsonrpc" || path == "/rpc") {
++    return false;
++  }
++  if (path.find("..") != std::string::npos) {
++    return false;
++  }
++  std::string key = (path.front() == '/') ? path.substr(1) : path;
++  auto it = g_map.find(key);
++  if (it == g_map.end()) {
++    return false;
++  }
++  contentType = it->second.mime;
++  body.assign(it->second.data, it->second.len);
++  return true;
++}
++
++bool WebUiServer::isBundled() {
++  init();
++  return !g_map.empty();
++}
++
++} // namespace aria2
+diff --git a/src/WebUiServer.h b/src/WebUiServer.h
+new file mode 100644
+index 00000000..1bbdf7af
+--- /dev/null
++++ b/src/WebUiServer.h
+@@ -0,0 +1,30 @@
++#ifndef D_WEB_UI_SERVER_H
++#define D_WEB_UI_SERVER_H
++
++#include "common.h"
++
++#include <string>
++
++namespace aria2 {
++
++// Serves the Web UI assets that were compiled into the aria2c binary at build
++// time (see scripts/gen_webui_blob.mjs -> src/WebUiBlob.cc).  The embedded blob
++// is a base64-encoded, zlib-deflated "AWEB" archive; it is decoded, inflated
++// and indexed lazily on first use.
++class WebUiServer {
++public:
++  // Maps an HTTP request path (e.g. "/", "/assets/app.js"; a query string or
++  // fragment is ignored) to an embedded asset.  On success, fills
++  // |contentType| and |body| and returns true.  Returns false for the RPC
++  // endpoint or an unknown path so the caller can fall through to normal
++  // handling.
++  static bool serve(const std::string& requestPath, std::string& contentType,
++                    std::string& body);
++
++  // Returns true when at least one asset was embedded in the binary.
++  static bool isBundled();
++};
++
++} // namespace aria2
++
++#endif // D_WEB_UI_SERVER_H

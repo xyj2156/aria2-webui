@@ -1,0 +1,16 @@
+# Build a fully static Linux aria2c (with the Web UI embedded) on Alpine/musl,
+# so the resulting single binary runs on any x86_64 Linux without distro deps.
+# The patched aria2 source + built webui dist are mounted at run time; this
+# image supplies the toolchain + static dependency libraries.
+#
+#   docker build -f docker/Dockerfile.linux -t aria2-webui-linux .
+#   docker run --rm -v "$PWD":/w aria2-webui-linux bash /w/patches/build-aria2-webui.sh
+FROM alpine:3.20
+
+RUN apk add --no-cache \
+      bash build-base autoconf automake libtool pkgconf m4 patch git curl nodejs \
+      openssl-dev expat-dev sqlite-dev libssh2-dev c-ares-dev gmp-dev zlib-dev \
+      gettext-dev linux-headers
+
+WORKDIR /w
+CMD ["bash"]
