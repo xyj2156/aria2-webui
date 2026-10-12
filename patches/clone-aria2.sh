@@ -14,6 +14,11 @@
 
 set -euo pipefail
 
+# Resolve this script's own directory to an absolute path *before* any command
+# changes the working directory — `git -C <dir> apply <patch>` resolves a
+# relative patch inside <dir>, not where the script was invoked from.
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+
 DEST=${1:?usage: clone-aria2.sh <destination-dir>}
 : "${ARIA2_REPO:?ARIA2_REPO is not set}"
 : "${ARIA2_TAG:?ARIA2_TAG is not set}"
@@ -26,8 +31,11 @@ fi
 
 echo "clone-aria2: ${ARIA2_REPO} ${ARIA2_TAG} (expecting ${ARIA2_SHA})"
 # A depth-1 tag clone detaches HEAD at the commit the tag points at, which is
-# exactly the object the pin names.
-git clone --depth 1 --branch "$ARIA2_TAG" "https://github.com/${ARIA2_REPO}" "$DEST"
+# exactly the object the pin names.  Upstream's release tags are annotated, so
+# git prints a benign "refs/tags/... is not a commit!" warning; the detached-HEAD
+# advice is noise in a build log.
+git -c advice.detachedHead=false clone --depth 1 --branch "$ARIA2_TAG" \
+  "https://github.com/${ARIA2_REPO}" "$DEST"
 
 ACTUAL=$(git -C "$DEST" rev-parse HEAD)
 if [ "$ACTUAL" != "$ARIA2_SHA" ]; then
@@ -39,6 +47,10 @@ if [ "$ACTUAL" != "$ARIA2_SHA" ]; then
 fi
 
 # Prove the promise is kept: the patch must apply to this exact tree.
-git -C "$DEST" apply --check -p1 "$(dirname "$0")/aria2-embed-webui.patch"
+PATCH="$SCRIPT_DIR/aria2-embed-webui.patch"
+if ! git -C "$DEST" apply --check -p1 "$PATCH"; then
+  echo "clone-aria2: $PATCH does not apply to ${ARIA2_TAG} (${ACTUAL})" >&2
+  exit 1
+fi
 
-echo "clone-aria2: pinned commit ${ACTUAL} verified, patch applies"
+echo "clone-aria2: pinned commit ${ACTUAL} verified, ${PATCH##*/} applies"

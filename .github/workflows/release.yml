@@ -299,37 +299,47 @@ jobs:
       - uses: actions/download-artifact@v8
         with: { name: webui-dist, path: dist }
       - name: Clone pinned aria2 (verifies the commit and that the patch applies)
-        run: bash patches/clone-aria2.sh aria2
+        run: bash patches/clone-aria2.sh "$RUNNER_TEMP/aria2"
       - name: Assemble the corresponding source
+        # Staging lives in RUNNER_TEMP, deliberately outside the repository work
+        # tree: `git apply` run inside a repository resolves patch paths against
+        # that repository's top level, so a staged copy under the checkout would
+        # have its patch applied to the Web UI sources instead of the aria2 tree,
+        # and we would publish a corresponding-source archive that is not the
+        # source of the shipped binaries.  The assertions below make that failure
+        # mode loud instead of silent.
         run: |
           set -euo pipefail
           ARIA2_TAG='${{ needs.meta.outputs.aria2_tag }}'
           VERSION='${{ needs.meta.outputs.version }}'
           BASE="aria2-${ARIA2_TAG}-webui-${VERSION}"
-          mkdir -p "stage/$BASE"
-          # git archive exports the pinned tree without .git, so the tarball holds
-          # source only; the patch is then applied exactly as a build would.
-          git -C aria2 archive HEAD | tar -x -C "stage/$BASE"
-          ( cd "stage/$BASE" && git apply -p1 "$GITHUB_WORKSPACE/patches/aria2-embed-webui.patch" )
-          node patches/gen_webui_blob.mjs "$PWD/dist" "$PWD/stage/$BASE/src/WebUiBlob.cc"
-          # Everything needed to rebuild these binaries, alongside the tree.
-          # git archive of this repository captures exactly the tracked recipe —
-          # src/, patches/, docker/, .github/, licenses/, the lockfile and the
-          # license texts — with no risk of quietly omitting one of them.
-          mkdir -p "stage/$BASE/build-recipe"
-          git archive HEAD | tar -x -C "stage/$BASE/build-recipe"
-          cat > "stage/$BASE/build-recipe/README.txt" <<EOF
-          This directory is the build recipe that produced the aria2c binaries
-          published alongside this file.  The patched aria2 tree one level up is
-          their complete corresponding source under GPL-3.0-or-later section 1.
+          WORK="${RUNNER_TEMP:?RUNNER_TEMP is not set}/cs"
+          STAGE="$WORK/$BASE"
+          mkdir -p "$STAGE/build-recipe"
+          git -C "$RUNNER_TEMP/aria2" archive HEAD | tar -x -C "$STAGE"
+          git -C "$STAGE" apply -p1 "$GITHUB_WORKSPACE/patches/aria2-embed-webui.patch"
+          # Prove the patch really landed in the tree we are about to publish.
+          test -f "$STAGE/src/WebUiServer.cc"
+          test -f "$STAGE/src/WebUiServer.h"
+          grep -q 'Modified by' "$STAGE/src/HttpServerCommand.cc"
+          grep -q 'Modified by' "$STAGE/src/Makefile.am"
+          node patches/gen_webui_blob.mjs "$GITHUB_WORKSPACE/dist" "$STAGE/src/WebUiBlob.cc"
+          test -s "$STAGE/src/WebUiBlob.cc"
+          # The recipe that produced it: exactly this repository's tracked files,
+          # so nothing (patches, dockerfiles, licenses, lockfile) can be quietly
+          # left out the way a hand-written cp list would.
+          git archive HEAD | tar -x -C "$STAGE/build-recipe"
+          cat > "$STAGE/build-recipe/README.txt" <<EOF
+          Corresponding source for the aria2c binaries published with this release.
 
-            aria2 source        : ${{ env.ARIA2_REPO }} tag ${ARIA2_TAG} commit ${{ env.ARIA2_SHA }}
-            webui repository    : ${{ github.repository }} commit ${{ github.sha }}
-            workflow run        : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            patched aria2 tree : the directory above, under GPL-3.0-or-later section 1
+            aria2 source       : ${{ env.ARIA2_REPO }} tag ${ARIA2_TAG} commit ${{ env.ARIA2_SHA }}
+            webui repository   : ${{ github.repository }} commit ${{ github.sha }}
+            workflow run       : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-          Reproduce with: pnpm install && pnpm build, then follow patches/README.md.
+          Rebuild: pnpm install && pnpm build, then follow build-recipe/patches/README.md.
           EOF
-          tar -czf "$GITHUB_WORKSPACE/$BASE-sources.tar.gz" -C stage .
+          tar -czf "$GITHUB_WORKSPACE/$BASE-sources.tar.gz" -C "$WORK" "$BASE"
           ls -la "$GITHUB_WORKSPACE/$BASE-sources.tar.gz"
       - uses: actions/upload-artifact@v7
         with:
