@@ -170,6 +170,7 @@ jobs:
     needs: [meta, build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with: { path: artifacts }
       - name: Zip each platform
@@ -191,47 +192,8 @@ jobs:
             # Drop a self-contained LICENSE + NOTICE into every platform dir so
             # the resulting zip is legally self-describing — a user doesn't
             # have to visit the repo to know what they're allowed to do.
-            cat > "$d/LICENSE" <<'LICENSE_EOF'
-aria2-webui release bundle
-Copyright (c) 2026 阿杰很厉害
-
-This bundle contains two parts:
-
-1. aria2c binary (with embedded Web UI) — GPLv3
-   This is a modified version of aria2 (https://github.com/aria2/aria2),
-   originally written by Tatsuhiro Tsujikawa (@tatsuhiro-t) and contributors.
-   aria2 is licensed under GPLv2 or later; this bundle exercises the "or later"
-   clause and distributes the modified aria2 under GPLv3.
-   Full license text: https://www.gnu.org/licenses/gpl-3.0.html
-
-2. Helper scripts (start.bat, start.sh, packaging config) — Apache-2.0
-   Copyright (c) 2026 阿杰很厉害
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy at: http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-
-Acknowledgements:
-  - aria2 by Tatsuhiro Tsujikawa and contributors (https://github.com/aria2/aria2)
-  - Embedded Web UI source (Apache-2.0): https://github.com/xyj2156/aria2-webui
-
-Corresponding source for the GPLv3 portion:
-  https://github.com/xyj2156/aria2-webui/tree/main/patches
-LICENSE_EOF
-            cat > "$d/NOTICE" <<'NOTICE_EOF'
-aria2-webui
-Copyright (c) 2026 阿杰很厉害
-
-This product bundles aria2 (https://github.com/aria2/aria2),
-licensed under GPLv3 (aria2's "GPLv2 or later" clause, "or later" exercised).
-Original aria2 copyright (c) Tatsuhiro Tsujikawa and contributors.
-
-The Web UI source and build scripts in the upstream repository are
-licensed under the Apache License, Version 2.0.
-NOTICE_EOF
+            cp "$GITHUB_WORKSPACE/patches/LICENSE-BUNDLE" "$d/LICENSE"
+            cp "$GITHUB_WORKSPACE/patches/NOTICE-BUNDLE"  "$d/NOTICE"
             ( cd "$name" && zip -qr "$out" . )
           done
           ls -la "$GITHUB_WORKSPACE"/*.zip

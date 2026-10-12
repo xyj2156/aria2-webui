@@ -1,0 +1,9 @@
+aria2-webui
+Copyright (c) 2026 阿杰很厉害
+
+This product bundles aria2 (https://github.com/aria2/aria2),
+licensed under GPLv3 (aria2's "GPLv2 or later" clause, "or later" exercised).
+Original aria2 copyright (c) Tatsuhiro Tsujikawa and contributors.
+
+The Web UI source and build scripts in the upstream repository are
+licensed under the Apache License, Version 2.0.
