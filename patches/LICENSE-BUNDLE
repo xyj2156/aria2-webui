@@ -1,28 +1,74 @@
-aria2-webui release bundle
-Copyright (c) 2026 阿杰很厉害
+aria2-webui — combined distribution
+Copyright (c) 2026 阿杰很厉害 <506907958@qq.com>
+https://github.com/xyj2156/aria2-webui
 
-This bundle contains two parts:
+This archive is a combined work.  The three parts below must be read together.
+THIRD-PARTY-NOTICES.txt, in this same folder, lists every other component
+linked into the binary and reproduces the notices those licenses require; the
+LICENSES/ folder holds the full text of every license referred to here.
 
-1. aria2c binary (with embedded Web UI) — GPLv3
-   This is a modified version of aria2 (https://github.com/aria2/aria2),
-   originally written by Tatsuhiro Tsujikawa (@tatsuhiro-t) and contributors.
-   aria2 is licensed under GPLv2 or later; this bundle exercises the "or later"
-   clause and distributes the modified aria2 under GPLv3.
-   Full license text: https://www.gnu.org/licenses/gpl-3.0.html
+------------------------------------------------------------------------------
+1. aria2c — modified aria2 with the Web UI embedded ............ GPL-3.0-or-later
+------------------------------------------------------------------------------
+Derived from aria2 <https://github.com/aria2/aria2>, Copyright (C) Tatsuhiro
+Tsujikawa and contributors.  aria2 is licensed under the GNU General Public
+License as published by the Free Software Foundation, either version 2 of the
+License or (at your option) any later version.  This project exercises that
+"or later" option and conveys the modified program under version 3, so
+LICENSES/GPL-3.0.txt governs this part.  For reference, LICENSES/
+aria2-GPL-2.0-upstream.txt is the upstream text as aria2 ships it.
 
-2. Helper scripts (start.bat, start.sh, packaging config) — Apache-2.0
-   Copyright (c) 2026 阿杰很厉害
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy at: http://www.apache.org/licenses/LICENSE-2.0
+aria2's additional permission to link with OpenSSL (LICENSES/
+aria2-LICENSE.OpenSSL.txt) is retained unchanged — relevant because the Linux
+and macOS binaries are statically linked against OpenSSL.  The Windows binary
+uses the operating system's WinTLS instead.
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+The modifications made by this project are marked in the corresponding source
+with prominent "Modified by 阿杰很厉害 <506907958@qq.com>" notices naming each
+changed file and the date, as GPL section 5 requires.
 
-Acknowledgements:
-  - aria2 by Tatsuhiro Tsujikawa and contributors (https://github.com/aria2/aria2)
-  - Embedded Web UI source (Apache-2.0): https://github.com/xyj2156/aria2-webui
+------------------------------------------------------------------------------
+2. The embedded Web UI assets ................................. Apache-2.0
+------------------------------------------------------------------------------
+The panel served by the binary was built from the sources of this repository
+and is licensed under the Apache License, Version 2.0 — see
+LICENSES/Apache-2.0.txt and the NOTICE file in this archive.
 
-Corresponding source for the GPLv3 portion:
-  https://github.com/xyj2156/aria2-webui/tree/main/patches
+Apache-2.0 is incompatible with GPLv2 but compatible with GPLv3; that is the
+reason part 1 is conveyed under version 3, so that these Apache-licensed
+assets may lawfully be packaged into the same program.
+
+------------------------------------------------------------------------------
+3. start.bat / start.sh and packaging configuration ........... Apache-2.0
+------------------------------------------------------------------------------
+Written by this project, Apache-2.0.  These are separate works merely
+aggregated with part 1 in one archive (GPLv3 section 5), not derivative parts
+of it.
+
+------------------------------------------------------------------------------
+No warranty
+------------------------------------------------------------------------------
+The software is provided "as is", without warranty of any kind, express or
+implied — GPLv3 section 15 for parts 1 and 3's GPL-covered counterpart,
+Apache-2.0 section 6 for part 2.  Copyright holders and contributors are not
+liable for damages.
+
+------------------------------------------------------------------------------
+Corresponding source for part 1 (how to get the complete source code)
+------------------------------------------------------------------------------
+The complete corresponding source of the exact binary in this archive is
+published beside it on the same GitHub release page, as an
+aria2-*-webui-*-sources.tar.gz asset.  It contains the patched aria2 tree, the
+Web UI blob generator, the build scripts, the container images and the CI
+workflow used to compile this binary — nothing else is needed to rebuild it.
+
+That asset is generated from this repository, whose build recipe pins aria2 to
+one exact upstream tag and commit; the values actually used are printed at the
+end of THIRD-PARTY-NOTICES.txt (section D) and in the release notes.  You can
+also reproduce the tree yourself: see patches/README.md in the repository.
+
+If you obtained this archive without its corresponding source and cannot
+download it from the release page, open an issue at the repository above or
+write to the address in NOTICE; a complete copy will be provided for at least
+three years after this release.  That offer is a convenience — the primary
+means of providing corresponding source is the release asset named above.
