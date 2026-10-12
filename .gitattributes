@@ -1,0 +1,16 @@
+# Line endings are load-bearing in this repository, not cosmetic:
+#  - licenses/manifest.json records the sha256 of every vendored license text,
+#    and scripts/gen-third-party-notices.mjs fails the release build when a
+#    checked-out file does not match it;
+#  - patches/aria2-embed-webui.patch must stay byte-exact or `git apply` breaks.
+# A clone with core.autocrlf=true would silently rewrite both, so pin LF here.
+*.txt text eol=lf
+*.json text eol=lf
+*.patch text eol=lf
+*.mjs text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+LICENSE text eol=lf
+NOTICE text eol=lf
+licenses/** text eol=lf
+patches/** text eol=lf
