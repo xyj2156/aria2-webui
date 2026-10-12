@@ -177,7 +177,18 @@ jobs:
           cd artifacts
           for d in */; do
             name="${d%/}"
-            ( cd "$name" && zip -qr "$GITHUB_WORKSPACE/aria2-${{ needs.meta.outputs.aria2_tag }}-webui-${GITHUB_REF_NAME}-${name}.zip" . )
+            case "$name" in
+              # The standalone Web UI build output gets its own short, stable
+              # name (no aria2 tag prefix) so it's clearly distinguishable from
+              # the per-platform aria2c bundles.
+              webui-dist)
+                out="$GITHUB_WORKSPACE/aria2-webui-${GITHUB_REF_NAME}-dist.zip"
+                ;;
+              *)
+                out="$GITHUB_WORKSPACE/aria2-${{ needs.meta.outputs.aria2_tag }}-webui-${GITHUB_REF_NAME}-${name}.zip"
+                ;;
+            esac
+            ( cd "$name" && zip -qr "$out" . )
           done
           ls -la "$GITHUB_WORKSPACE"/*.zip
       - uses: softprops/action-gh-release@v3
@@ -185,10 +196,18 @@ jobs:
           files: aria2-*.zip
           name: "Aria2 WebUI ${{ github.ref_name }} (内嵌 aria2 ${{ needs.meta.outputs.aria2_tag }})"
           body: |
-            每个平台一个把 Web UI 内嵌进 `aria2c` 的单文件二进制。
-            A single-binary `aria2c` per platform with the Web UI embedded.
+            每个平台一个把 Web UI 内嵌进 `aria2c` 的单文件二进制；另有一个 `aria2-webui-<version>-dist.zip` 是未打包进二进制的 Web UI 静态产物本身。
+
+            A single-binary `aria2c` per platform with the Web UI embedded; plus `aria2-webui-<version>-dist.zip` which is the Web UI static build itself, unbundled.
 
             - 内嵌的 aria2 版本 / Embedded aria2 version: `${{ needs.meta.outputs.aria2_tag }}`
             - Web UI 版本 / Web UI version: `${{ github.ref_name }}`
 
             用法 / Usage: Windows 运行 `start.bat`；Linux/macOS 运行 `./start.sh`，然后打开 http://localhost:6800/
+
+            ---
+
+            许可 / License:
+            - Web UI 源码 / Web UI source: **Apache-2.0**.
+            - 修改后的 aria2 及本组二进制 / Modified aria2 and these binaries: **GPLv3** (exercising aria2's "GPLv2 or later" clause; chosen so the Apache-2.0 Web UI can be legally bundled — Apache-2.0 is GPLv2-incompatible but GPLv3-compatible).
+            - 对应源码 / Corresponding source: 本仓库公开了完整构建配方（aria2 fork tag、`patches/aria2-embed-webui.patch`、blob 生成脚本、本 CI 工作流）；按仓库 `patches/README.md` 即可 1:1 重现打补丁后的 aria2 源码树，或通过 issue 联系作者索取完整源码 tarball，自发布之日起三年内有效。 / The full build recipe is public in this repo; follow `patches/README.md` to reproduce the patched aria2 source tree, or open an issue to request a tarball — valid for at least three years from this release.

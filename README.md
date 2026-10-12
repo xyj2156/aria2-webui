@@ -85,9 +85,13 @@ See [`patches/README.md`](./patches/README.md) for details.
 
 ## 许可 / License
 
-本 Web UI 源码以 **Apache License 2.0** 授权，详见 [`LICENSE`](./LICENSE) 与 [`NOTICE`](./NOTICE)。由上述流水线将界面内嵌进 aria2 后产生的组合作品，其分发仍需遵守 **aria2 自身的许可证（GPL）** 条款。
+- **本仓库的 Web UI 源码（`src/`、`patches/gen_webui_blob.mjs`、`patches/build-aria2-webui.sh` 等构建脚本）** 以 **Apache License 2.0** 授权，详见 [`LICENSE`](./LICENSE) 与 [`NOTICE`](./NOTICE)。
+- **`patches/aria2-embed-webui.patch` 对 aria2 源码的改动，以及由该补丁与本仓库流水线编译出的 `aria2c` 单文件二进制**，属于 aria2 的衍生作品。aria2 本身采用 **GPLv2 or later**；本项目在分发修改版时**行使 "or later" 条款，按 GNU General Public License v3.0 分发**。这样做是因为 Apache-2.0 与 GPLv2 不兼容，但与 GPLv3 兼容，Web UI 的 Apache-2.0 代码因此可以合法地被打包进组合作品。
+- **GPL 对应源码获取（GPLv2/v3 Section "Corresponding Source"）**：分发的二进制对应的完整构建配方（aria2 fork tag、补丁文件、blob 生成脚本、CI 工作流）全部在本仓库公开。如需获取打补丁后的完整 aria2 源码树，按 [`patches/README.md`](./patches/README.md) 的"本地复现"步骤即可 1:1 重现；或通过仓库 issue / 邮件联系作者，我们承诺在自分发之日起三年内提供完整对应源码。
 
-This Web UI source is licensed under the **Apache License 2.0** — see [`LICENSE`](./LICENSE) and [`NOTICE`](./NOTICE). Combined binaries that embed this UI into aria2 via the pipeline above remain subject to **aria2's own license (GPL)** terms when distributed.
+- **The Web UI sources in this repo** (`src/`, the build scripts under `patches/`) are licensed under **Apache License 2.0** — see [`LICENSE`](./LICENSE) and [`NOTICE`](./NOTICE).
+- **The patch against aria2 (`patches/aria2-embed-webui.patch`) and the resulting single-file `aria2c` binaries distributed via Releases** are derivative works of aria2, which itself is licensed under **GPLv2 or later**. This project exercises the "or later" clause and distributes the modified aria2 under **GPLv3**. This is deliberate: Apache-2.0 is incompatible with GPLv2 but compatible with GPLv3, which lets the Apache-2.0 Web UI be legally bundled into the combined work.
+- **Corresponding source code (GPL Section "Corresponding Source" offer)**: the full build recipe (aria2 fork tag, patch, blob generator, CI workflow) is public in this repo. To reproduce the patched aria2 source tree, follow the "local reproduction" steps in [`patches/README.md`](./patches/README.md); or contact the author via an issue / email — we offer to provide the complete corresponding source for at least three years from distribution.
 
 再次感谢 aria2 及其作者 [Tatsuhiro Tsujikawa](https://github.com/tatsuhiro-t)。
 

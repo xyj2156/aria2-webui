@@ -1,5 +1,5 @@
 diff --git a/src/HttpServerCommand.cc b/src/HttpServerCommand.cc
-index 68293b39..11cf79ae 100644
+index 68293b3..0d77027 100644
 --- a/src/HttpServerCommand.cc
 +++ b/src/HttpServerCommand.cc
 @@ -53,6 +53,7 @@
@@ -10,10 +10,14 @@ index 68293b39..11cf79ae 100644
  #ifdef ENABLE_WEBSOCKET
  #  include "WebSocketResponseCommand.h"
  #endif // ENABLE_WEBSOCKET
-@@ -208,6 +209,29 @@ bool HttpServerCommand::execute()
+@@ -208,6 +209,34 @@ bool HttpServerCommand::execute()
          e_->setNoWait(true);
          return true;
        }
++      // === Modified by 阿杰 <master@x-ac.cn>, 2026-10.
++      //     This block was added to aria2's HttpServerCommand.cc and is
++      //     licensed under GPL-3.0-or-later (the "or later" clause of aria2's
++      //     GPLv2 grant).  SPDX-License-Identifier: GPL-3.0-or-later. ===
 +      // Serve the bundled Web UI over the same listener as the JSON-RPC
 +      // endpoint.  Only plain GET requests for files that actually exist are
 +      // handled here; anything else (RPC POST, WebSocket upgrade, missing file)
@@ -37,11 +41,12 @@ index 68293b39..11cf79ae 100644
 +          return true;
 +        }
 +      }
++      // === End modification by 阿杰 <master@x-ac.cn> ===
        auto& header = httpServer_->getRequestHeader();
        if (header->fieldContains(HttpHeader::UPGRADE, "websocket") &&
            header->fieldContains(HttpHeader::CONNECTION, "upgrade")) {
 diff --git a/src/Makefile.am b/src/Makefile.am
-index cb6e3b7c..54049b1f 100644
+index cb6e3b7..54049b1 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
 @@ -133,7 +133,7 @@ SRCS =  \
@@ -55,10 +60,26 @@ index cb6e3b7c..54049b1f 100644
  	IndexedList.h\
 diff --git a/src/WebUiServer.cc b/src/WebUiServer.cc
 new file mode 100644
-index 00000000..41895b1c
+index 0000000..cb77af2
 --- /dev/null
 +++ b/src/WebUiServer.cc
-@@ -0,0 +1,127 @@
+@@ -0,0 +1,143 @@
++/*
++ * WebUiServer.cc - Serve embedded Web UI assets over aria2's HTTP listener.
++ *
++ * This file is an addition to the aria2 source tree.  It is not part of the
++ * original aria2 distribution.
++ *
++ * Copyright (C) 2026 阿杰 <master@x-ac.cn>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation, either version 3 of the License, or
++ * (at your option) any later version.
++ *
++ * SPDX-License-Identifier: GPL-3.0-or-later
++ */
++
 +#include "WebUiServer.h"
 +
 +#include "common.h"
@@ -188,10 +209,26 @@ index 00000000..41895b1c
 +} // namespace aria2
 diff --git a/src/WebUiServer.h b/src/WebUiServer.h
 new file mode 100644
-index 00000000..1bbdf7af
+index 0000000..44eb770
 --- /dev/null
 +++ b/src/WebUiServer.h
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,46 @@
++/*
++ * WebUiServer.h - Serve embedded Web UI assets over aria2's HTTP listener.
++ *
++ * This file is an addition to the aria2 source tree.  It is not part of the
++ * original aria2 distribution.
++ *
++ * Copyright (C) 2026 阿杰 <master@x-ac.cn>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation, either version 3 of the License, or
++ * (at your option) any later version.
++ *
++ * SPDX-License-Identifier: GPL-3.0-or-later
++ */
++
 +#ifndef D_WEB_UI_SERVER_H
 +#define D_WEB_UI_SERVER_H
 +
