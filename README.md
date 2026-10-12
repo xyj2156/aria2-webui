@@ -64,20 +64,20 @@ During development, the default RPC endpoint can be set via env vars such as `VI
 The `patches/`, `docker/`, and `.github/workflows/release.yml` in this repo together build multi-platform releases:
 
 1. 构建本 Web UI 得到 `dist/`。
-2. 克隆打过基础改动的 aria2 fork，应用 `patches/aria2-embed-webui.patch`（把内嵌 blob 的解码/解压/查表回吐逻辑挂进 aria2 的 HTTP 服务，与 JSON-RPC 同端口同源）。
+2. 按 `release.yml` 里钉死的 tag 与 commit 克隆上游 aria2（`patches/clone-aria2.sh` 校验 commit 并确认补丁可应用），再应用 `patches/aria2-embed-webui.patch`（把内嵌 blob 的解码/解压/查表回吐逻辑挂进 aria2 的 HTTP 服务，与 JSON-RPC 同端口同源）。
 3. 用 `patches/gen_webui_blob.mjs` 把 `dist/` 打成内嵌资源。
 4. 分别为 **Windows x64（mingw 交叉、全静态）/ Linux x64（Alpine musl 全静态）/ macOS（arm64 原生）** 编出自洽的单文件 `aria2c`。
 5. 打 tag（`v*`）时汇总并发布 GitHub Release。
 
 1. Build this Web UI into `dist/`.
-2. Clone the aria2 fork and apply `patches/aria2-embed-webui.patch` (hooks blob decode/decompress/lookup into aria2's HTTP server, same-origin with the JSON-RPC port).
+2. Clone upstream aria2 at the tag and commit pinned in `release.yml` (`patches/clone-aria2.sh` verifies the commit and that the patch applies), then apply `patches/aria2-embed-webui.patch` (hooks blob decode/decompress/lookup into aria2's HTTP server, same-origin with the JSON-RPC port).
 3. Pack `dist/` into an embedded resource via `patches/gen_webui_blob.mjs`.
 4. Cross-compile self-contained single-file `aria2c` for **Windows x64 (mingw, fully static) / Linux x64 (Alpine musl, fully static) / macOS (native arm64)**.
 5. On a `v*` tag, assemble and publish a GitHub Release.
 
-> 提示：`workflow_dispatch` 手动触发只跑各平台构建以验证流水线，**不会**创建 Release；Release 仅在推送 `v*` 标签时产生。
+> 提示：`workflow_dispatch` 手动触发默认只跑各平台构建以验证流水线，**不**发布 Release；推送 `v*` 标签时才会发布。若需要**重发某个已存在的版本**（例如修正该版本产物里缺失的许可随件），在 `workflow_dispatch` 的 `release_tag` 里填入该 tag 即可，它会覆盖同名资产而不动标签历史。
 >
-> Note: a `workflow_dispatch` run only builds the platform artifacts to validate the pipeline and does **not** create a Release; Releases are produced only on `v*` tag pushes.
+> Note: a `workflow_dispatch` run only builds the platform artifacts to validate the pipeline and does **not** publish unless it is told which release it stands for; Releases are produced on `v*` tag pushes. To **re-publish an existing version** (for example to fix license files missing from its artifacts), pass that tag in the `release_tag` input — assets with the same name are replaced and the tag history is left alone.
 
 详见 [`patches/README.md`](./patches/README.md)。
 
@@ -87,11 +87,13 @@ See [`patches/README.md`](./patches/README.md) for details.
 
 - **本仓库的 Web UI 源码（`src/`、`patches/gen_webui_blob.mjs`、`patches/build-aria2-webui.sh` 等构建脚本）** 以 **Apache License 2.0** 授权，详见 [`LICENSE`](./LICENSE) 与 [`NOTICE`](./NOTICE)。
 - **`patches/aria2-embed-webui.patch` 对 aria2 源码的改动，以及由该补丁与本仓库流水线编译出的 `aria2c` 单文件二进制**，属于 aria2 的衍生作品。aria2 本身采用 **GPLv2 or later**；本项目在分发修改版时**行使 "or later" 条款，按 GNU General Public License v3.0 分发**。这样做是因为 Apache-2.0 与 GPLv2 不兼容，但与 GPLv3 兼容，Web UI 的 Apache-2.0 代码因此可以合法地被打包进组合作品。
-- **GPL 对应源码获取（GPLv2/v3 Section "Corresponding Source"）**：分发的二进制对应的完整构建配方（aria2 fork tag、补丁文件、blob 生成脚本、CI 工作流）全部在本仓库公开。如需获取打补丁后的完整 aria2 源码树，按 [`patches/README.md`](./patches/README.md) 的"本地复现"步骤即可 1:1 重现；或通过仓库 issue / 邮件联系作者，我们承诺在自分发之日起三年内提供完整对应源码。
+- **GPL 对应源码获取（GPLv3 第一节 "Corresponding Source"）**：每个 Release 都附带 `aria2-<aria2-tag>-webui-<版本>-sources.tar.gz`，里面是**已打补丁的完整 aria2 源码树**加上重建这批二进制所需的构建配方（blob 生成脚本、构建脚本、容器镜像、CI 工作流），源码基线钉死在上游 aria2 的一个 tag 与 commit 上（见 `release.yml` 的 `ARIA2_TAG` / `ARIA2_SHA`，以及 `licenses/manifest.json`）。这是履行对应源码义务的主要方式；`patches/README.md` 的"本地复现"步骤可 1:1 重放同一过程。若你拿不到该资产，开 issue 或按 `NOTICE` 里的地址联系作者，自本次分发起至少三年内仍会提供完整源码——这条承诺是补充便利，不是履行方式的替代。
+- **随包许可文件 / files inside every archive**：`LICENSE`（组合作品的授权说明）、`NOTICE`、`THIRD-PARTY-NOTICES.txt`（由 `scripts/gen-third-party-notices.mjs` 从 `licenses/manifest.json` 与 `pnpm-lock.yaml` 生成）、以及 `LICENSES/` 下各许可证全文。静态链入库包含 OpenSSL、c-ares、Expat、SQLite、zlib、libssh2、GNU MP、musl、MinGW-w64 runtime、winpthread 与 libstdc++/libgcc（后两者按 GCC 运行库例外使用）。
 
 - **The Web UI sources in this repo** (`src/`, the build scripts under `patches/`) are licensed under **Apache License 2.0** — see [`LICENSE`](./LICENSE) and [`NOTICE`](./NOTICE).
 - **The patch against aria2 (`patches/aria2-embed-webui.patch`) and the resulting single-file `aria2c` binaries distributed via Releases** are derivative works of aria2, which itself is licensed under **GPLv2 or later**. This project exercises the "or later" clause and distributes the modified aria2 under **GPLv3**. This is deliberate: Apache-2.0 is incompatible with GPLv2 but compatible with GPLv3, which lets the Apache-2.0 Web UI be legally bundled into the combined work.
-- **Corresponding source code (GPL Section "Corresponding Source" offer)**: the full build recipe (aria2 fork tag, patch, blob generator, CI workflow) is public in this repo. To reproduce the patched aria2 source tree, follow the "local reproduction" steps in [`patches/README.md`](./patches/README.md); or contact the author via an issue / email — we offer to provide the complete corresponding source for at least three years from distribution.
+- **Corresponding source code (GPLv3 section 1)**: every release carries an `aria2-<aria2-tag>-webui-<version>-sources.tar.gz` asset containing the **fully patched aria2 source tree** plus the recipe needed to rebuild these binaries (blob generator, build scripts, container images, CI workflow). The source baseline is pinned to one upstream aria2 tag and commit (`ARIA2_TAG` / `ARIA2_SHA` in `release.yml`, mirrored in `licenses/manifest.json`). That asset is the primary way this obligation is met; the "local reproduction" steps in [`patches/README.md`](./patches/README.md) replay the same process 1:1. If you cannot obtain the asset, open an issue or write to the address in `NOTICE` and a complete copy will still be provided for at least three years after this release — that offer is a convenience on top of the asset, not a substitute for it.
+- **License files inside every archive**: `LICENSE` (how the combined work is granted), `NOTICE`, `THIRD-PARTY-NOTICES.txt` (generated by `scripts/gen-third-party-notices.mjs` from `licenses/manifest.json` and the pnpm lockfile) and the full texts under `LICENSES/`. Statically linked components include OpenSSL, c-ares, Expat, SQLite, zlib, libssh2, GNU MP, musl, the MinGW-w64 runtime and winpthread, plus libstdc++/libgcc used under the GCC Runtime Library Exception.
 
 再次感谢 aria2 及其作者 [Tatsuhiro Tsujikawa](https://github.com/tatsuhiro-t)。
 
