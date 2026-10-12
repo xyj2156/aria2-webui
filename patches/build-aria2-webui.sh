@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 阿杰很厉害 <506907958@qq.com>
 # Build aria2c with the Web UI embedded, for whichever toolchain the current
 # environment provides (Windows cross-compile, Linux/musl static, macOS native).
 #
 # Required env:
-#   ARIA2_SRC   path to a CLEAN aria2 source checkout (tag or master)
+#   ARIA2_SRC   path to a CLEAN aria2 source checkout at the pinned commit
+#               (produce it with patches/clone-aria2.sh; it refuses any other)
 #   WEBUI_DIST  path to the built Web UI "dist" directory
 #   OUT         output directory for the packaged binary + launchers
 # Optional env:

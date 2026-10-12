@@ -18,33 +18,49 @@ on:
         description: 'Build macOS (arm64)'
         type: boolean
         default: true
+      release_tag:
+        description: 'Publish as this Web UI tag (e.g. v1.0.0); empty = the triggering tag. Required to re-publish an existing release from a branch run.'
+        type: string
+        default: ''
 
 permissions:
   contents: write
 
 env:
-  ARIA2_REPO: xyj2156/aria2-original
+  # Every published binary is built from exactly this aria2 commit, and the GPL
+  # corresponding-source promise names it.  A personal fork used to be the
+  # source (with the tag resolved dynamically at run time), which meant the
+  # source of an already-downloaded binary could drift or vanish; upstream
+  # aria2/aria2 at a pinned commit cannot.  patches/clone-aria2.sh enforces it.
+  ARIA2_REPO: aria2/aria2
+  ARIA2_TAG: release-1.37.0
+  ARIA2_SHA: 02f2d0d8472b3c38c29b4dba8c75ebd5fdd2899a
 
 jobs:
-  # Resolve which aria2 tag to build against (the fork's latest release tag).
+  # Work out the release version this run represents, and whether it may
+  # publish anything.  Nothing here resolves aria2 any more: that is pinned in
+  # env above and enforced by patches/clone-aria2.sh.
   meta:
     runs-on: ubuntu-latest
     outputs:
-      aria2_tag: ${{ steps.t.outputs.tag }}
+      aria2_tag: ${{ steps.v.outputs.aria2_tag }}
+      version: ${{ steps.v.outputs.version }}
+      publish: ${{ steps.v.outputs.publish }}
     steps:
-      - id: t
+      - id: v
         run: |
-          # git ls-remote cannot sort by creatordate/committerdate (those need
-          # object data); sort on the ref name with version ordering instead.
-          TAG=$(git ls-remote --tags --sort=-v:refname "https://github.com/${ARIA2_REPO}" \
-                | grep -E 'refs/tags/release-' | grep -v '\^{}' \
-                | sed 's#.*refs/tags/##' | head -1)
-          if [ -z "$TAG" ]; then
-            echo "::error::could not resolve an aria2 'release-*' tag from ${ARIA2_REPO}"
-            exit 1
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "resolved aria2 tag: $TAG"
+          echo "aria2_tag=${ARIA2_TAG}" >> "$GITHUB_OUTPUT"
+          # A tag push names the release after that tag.  A workflow_dispatch run
+          # would otherwise report the branch name as github.ref_name, mis-naming
+          # every artifact and opening a bogus release — so to re-publish an
+          # existing release, dispatch must say which tag it stands for.
+          VERSION="${{ github.event.inputs.release_tag || github.ref_name }}"
+          case "$VERSION" in
+            v[0-9]*) echo "publish=yes"  >> "$GITHUB_OUTPUT" ;;
+            *)       echo "publish=no"   >> "$GITHUB_OUTPUT" ;;
+          esac
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "release version: ${VERSION} (aria2 ${ARIA2_TAG})"
 
   # Build the Web UI once; every platform job embeds this dist.
   webui:
@@ -60,10 +76,28 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # The unbundled static archive is Apache-2.0 plus the notices of every JS
+      # package compiled into it.  Those can only be read from an installed
+      # node_modules, so they are generated here and travel as their own
+      # artifact rather than being baked into dist/ (which is embedded in the
+      # binaries and must stay byte-for-byte the app).
+      - name: Generate the Web UI third-party notices
+        run: |
+          mkdir -p legal-webui
+          pnpm licenses list --json --prod > pnpm-licenses.json
+          node scripts/gen-third-party-notices.mjs \
+            --platform webui --pnpm-json pnpm-licenses.json \
+            --out legal-webui/THIRD-PARTY-NOTICES.txt
+          cp LICENSE legal-webui/LICENSE
+          cp NOTICE  legal-webui/NOTICE
       - uses: actions/upload-artifact@v7
         with:
           name: webui-dist
           path: dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: legal-webui
+          path: legal-webui
 
   build-windows:
     needs: [meta, webui]
@@ -73,8 +107,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with: { name: webui-dist, path: dist }
-      - name: Clone aria2
-        run: git clone --depth 1 --branch "${{ needs.meta.outputs.aria2_tag }}" "https://github.com/${ARIA2_REPO}" aria2
+      - name: Clone pinned aria2 (verifies the commit and that the patch applies)
+        run: bash patches/clone-aria2.sh aria2
       - name: Build image (mingw cross + static deps)
         run: docker build -f docker/Dockerfile.win -t aria2-webui-win .
       - name: Compile aria2c.exe (static, WinTLS)
@@ -100,8 +134,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with: { name: webui-dist, path: dist }
-      - name: Clone aria2
-        run: git clone --depth 1 --branch "${{ needs.meta.outputs.aria2_tag }}" "https://github.com/${ARIA2_REPO}" aria2
+      - name: Clone pinned aria2 (verifies the commit and that the patch applies)
+        run: bash patches/clone-aria2.sh aria2
       - name: Build image (alpine/musl static)
         run: docker build -f docker/Dockerfile.linux -t aria2-webui-linux .
       - name: Compile aria2c (static musl, OpenSSL)
@@ -139,8 +173,8 @@ jobs:
         with: { name: webui-dist, path: dist }
       - name: Install deps
         run: brew install autoconf automake libtool pkg-config gettext openssl@3 expat sqlite libssh2 c-ares gmp zlib
-      - name: Clone aria2
-        run: git clone --depth 1 --branch "${{ needs.meta.outputs.aria2_tag }}" "https://github.com/${ARIA2_REPO}" aria2
+      - name: Clone pinned aria2 (verifies the commit and that the patch applies)
+        run: bash patches/clone-aria2.sh aria2
       - name: Compile aria2c (static deps, OpenSSL)
         run: |
           # PKG_CONFIG_PATH must be exported in-shell: a step's `env:` map does
@@ -162,58 +196,143 @@ jobs:
           path: out/macos-arm64
 
   release:
-    # Only publish a GitHub Release on real version tags (v*).
-    # A workflow_dispatch run stays on branch refs (GITHUB_REF_NAME="main"),
-    # which would otherwise create a mis-named / failing Release, so we skip it
-    # here and let dispatch exercise just the multi-platform build jobs.
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    needs: [meta, build-windows, build-linux, build-macos]
+    # Publish only when this run represents a version tag — either a real tag
+    # push, or a dispatch that named one through release_tag.  The second form is
+    # how an already-published release gets corrected (a missing license bundle,
+    # say) without rewriting the tag or pretending a new version shipped.
+    if: needs.meta.outputs.publish == 'yes'
+    needs: [meta, build-windows, build-linux, build-macos, source-bundle]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with: { path: artifacts }
-      - name: Zip each platform
+      - name: Attach license bundle and zip each artifact
         run: |
+          VERSION='${{ needs.meta.outputs.version }}'
+          ARIA2_TAG='${{ needs.meta.outputs.aria2_tag }}'
           cd artifacts
           for d in */; do
             name="${d%/}"
             case "$name" in
-              # The standalone Web UI build output gets its own short, stable
-              # name (no aria2 tag prefix) so it's clearly distinguishable from
-              # the per-platform aria2c bundles.
-              webui-dist)
-                out="$GITHUB_WORKSPACE/aria2-webui-${GITHUB_REF_NAME}-dist.zip"
-                ;;
-              *)
-                out="$GITHUB_WORKSPACE/aria2-${{ needs.meta.outputs.aria2_tag }}-webui-${GITHUB_REF_NAME}-${name}.zip"
-                ;;
+              # Auxiliary artifacts, not platforms: their contents are copied
+              # into the platform directories below, never zipped on their own.
+              legal-webui|source-bundle) continue ;;
             esac
-            # Drop a self-contained LICENSE + NOTICE into every platform dir so
-            # the resulting zip is legally self-describing — a user doesn't
-            # have to visit the repo to know what they're allowed to do.
-            cp "$GITHUB_WORKSPACE/patches/LICENSE-BUNDLE" "$d/LICENSE"
-            cp "$GITHUB_WORKSPACE/patches/NOTICE-BUNDLE"  "$d/NOTICE"
+            if [ "$name" = webui-dist ]; then
+              # The unbundled static build contains no aria2 at all, so it gets
+              # the Apache-2.0 package only.  Putting the combined-work license
+              # here would describe a binary that is not in the zip.
+              out="$GITHUB_WORKSPACE/aria2-webui-${VERSION}-dist.zip"
+              cp legal-webui/LICENSE "$d/LICENSE"
+              cp legal-webui/NOTICE  "$d/NOTICE"
+              cp legal-webui/THIRD-PARTY-NOTICES.txt "$d/THIRD-PARTY-NOTICES.txt"
+            else
+              out="$GITHUB_WORKSPACE/aria2-${ARIA2_TAG}-webui-${VERSION}-${name}.zip"
+              case "$name" in
+                win-x64)     platform=win ;;
+                linux-x64)   platform=linux ;;
+                macos-arm64) platform=macos ;;
+                *) echo "unknown artifact directory $name" >&2; exit 1 ;;
+              esac
+              # A GPL binary has to travel with its license text, the notices of
+              # everything statically linked into it, and the pointer to the
+              # corresponding source — all readable without visiting the repo.
+              cp "$GITHUB_WORKSPACE/patches/LICENSE-BUNDLE" "$d/LICENSE"
+              cp "$GITHUB_WORKSPACE/patches/NOTICE-BUNDLE"  "$d/NOTICE"
+              mkdir -p "$d/LICENSES"
+              # Only the texts this variant actually needs — musl does not belong
+              # in the Windows zip — plus the machine-readable inventory they were
+              # derived from, so a recipient can re-derive them.
+              node "$GITHUB_WORKSPACE/scripts/gen-third-party-notices.mjs" \
+                --platform "$platform" --list-license-files |
+                while read -r text; do
+                  cp "$GITHUB_WORKSPACE/licenses/$text" "$d/LICENSES/"
+                done
+              cp "$GITHUB_WORKSPACE/licenses/manifest.json" "$d/LICENSES/"
+              node "$GITHUB_WORKSPACE/scripts/gen-third-party-notices.mjs" \
+                --platform "$platform" --out "$d/THIRD-PARTY-NOTICES.txt"
+            fi
             ( cd "$name" && zip -qr "$out" . )
           done
-          ls -la "$GITHUB_WORKSPACE"/*.zip
+          cp source-bundle/*.tar.gz "$GITHUB_WORKSPACE/"
+          ls -la "$GITHUB_WORKSPACE"/*.zip "$GITHUB_WORKSPACE"/*.tar.gz
       - uses: softprops/action-gh-release@v3
         with:
-          files: aria2-*.zip
-          name: "Aria2 WebUI ${{ github.ref_name }} (内嵌 aria2 ${{ needs.meta.outputs.aria2_tag }})"
+          tag_name: ${{ needs.meta.outputs.version }}
+          # Re-running for a tag that already exists — to fix what it shipped —
+          # replaces its assets instead of failing on a name collision.
+          overwrite_files: true
+          files: |
+            aria2-*.zip
+            aria2-*-sources.tar.gz
+          name: "Aria2 WebUI ${{ needs.meta.outputs.version }} (内嵌 aria2 ${{ needs.meta.outputs.aria2_tag }})"
           body: |
-            每个平台一个把 Web UI 内嵌进 `aria2c` 的单文件二进制；另有一个 `aria2-webui-<version>-dist.zip` 是未打包进二进制的 Web UI 静态产物本身。
+            每个平台一个把 Web UI 内嵌进 `aria2c` 的单文件二进制；`aria2-webui-<版本>-dist.zip` 是未打包进二进制的 Web UI 静态产物；`aria2-<aria2-tag>-webui-<版本>-sources.tar.gz` 是这批二进制的完整对应源码。
 
-            A single-binary `aria2c` per platform with the Web UI embedded; plus `aria2-webui-<version>-dist.zip` which is the Web UI static build itself, unbundled.
+            A single-binary `aria2c` per platform with the Web UI embedded; `aria2-webui-<version>-dist.zip`, the unbundled Web UI static build; and `aria2-<aria2-tag>-webui-<version>-sources.tar.gz`, the complete corresponding source of those binaries.
 
-            - 内嵌的 aria2 版本 / Embedded aria2 version: `${{ needs.meta.outputs.aria2_tag }}`
-            - Web UI 版本 / Web UI version: `${{ github.ref_name }}`
+            - 内嵌的 aria2 / Embedded aria2: `${{ needs.meta.outputs.aria2_tag }}` @ `${{ env.ARIA2_SHA }}`
+            - Web UI 版本 / Web UI version: `${{ needs.meta.outputs.version }}`
 
             用法 / Usage: Windows 运行 `start.bat`；Linux/macOS 运行 `./start.sh`，然后打开 http://localhost:6800/
 
             ---
 
-            许可 / License:
-            - Web UI 源码 / Web UI source: **Apache-2.0**.
-            - 修改后的 aria2 及本组二进制 / Modified aria2 and these binaries: **GPLv3** (exercising aria2's "GPLv2 or later" clause; chosen so the Apache-2.0 Web UI can be legally bundled — Apache-2.0 is GPLv2-incompatible but GPLv3-compatible).
-            - 对应源码 / Corresponding source: 本仓库公开了完整构建配方（aria2 fork tag、`patches/aria2-embed-webui.patch`、blob 生成脚本、本 CI 工作流）；按仓库 `patches/README.md` 即可 1:1 重现打补丁后的 aria2 源码树，或通过 issue 联系作者索取完整源码 tarball，自发布之日起三年内有效。 / The full build recipe is public in this repo; follow `patches/README.md` to reproduce the patched aria2 source tree, or open an issue to request a tarball — valid for at least three years from this release.
+            许可 / License — 每个压缩包内都带 `LICENSE`、`NOTICE`、`THIRD-PARTY-NOTICES.txt` 与 `LICENSES/` 许可证全文，不必访问本仓库即可知道权利与义务 / every archive carries its own LICENSE, NOTICE, THIRD-PARTY-NOTICES.txt and the full license texts under LICENSES/:
+
+            - Web UI 源码与静态产物 / Web UI sources and static build: **Apache-2.0**.
+            - 修改后的 aria2 与各平台二进制 / modified aria2 and the platform binaries: **GPL-3.0-or-later** — exercising aria2's "GPLv2 or later" option, chosen because Apache-2.0 is GPLv2-incompatible but GPLv3-compatible, which is what lets the panel be embedded lawfully.
+            - 静态链接的第三方库 / statically linked components: OpenSSL, c-ares, Expat, SQLite, zlib, libssh2, GNU MP (GMP), musl, MinGW-w64 runtime, winpthread, libstdc++/libgcc — 逐条版权声明与许可文本见包内 `THIRD-PARTY-NOTICES.txt` / per-component notices are inside each archive.
+            - 对应源码 / Corresponding source: 见上方 `*-sources.tar.gz` 资产（已打补丁的完整 aria2 源码树、Web UI blob 生成脚本、构建脚本、容器镜像与本工作流），构建固定使用上面那个 aria2 commit；也可按仓库 `patches/README.md` 自行重现。 / the sources asset above, pinned to the aria2 commit listed here.
+
+  # GPLv3 requires the complete corresponding source of a conveyed binary to be
+  # obtainable.  "Follow the recipe in the repo" is arguable; publishing the
+  # patched tree as an asset of the same release is not, and it also freezes the
+  # source against any later movement of the pinned tag.
+  source-bundle:
+    if: needs.meta.outputs.publish == 'yes'
+    needs: [meta, webui]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with: { name: webui-dist, path: dist }
+      - name: Clone pinned aria2 (verifies the commit and that the patch applies)
+        run: bash patches/clone-aria2.sh aria2
+      - name: Assemble the corresponding source
+        run: |
+          set -euo pipefail
+          ARIA2_TAG='${{ needs.meta.outputs.aria2_tag }}'
+          VERSION='${{ needs.meta.outputs.version }}'
+          BASE="aria2-${ARIA2_TAG}-webui-${VERSION}"
+          mkdir -p "stage/$BASE"
+          # git archive exports the pinned tree without .git, so the tarball holds
+          # source only; the patch is then applied exactly as a build would.
+          git -C aria2 archive HEAD | tar -x -C "stage/$BASE"
+          ( cd "stage/$BASE" && git apply -p1 "$GITHUB_WORKSPACE/patches/aria2-embed-webui.patch" )
+          node patches/gen_webui_blob.mjs "$PWD/dist" "$PWD/stage/$BASE/src/WebUiBlob.cc"
+          # Everything needed to rebuild these binaries, alongside the tree.
+          # git archive of this repository captures exactly the tracked recipe —
+          # src/, patches/, docker/, .github/, licenses/, the lockfile and the
+          # license texts — with no risk of quietly omitting one of them.
+          mkdir -p "stage/$BASE/build-recipe"
+          git archive HEAD | tar -x -C "stage/$BASE/build-recipe"
+          cat > "stage/$BASE/build-recipe/README.txt" <<EOF
+          This directory is the build recipe that produced the aria2c binaries
+          published alongside this file.  The patched aria2 tree one level up is
+          their complete corresponding source under GPL-3.0-or-later section 1.
+
+            aria2 source        : ${{ env.ARIA2_REPO }} tag ${ARIA2_TAG} commit ${{ env.ARIA2_SHA }}
+            webui repository    : ${{ github.repository }} commit ${{ github.sha }}
+            workflow run        : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Reproduce with: pnpm install && pnpm build, then follow patches/README.md.
+          EOF
+          tar -czf "$GITHUB_WORKSPACE/$BASE-sources.tar.gz" -C stage .
+          ls -la "$GITHUB_WORKSPACE/$BASE-sources.tar.gz"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: source-bundle
+          path: '*-sources.tar.gz'
+          if-no-files-found: error

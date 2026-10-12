@@ -1,13 +1,18 @@
 // Packs a built Web UI directory into a C++ source that embeds the assets in
 // the aria2c binary.  Format: AWEB index -> zlib deflate -> base64 -> C string.
 // Usage: node gen_webui_blob.mjs <distDir> <out.cc>
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 阿杰很厉害 <506907958@qq.com>
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 
-const DIST = process.argv[2] || 'F:\\tmp\\aria2-webui-test\\webui';
-const OUT =
-  process.argv[3] || 'G:\\web\\aria2-webui\\aria2-with-webui\\src\\WebUiBlob.cc';
+// No default paths: a silently wrong distDir would embed the wrong panel.
+const [DIST, OUT] = process.argv.slice(2);
+if (!DIST || !OUT) {
+  console.error('usage: node gen_webui_blob.mjs <distDir> <out.cc>');
+  process.exit(1);
+}
 
 const MIME = {
   html: 'text/html; charset=utf-8',
