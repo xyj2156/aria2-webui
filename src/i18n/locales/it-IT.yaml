@@ -1,0 +1,725 @@
+app:
+  name: Aria2 WebUI
+lang:
+  label: Lingua
+theme:
+  toggle: Cambia tema
+settings:
+  immediate-hint: Le modifiche vengono inviate subito ad aria2 (alcune opzioni richiedono il riavvio di aria2)
+  connect-error: Impossibile connettersi a aria2!
+setting:
+  validate:
+    empty: Il valore dell'opzione non può essere vuoto!
+    invalid-number: Il numero inserito non è valido!
+    below-min: Il numero inserito è inferiore al valore minimo {value}!
+    above-max: Il numero inserito supera il valore massimo {value}!
+    invalid: Il valore inserito non è valido!
+option:
+  'true': Sì
+  'false': 'No'
+format:
+  settings:
+    total-count: '{count} elemento/i'
+menu:
+  group:
+    task: Attività
+    aria2-settings: Impostazioni Aria2
+  webui-settings: Impostazioni interfaccia
+  downloading: In download
+  waiting: In attesa
+  stopped: Completate / fermate
+  settings: Impostazioni
+  base-settings: Impostazioni di base
+  protocol-settings: Impostazioni HTTP/FTP/SFTP
+  http-setting: Impostazioni HTTP
+  ftp-sftp-setting: Impostazioni FTP/SFTP
+  bittorrent-setting: Impostazioni BitTorrent
+  metalink-setting: Impostazioni Metalink
+  rpc-setting: Impostazioni RPC
+  advanced-setting: Impostazioni avanzate
+connection:
+  name: Nome connessione
+  host: Nome host
+  port: Porta
+  path: Percorso
+  protocol: Protocollo
+  secret: Chiave RPC
+  test:
+    success: Connesso ad aria2
+    failed: Connessione ad aria2 non riuscita
+  status:
+    idle: Non connesso
+    connecting: Connessione in corso
+    connected: Connesso
+    reconnecting: Riconnessione in corso
+    error: Errore di connessione
+  remove:
+    title: Conferma eliminazione
+    content: Eliminare davvero questa connessione?
+    positive: Elimina
+    negative: Annulla
+  switch:
+    tooltip: Cambia connessione aria2
+    none: Nessuna connessione
+task:
+  loading: Caricamento…
+  count: '{selected} di {total} selezionate'
+  search:
+    placeholder: Cerca nome attività
+  empty:
+    none: Nessuna attività
+    filtered: Nessuna attività corrispondente
+  refresh-failed: Aggiornamento non riuscito
+  duration:
+    more-than-a-day: Più di un giorno
+  status:
+    downloading: In download
+    seeding: Seeding in corso
+    waiting: In attesa
+    paused: In pausa
+    completed: Completato
+    error: Errore
+    removed: Rimosso
+  meta:
+    seeders: Seed
+    remain: Tempo rimanente
+    error-code: 'Codice di errore:'
+  action:
+    pause: Pausa
+    resume: Avvia
+    remove: Rimuovi
+    retry: Riprova
+    clear-completed: Cancella completate
+    refresh: Aggiorna
+    saved: Salvato
+    view: Visualizza
+    expand: Espandi tutto
+    collapse: Comprimi tutto
+  retry:
+    not-retryable: Questa attività non può essere ricreata (aria2 non conserva i file torrent / metalink). Aggiungila di nuovo.
+  notify:
+    completed: Download completato
+    failed: Download fallito
+  chart-loading: Caricamento grafico...
+  tab:
+    overview: Panoramica
+    pieces: Piece
+    files: File
+    peers: Peer
+    settings: Impostazioni
+  pieces:
+    completed: Completato
+    uncompleted: Non completato
+    info: '{completed} di {total} piece completate'
+    view-distribution: Distribuzione
+    view-pie: Grafico a torta
+    group-auto: Raggruppamento automatico
+    group-step: '{size} piece / barra'
+    summary-per-piece: '{total} piece originali, mostrate una per una'
+    summary-grouped: '{total} piece originali, {size} unite per barra, {bars} barre'
+    cell-single: Piece {index} · {state}
+    cell-range: Piece {start}-{end} · {done}/{count} completate ({pct}%)
+  files:
+    name: Nome file
+    empty: Nessun file
+    restart-tip: Modificare durante il download riavvia l'attività
+    none-selected: Seleziona almeno un file
+    select-all: Seleziona tutto
+    select-none: Deseleziona tutto
+    select-invert: Inverti selezione
+    confirm: Conferma
+  peers:
+    address: Indirizzo
+    client: Client
+    status: Stato
+    download: Download
+    upload: Upload
+    local: Questo client
+    empty: Nessun peer connesso
+  detail:
+    auto-refresh-hint: Aggiornamento automatico in pausa
+    invalid-url: Indirizzo attività non valido
+    task-not-found: Attività non trovata
+  field:
+    name: Nome
+    size: Dimensione
+    selected-files: File selezionati
+    file-count: '{count} file'
+    status: Stato
+    error-description: Descrizione dell'errore
+    progress: Progressione
+    health: Integrità
+    download: Download
+    upload: Upload
+    share-ratio: Rapporto di condivisione
+    remaining: Tempo rimanente
+    seeders-connections: Seed / connessioni
+    seed-creation-time: Ora di creazione del seed
+    info-hash: Valore hash
+    download-url: Indirizzo di download
+    download-dir: Percorso di download
+    speed: Velocità
+    tracker-servers: Server tracker BT
+  menu:
+    select-all: Seleziona tutto
+    select-completed: Seleziona completate
+    select-failed: Seleziona fallite / rimosse
+  confirm:
+    negative: Annulla
+    remove:
+      title: Conferma eliminazione
+      content: Rimuovere le {count} attività selezionate?
+      positive: Rimuovi
+    clear:
+      title: Cancella completate
+      content: Cancellare tutte le attività completate / rimosse? (i file su disco restano)
+      positive: Cancella
+  new:
+    button: Nuovo
+    title: Nuovo download
+    source:
+      links: Collegamenti
+      torrent: Torrent
+    links:
+      placeholder: Un indirizzo di download per riga (http / https / ftp / sftp / link magnet)
+      valid-count: '{count} collegamenti validi'
+      ignored-count: ', {count} righe ignorate'
+      empty: Inserisci almeno un collegamento valido
+    torrent:
+      pick: Scegli file
+      hint: Accetta file .torrent / .metalink / .meta4
+      none: Nessun file scelto
+      no-file: Nessun file selezionato
+      empty: Il file selezionato è vuoto
+      too-large: Il file supera il limite di {size}
+      read-failed: Lettura del file non riuscita
+      unknown-type: Tipo di file non riconosciuto, scegli un file torrent o Metalink
+    options:
+      title: Opzioni prima del download
+      hint: Le opzioni vuote non vengono inviate; valgono i valori globali di aria2
+    action:
+      download: Scarica ora
+      download-later: Scarica manualmente
+      cancel: Annulla
+      submitting: Creazione…
+    result:
+      success: '{count} attività create'
+      failed: 'Creazione non riuscita: {message}'
+options:
+  all-proxy-passwd:
+    name: Password del server proxy
+  all-proxy-user:
+    name: Nome utente del server proxy
+  all-proxy:
+    description: Imposta l'indirizzo del server proxy per tutti i protocolli. È anche possibile sovrascrivere questa opzione per protocolli specifici utilizzando le opzioni --http-proxy, --https-proxy e --ftp-proxy. Questa impostazione influenzerà tutti i download. Il formato dell'indirizzo del server proxy è [http://][UTENTE:PASSWORD@]HOST[:PORTA].
+    name: Server proxy
+  allow-overwrite:
+    description: Riscarica il file dall'inizio se il file di controllo corrispondente non esiste. Vedere l'opzione --auto-file-renaming.
+    name: Consenti la sovrascrittura
+  allow-piece-length-change:
+    description: Se impostato su "No", aria2 interromperà il download se la lunghezza del pezzo è diversa da quella nel file di controllo. Se impostato su "Sì", puoi continuare, ma parte della progressione del download verrà persa.
+    name: Consenti la modifica della lunghezza del pezzo
+  always-resume:
+    description: Ripristina sempre il download interrotto. Se impostato su "Sì", aria2 tenta sempre di ripristinare il download interrotto, in caso contrario interrompe il download. Se impostato su "No", per URI che non supportano il download interrotto o aria2 incontra N URI che non supportano il download interrotto (N è il valore impostato dall'opzione --max-resume-failure-tries), aria2 scaricherà il file dall'inizio. Vedere il parametro --max-resume-failure-tries.
+    name: Ripristina sempre
+  async-dns:
+    name: DNS asincrono
+  auto-file-renaming:
+    description: Rinomina i file
+    name: Ridenominazione automatica dei file
+  auto-save-interval:
+    description: Salva automaticamente il file di controllo (*.aria2) ogni tot secondi specificati. Se impostato su 0, il file di controllo non verrà salvato automaticamente durante il download. Indipendentemente dal valore impostato, aria2 salverà il file di controllo al termine del task. Il valore può essere impostato da 0 a 600.
+    name: Intervallo di salvataggio automatico
+  bt-detach-seed-only:
+    description: Escludi i task di sola seed durante il calcolo dei task di download attivi (vedi opzione -j). Ciò significa che se il parametro è impostato su -j3 e attualmente ci sono 3 task attivi, di cui uno è in modalità seed, verrà escluso (cioè il numero diventerà 2) e il prossimo task in coda verrà avviato. Tuttavia, è importante notare che nei metodi RPC, i task di seed sono comunque considerati attivi.
+    name: Separare solo i Task di Seed
+  bt-enable-hook-after-hash-check:
+    description: Consente l'esecuzione di un comando dopo il completamento del controllo hash dei download BT (vedi opzione -V). Per impostazione predefinita, quando il controllo hash ha successo, verrà eseguito il comando impostato tramite --on-bt-download-complete. Per disabilitare questo comportamento, impostare su "no".
+    name: Abilita Evento di Fine Controllo Hash
+  bt-enable-lpd:
+    name: Abilita Discovery Nodi Locali (LPD)
+  bt-exclude-tracker:
+    description: Indirizzi server BT esclusi separati da virgola. È possibile utilizzare * per corrispondere a tutti gli indirizzi, quindi escludere tutti gli indirizzi del server. Quando si utilizza * nella riga di comando della shell, è necessario utilizzare un carattere di escape o le virgolette.
+    name: Escludi Indirizzi Server BT
+  bt-external-ip:
+    description: Specifica l'indirizzo IP esterno utilizzato per i download BitTorrent e DHT. Potrebbe essere inviato ai server BitTorrent. Per DHT, questa opzione segnalerà ai nodi locali di essere in fase di download di un determinato torrent. Questo è essenziale per l'uso di DHT in reti private. Anche se si chiama "esterno", accetta vari tipi di indirizzi IP.
+    name: Indirizzo IP Esterno
+  bt-force-encryption:
+    description: I contenuti dei messaggi BT devono essere crittografati con arc4. Questa opzione è un modo rapido per impostare --bt-require-crypto --bt-min-crypto-level=arc4. Non modifica il contenuto di queste due opzioni. Se impostato su "sì", rifiuterà gli handshake BT precedenti e utilizzerà solo handshake sfocati e messaggi crittografati.
+    name: Forza Crittografia
+  bt-hash-check-seed:
+    description: Se impostato su "sì", aria2 continuerà il seeding solo dopo aver completato il controllo hash e il completamento del file utilizzando l'opzione --check-integrity. Se si desidera controllare solo i file quando sono danneggiati o incompleti, impostare su "no". Questa opzione è valida solo per i download BT.
+    name: Controlla Hash Prima del Seed
+  bt-load-saved-metadata:
+    description: Quando si utilizza il download magnetico, tenta prima di caricare il file salvato con l'opzione --bt-save-metadata prima di scaricare i metadati dal DHT. Se il caricamento del file ha successo, i metadati non verranno scaricati dal DHT.
+    name: Carica Metadata Salvati
+  bt-max-open-files:
+    description: Imposta il numero massimo di file aperti globalmente per i download BT/Metalink.
+    name: Numero Massimo File Aperti
+  bt-max-peers:
+    description: Imposta il numero massimo di peer connessi per ogni download BT. 0 significa nessun limite.
+    name: Numero Massimo Peer
+  bt-metadata-only:
+    description: Scarica solo i file torrent. I file descritti nel file torrent non verranno scaricati. Questa opzione è valida solo per i link magnetici.
+    name: Scarica Solo Metadati
+  bt-min-crypto-level:
+    description: Imposta il livello minimo della crittografia. Se un peer offre più metodi di crittografia, aria2 selezionerà il livello minimo che soddisfi il livello specificato.
+    name: Livello Minimo Crittografia
+  bt-prioritize-piece:
+    description: 'Tenta di scaricare prima i pezzi all''inizio o alla fine di ogni file. Questa opzione è utile per la visualizzazione anticipata dei file. I parametri possono includere due parole chiave: head e tail. Se sono presenti entrambe le parole chiave, devono essere separate da una virgola. Ogni parola chiave può includere un parametro SIZE. Ad esempio, specificando head=SIZE, le prime SIZE dei dati di ciascun file avranno una priorità maggiore. tail=SIZE significa gli ultimi SIZE dati di ciascun file. SIZE può includere K o M (1K=1024, 1M=1024K).'
+    name: Priorità Download
+  bt-remove-unselected-file:
+    description: Dopo il completamento del task BT, rimuove i file non selezionati. Per selezionare i file da scaricare, utilizzare l'opzione --select-file. Se non vengono selezionati file, tutti i file saranno considerati come da scaricare per impostazione predefinita. Questa opzione rimuoverà direttamente i file dal disco, quindi utilizzarla con attenzione.
+    name: Rimuovi File Non Selezionati
+  bt-request-peer-speed-limit:
+    description: Se la velocità di download complessiva di un download BT è inferiore al valore impostato con questa opzione, aria2 aumenterà temporaneamente il numero di connessioni per aumentare la velocità di download. In alcune circostanze, impostare una velocità di download desiderata può migliorare la velocità di download. È possibile aggiungere unità K o M (1K=1024, 1M=1024K).
+    name: Velocità Download Desiderata dai Peer
+  bt-require-crypto:
+    description: Se impostata su "sì", aria non accetterà gli handshake BitTorrent precedenti (\19protocollo BitTorrent) e stabilirà una connessione solo sfocata. Pertanto, aria2 utilizzerà sempre handshake sfocati.
+    name: Crittografia Obbligatoria
+  bt-save-metadata:
+    description: Salva il file torrent come file ".torrent". Questa opzione è valida solo per i link magnetici. Il nome del file è l'hash esadecimale codificato in formato esadecimale seguito dall'estensione ".torrent". Viene salvato nella stessa directory dei file scaricati. Se esiste già un file con lo stesso nome, il file torrent non verrà salvato.
+    name: Salva File Torrent
+  bt-seed-unverified:
+    description: Non controlla il valore hash di ogni pezzo dei file scaricati in precedenza.
+    name: Non Verificare File Già Scaricati
+  bt-stop-timeout:
+    description: Quando la velocità di download di un task BT rimane a 0 per il tempo impostato con questa opzione, il download si ferma. Se impostato su 0, questa funzionalità sarà disabilitata.
+    name: Timeout di Arresto Automatico Senza Velocità
+  bt-tracker-connect-timeout:
+    description: Imposta il timeout di connessione al server BT in secondi. Dopo che la connessione è stata stabilita, questa opzione non ha più effetto, utilizzare l'opzione --bt-tracker-timeout.
+    name: Timeout di connessione al server BT
+  bt-tracker-interval:
+    description: Imposta l'intervallo di richiesta al server BT in secondi. Questa opzione sovrascriverà completamente l'intervallo minimo e l'intervallo restituiti dal server, aria2 utilizzerà solo il valore di questa opzione. Se impostato su 0, aria2 deciderà l'intervallo in base alla risposta del server e all'avanzamento del download.
+    name: Intervallo di connessione al server BT
+  bt-tracker-timeout:
+    name: Timeout del server BT
+  bt-tracker:
+    description: Indirizzi server BT separati da virgola. Questi indirizzi non sono influenzati dall'opzione --bt-exclude-tracker, perché vengono aggiunti solo dopo che l'opzione --bt-exclude-tracker ha escluso altri indirizzi.
+    name: Indirizzo del Tracker BT
+  check-certificate:
+    name: Verifica certificato
+  check-integrity:
+    description: Verifica l'integrità del file tramite la convalida hash di ogni blocco o del file completo. Questa opzione è valida solo per collegamenti BT, Metalink e per collegamenti HTTP(S)/FTP che hanno impostato l'opzione --checksum.
+    name: Verifica integrità
+  checksum:
+    description: 'Imposta il checksum. Il formato del valore dell''opzione è TIPO=DIGEST. TIPO è il tipo di hash supportato elencato negli algoritmi hash di aria2c -v. DIGEST è il digest esadecimale. Ad esempio, impostare il digest sha-1 sarebbe simile a questo: sha-1=0192ba11326fe2298c8cb4de616f4d4140213838. Questa opzione è valida solo per i download HTTP(S)/FTP.'
+    name: Checksum
+  conditional-get:
+    description: Scarica il file solo se è più vecchio del file locale. Questa funzione funziona solo per i download HTTP(S). Se la dimensione del file è già stata specificata in Metalink, la funzione non avrà effetto. Inoltre, questa funzione ignorerà l'intestazione di risposta Content-Disposition. Se esiste un file di controllo, questa opzione verrà ignorata. Questa funzione utilizza l'intestazione di richiesta If-Modified-Since per ottenere il file più recente. Quando viene recuperato il tempo di modifica del file locale, questa funzione utilizzerà il nome del file fornito dall'utente (vedere l'opzione --out), oppure il nome del file nell'URI se l'opzione --out non è specificata. Per sovrascrivere un file esistente, è necessario utilizzare il parametro --allow-overwrite.
+    name: Download condizionale
+  conf-path:
+    name: Percorso del file di configurazione
+  connect-timeout:
+    description: Imposta il timeout (in secondi) per stabilire la connessione a un server HTTP/FTP/proxy. Una volta stabilita la connessione, questa opzione non avrà più effetto, si prega di utilizzare l'opzione --timeout.
+    name: Timeout connessione
+  console-log-level:
+    name: Livello di log della console
+  content-disposition-default-utf8:
+    description: Usa il set di caratteri UTF-8 invece di ISO-8859-1 per elaborare la stringa nell'intestazione "Content-Disposition", ad esempio, il parametro del nome file, ma non il nome file della versione estesa.
+    name: Usa UTF-8 per elaborare Content-Disposition
+  continue:
+    description: Riprende il download dei file parzialmente scaricati. Abilitando questa opzione, è possibile riprendere il download dei file scaricati sequenzialmente da un browser o da altri programmi. Questa opzione è attualmente supportata solo per i file scaricati tramite HTTP(S)/FTP.
+    name: Riprendi download
+  daemon:
+    name: Abilita il processo in background
+  deferred-input:
+    description: Se impostato su "Sì", aria2 non leggerà tutti gli indirizzi URI nel file specificato dall'opzione --input-file all'avvio, ma li leggerà solo quando necessario. Se il file di input contiene un gran numero di URI da scaricare, questa opzione può ridurre l'utilizzo della memoria. Se impostato su "No", aria2 leggerà tutti gli URI all'avvio. L'opzione --deferred-input verrà disattivata quando si utilizza --save-session.
+    name: Caricamento ritardato
+  dht-file-path:
+    description: Modifica il percorso del file della tabella di routing DHT IPv4.
+    name: File DHT (IPv4)
+  dht-file-path6:
+    description: Modifica il percorso del file della tabella di routing DHT IPv6.
+    name: File DHT (IPv6)
+  dht-listen-port:
+    description: 'Imposta la porta UDP utilizzata da DHT (IPv4, IPv6) e dal server UDP. Più porte possono essere separate da virgole ",", ad esempio: 6881,6885. È anche possibile utilizzare un trattino "-" per indicare un intervallo: 6881-6999, oppure entrambi insieme: 6881-6889, 6999.'
+    name: Porta di ascolto DHT
+  dht-message-timeout:
+    name: Timeout del messaggio DHT
+  dir:
+    name: Percorso di download
+  disable-ipv6:
+    name: Disabilita IPv6
+  disk-cache:
+    description: Abilita la cache disco. Se impostato su 0, la cache disco verrà disattivata. Questa funzione memorizza nella cache i dati scaricati nella memoria, fino a un massimo di byte specificati in questa opzione. La memoria cache di archiviazione viene creata dall'istanza aria2 e condivisa da tutti i download. Poiché i dati vengono scritti in unità più grandi e riordinati in base all'offset del file, un vantaggio della cache disco è la riduzione dell'I/O del disco. Se viene richiamato il controllo dell'hash e i dati sono memorizzati nella cache in memoria, non sarà necessario leggerli dal disco. La dimensione può includere K o M (1K=1024, 1M=1024K).
+    name: Cache disco
+  download-result:
+    description: Questa opzione modifica il formato del risultato del download. Se impostato su "Default", stamperà GID, stato, velocità media di download e percorso/URI. Se sono coinvolti più file, verrà stampato solo il percorso/URI del primo file richiesto, gli altri verranno ignorati. Se impostato su "Completo", stamperà GID, stato, velocità media di download, avanzamento del download e percorso/URI. In questo caso, l'avanzamento del download e il percorso/URI verranno stampati su una riga per ciascun file. Se impostato su "Nascosto", il risultato del download verrà nascosto.
+    name: Risultato del download
+  dry-run:
+    description: Se impostato su "sì", aria2 verificherà solo se il file remoto esiste senza scaricare il contenuto del file. Questa opzione è valida solo per i download HTTP/FTP. Se impostato su true, i download BT verranno interrotti immediatamente.
+    name: Esecuzione di prova
+  dscp:
+    description: Imposta il valore DSCP del campo TOS nei pacchetti IP in uscita BT per QoS. Questo parametro imposta solo i bit DSCP del campo TOS, non l'intero campo. Se si ottengono valori da /usr/include/netinet/ip.h, è necessario dividerli per 4 (altrimenti i valori saranno errati, ad esempio la classe CS1 diventerà CS4). Se si utilizzano valori comuni da RFC, documentazione del fornitore di rete, Wikipedia o altre fonti, è possibile utilizzarli direttamente.
+    name: DSCP
+  enable-color:
+    name: Usa colori nell'output del terminale
+  enable-dht:
+    description: Abilita la funzione DHT IPv4. Questa opzione abilita anche il supporto del server UDP. Se il torrent è contrassegnato come privato, aria2 non abiliterà DHT anche se questa opzione è impostata su "Sì".
+    name: Abilita DHT (IPv4)
+  enable-dht6:
+    description: Abilita la funzione DHT IPv6. Se il torrent è contrassegnato come privato, aria2 non abiliterà DHT anche se questa opzione è impostata su "Sì". Usa l'opzione --dht-listen-port per impostare la porta di ascolto.
+    name: Abilita DHT (IPv6)
+  enable-http-keep-alive:
+    description: Abilita il keep-alive HTTP/1.1.
+    name: Abilita keep-alive HTTP
+  enable-http-pipelining:
+    description: Abilita il pipelining HTTP/1.1.
+    name: Abilita il pipelining HTTP
+  enable-mmap:
+    description: Memorizza i file mappati in memoria. Se lo spazio del file non è preallocato, questa opzione non è valida. Vedere --file-allocation.
+    name: Abilita MMap
+  enable-peer-exchange:
+    description: Abilita l'estensione di scambio di peer. Se il torrent è contrassegnato come privato, aria2 non abiliterà questa funzione anche se questa opzione è impostata su "Sì".
+    name: Abilita lo scambio di peer
+  enable-rpc:
+    name: Abilita il server JSON-RPC/XML-RPC
+  event-poll:
+    description: Imposta il metodo di polling degli eventi. I valori possibili includono epoll, kqueue, port, poll e select. Per epoll, kqueue, port e poll, sono disponibili solo se il sistema li supporta. La maggior parte delle distribuzioni Linux supporta epoll. Vari sistemi *BSD, incluso Mac OS X, supportano kqueue. Open Solaris supporta la porta. Il valore predefinito varia a seconda del sistema operativo utilizzato.
+    name: Metodo di polling degli eventi
+  file-allocation:
+    description: Specifica il metodo di allocazione dei file. "Nessuno" non alloca preventivamente lo spazio del file. "Prealloc" allocherà lo spazio prima dell'inizio del download. Questo richiederà del tempo in base alle dimensioni del file. Se si utilizza un file system più recente, come ext4 (con supporto esteso), btrfs, xfs o NTFS (solo build MinGW), "falloc" è la scelta migliore. Può allocare file di grandi dimensioni (numerosi GiB) quasi istantaneamente. Non utilizzare falloc su file system legacy, come ext3 e FAT32, poiché richiede lo stesso tempo di prealloc e blocca aria2 fino al completamento dell'allocazione. falloc potrebbe non essere disponibile se il sistema non supporta la funzione posix_fallocate(3). "Trunc" utilizza la chiamata di sistema ftruncate(2) o un'implementazione specifica della piattaforma per troncare un file a una lunghezza specifica. Nei download BitTorrent con più file, se un file condivide le stesse sezioni con un file adiacente, anche i file adiacenti verranno allocati.
+    name: Metodo di allocazione file
+  follow-metalink:
+    description: Se impostato su "Sì" o "Solo memoria", quando un file con suffisso .meta4 o .metalink o con tipo di contenuto application/metalink4+xml o application/metalink+xml viene completato, aria2 leggerà e scaricherà i file menzionati nel file Metalink. Se impostato su "Solo memoria", il file Metalink non verrà scritto sul disco, ma solo memorizzato nella memoria. Se impostato su "No", il file .metalink verrà scaricato sul disco, ma non verrà letto e i file in esso contenuti non verranno scaricati.
+    name: Scarica i file nel Metalink
+  follow-torrent:
+    description: Se impostato su "Sì" o "Solo memoria", quando un file con suffisso .torrent o con tipo di contenuto application/x-bittorrent viene completato, aria2 leggerà e scaricherà i file menzionati nel file torrent. Se impostato su "Solo memoria", il file torrent non verrà scritto sul disco, ma solo memorizzato nella memoria. Se impostato su "No", il file .torrent verrà scaricato sul disco, ma non verrà letto e i file in esso contenuti non verranno scaricati.
+    name: Scarica i file nel torrent
+  force-save:
+    description: Salva l'attività anche se è stata completata o eliminata quando si utilizza l'opzione --save-session. In questo caso, questa opzione salverà anche il file di controllo. Questa opzione può salvare le attività BT che sono considerate completate ma che stanno ancora seedando.
+    name: Forza il salvataggio
+  ftp-passwd:
+    description: Se l'URI contiene solo il nome utente senza la password, aria2 cercherà prima la password nel file .netrc. Se trova la password nel file .netrc, la userà. Altrimenti, userà la password impostata con questa opzione.
+    name: Password FTP Predefinita
+  ftp-pasv:
+    description: Usa la modalità passiva nell'FTP. Se impostata su "no", verrà utilizzata la modalità attiva. Questa opzione non si applica al trasferimento SFTP.
+    name: Modalità Passiva
+  ftp-proxy-passwd:
+    name: Password Server Proxy FTP
+  ftp-proxy-user:
+    name: Nome Utente Server Proxy FTP
+  ftp-proxy:
+    name: Server Proxy FTP
+  ftp-reuse-connection:
+    name: Riutilizzo Connessione
+  ftp-type:
+    name: Tipo di Trasferimento
+  ftp-user:
+    name: Nome Utente FTP Predefinito
+  hash-check-only:
+    description: Se impostato su "Sì", termina il download in base al completamento del download dopo aver eseguito il controllo hash utilizzando l'opzione --check-integrity.
+    name: Solo controllo hash
+  header:
+    description: 'Aggiunge il contenuto dell''intestazione di richiesta HTTP. Ogni riga rappresenta un''opzione, contenente "nome intestazione: valore intestazione".'
+    name: Header personalizzati
+  http-accept-gzip:
+    description: 'Se l''intestazione di risposta del server remoto include Content-Encoding: gzip o Content-Encoding: deflate, invia le intestazioni di richiesta che contengono Accept: deflate, gzip e decomprimi la risposta.'
+    name: Accetta GZip
+  http-auth-challenge:
+    description: 'Invia intestazioni di richiesta di autenticazione HTTP solo quando richiesto dal server. Se impostato su "no", invierà sempre le intestazioni di richiesta di autenticazione. Eccezione: se il nome utente e la password sono inclusi nell''URI, questa opzione verrà ignorata e le intestazioni di richiesta di autenticazione verranno inviate sempre.'
+    name: Sfida autenticazione HTTP
+  http-no-cache:
+    description: 'Le intestazioni di richiesta inviate conterranno Cache-Control: no-cache e Pragma: no-cache per evitare la memorizzazione nella cache. Se impostato su "no", le suddette intestazioni di richiesta non verranno inviate e l''opzione --header potrà essere utilizzata per aggiungere l''intestazione Cache-Control.'
+    name: Disabilita cache
+  http-passwd:
+    name: Password HTTP predefinita
+  http-proxy-passwd:
+    name: Password server proxy HTTP
+  http-proxy-user:
+    name: Nome utente server proxy HTTP
+  http-proxy:
+    name: Server proxy HTTP
+  http-user:
+    name: Nome utente HTTP predefinito
+  https-proxy-passwd:
+    name: Password server proxy HTTPS
+  https-proxy-user:
+    name: Nome utente server proxy HTTPS
+  https-proxy:
+    name: Server proxy HTTPS
+  human-readable:
+    description: Stampa dimensioni e velocità in un formato leggibile in console (ad esempio, 1.2Ki, 3.4Mi).
+    name: Output leggibile in console
+  keep-unfinished-download-result:
+    description: Conserva tutti i risultati delle attività di download non completate, anche se superano il numero impostato dall'opzione --max-download-result. Questo può aiutare a conservare tutti i download non completati nel file di sessione (vedere l'opzione --save-session). È importante notare che non c'è un limite al numero di attività non completate. Se non lo si desidera, disattivare questa opzione.
+    name: Conserva i risultati delle attività non completate
+  listen-port:
+    description: 'Imposta la porta TCP per i download BT. Più porte possono essere separate da virgole ",", ad esempio: 6881,6885. È anche possibile utilizzare un trattino "-" per indicare un intervallo: 6881-6999, oppure entrambi insieme: 6881-6889, 6999.'
+    name: Porta di ascolto
+  log-level:
+    name: Livello di log
+  log:
+    description: Percorso del file di registro. Se impostato su "-", il registro viene scritto su stdout. Se impostato su una stringa vuota (""), il registro non verrà memorizzato su disco.
+    name: File di registro
+  lowest-speed-limit:
+    description: Chiude la connessione quando la velocità di download è inferiore al valore impostato (in B/s). 0 indica nessun limite di velocità minimo. È possibile aggiungere unità di misura come K o M (1K=1024, 1M=1024K). Questa opzione non influisce sui download BT.
+    name: Limite minimo di velocità
+  max-concurrent-downloads:
+    name: Numero massimo di download simultanei
+  max-connection-per-server:
+    name: Numero massimo di connessioni per server
+  max-download-limit:
+    description: Imposta la velocità massima di download per ogni attività (byte/secondo). 0 indica nessuna restrizione. È possibile aumentare il valore con le unità K o M (1K=1024, 1M=1024K).
+    name: Velocità massima di download
+  max-download-result:
+    description: Imposta il numero massimo di risultati di download da memorizzare in memoria. I risultati del download includono download completati/con errori/eliminati. I risultati del download vengono memorizzati in una coda FIFO, quindi è possibile memorizzare al massimo il numero specificato di risultati del download. Quando la coda è piena e viene creato un nuovo risultato di download, il risultato di download più vecchio viene rimosso dalla parte anteriore della coda e il nuovo viene inserito alla fine. Impostare un valore elevato per questa opzione può portare a un consumo elevato di memoria se si eseguono migliaia di download. Impostare su 0 per non memorizzare i risultati del download. Si noti che i download non completati saranno sempre conservati in memoria, indipendentemente dall'impostazione di questa opzione. Vedere l'opzione --keep-unfinished-download-result.
+    name: Numero massimo di risultati di download
+  max-file-not-found:
+    description: Se aria2 riceve lo stato "file non trovato" da un server HTTP/FTP remoto più volte rispetto al numero impostato in questa opzione, il download fallirà. Impostare a 0 disabiliterà questa opzione. Questa opzione influisce solo sui server HTTP/FTP. I tentativi di riprova verranno registrati insieme al numero di tentativi di riprova, quindi è necessario impostare l'opzione --max-tries.
+    name: Tentativi di riprova per file non trovati
+  max-mmap-limit:
+    description: Imposta la dimensione massima del file per abilitare MMap (vedere l'opzione --enable-mmap). La dimensione del file è determinata dalla somma di tutte le dimensioni dei file in un'attività di download. Ad esempio, se un download contiene 5 file, la dimensione del file sarà la dimensione totale di questi file. Se la dimensione del file supera la dimensione impostata per questa opzione, MMap verrà disattivato.
+    name: Limite massimo di MMap
+  max-overall-download-limit:
+    description: Imposta la velocità massima di download globale (byte/secondo). 0 indica nessuna restrizione. È possibile aumentare il valore con le unità K o M (1K=1024, 1M=1024K).
+    name: Velocità massima di download globale
+  max-overall-upload-limit:
+    description: Imposta la velocità massima di upload globale in byte/secondo. 0 indica che non ci sono limiti. Puoi aumentare il valore aggiungendo le unità K o M (1K=1024, 1M=1024K).
+    name: Velocità massima di upload globale
+  max-resume-failure-tries:
+    description: Quando l'opzione --always-resume è impostata su "No", se aria2 rileva che N URI non supportano la ripresa di download interrotti, il download del file inizierà dall'inizio. Se N è impostato su 0, il download del file inizierà dall'inizio solo se tutti gli URI non supportano la ripresa di download interrotti. Vedere l'opzione --always-resume.
+    name: Numero massimo di tentativi di ripresa di download interrotti
+  max-tries:
+    description: Imposta il numero massimo di tentativi. 0 indica nessuna limitazione.
+    name: Numero massimo di tentativi
+  max-upload-limit:
+    description: Imposta la velocità massima di upload per ogni task in byte/secondo. 0 indica che non ci sono limiti. Puoi aumentare il valore aggiungendo le unità K o M (1K=1024, 1M=1024K).
+    name: Velocità massima di upload
+  metalink-base-uri:
+    description: Specifica l'URI di base per risolvere gli indirizzi URI relativi metalink:url e metalink:metaurl nei file Metalink memorizzati sul disco locale. Se l'URI rappresenta una directory, deve terminare con /.
+    name: URI di base
+  metalink-enable-unique-protocol:
+    description: Se un file Metalink è disponibile su più protocolli e questa opzione è impostata su "Sì", aria2 ne utilizzerà solo uno. Usa il parametro --metalink-preferred-protocol per specificare il protocollo preferito.
+    name: Usa solo un protocollo univoco
+  metalink-language:
+    name: Lingua
+  metalink-location:
+    description: 'La posizione preferita del server. Puoi utilizzare un elenco separato da virgole, ad esempio: jp,us.'
+    name: Posizione del server preferita
+  metalink-os:
+    description: Il sistema operativo del file da scaricare.
+    name: Sistema operativo
+  metalink-preferred-protocol:
+    description: Specifica il protocollo preferito da utilizzare. Può essere impostato su http, https, ftp o "no". Se impostato su "no", questa opzione viene disattivata.
+    name: Protocollo preferito
+  metalink-version:
+    description: Il numero di versione del file da scaricare.
+    name: Numero di versione
+  min-split-size:
+    description: 'aria2 non dividerà i file più piccoli di 2*DIMENSIONE byte. Ad esempio, se la dimensione del file è di 20 MB e DIMENSIONE è 10M, aria2 dividerà il file in 2 segmenti [0-10MB) e [10MB-20MB) e utilizzerà 2 fonti per il download (se --split >= 2). Se DIMENSIONE è 15M, poiché 2*15M > 20MB, aria2 non dividerà il file e utilizzerà 1 fonte per il download. È possibile aggiungere unità di misura come K o M (1K=1024, 1M=1024K). I valori ammissibili vanno da: 1M-1024M.'
+    name: Dimensione minima della suddivisione dei file
+  min-tls-version:
+    description: Specifica la versione minima di SSL/TLS abilitata.
+    name: Versione minima TLS
+  netrc-path:
+    name: Percorso del file .netrc
+  no-conf:
+    name: Disabilita il file di configurazione
+  no-file-allocation-limit:
+    description: Non confrontare i file allocati con questo limite di dimensione. È possibile aumentare il valore con le unità K o M (1K=1024, 1M=1024K).
+    name: Limite di allocazione file
+  no-netrc:
+    name: Disabilita netrc
+  no-proxy:
+    description: Imposta gli hostname, i nomi di dominio, gli indirizzi di rete con o senza subnet mask da non utilizzare il server proxy. Utilizzare la virgola per separare più voci.
+    name: Elenco dei server proxy da non utilizzare
+  optimize-concurrent-downloads:
+    description: Ottimizza il numero di download simultanei in base alla larghezza di banda disponibile. aria2 utilizza la velocità di download precedentemente misurata per ottenere il numero di download simultanei tramite la regola N=A + B Log10 (la velocità è in Mbps). I coefficienti A e B possono essere personalizzati separati da due punti nel parametro. Il valore predefinito (A=5, B=25) può utilizzare 5 download simultanei su una rete da 1 Mbps e 50 su una rete da 100 Mbps. Il numero di download simultanei è limitato al massimo definito dal parametro --max-concurrent-downloads.
+    name: Ottimizza i download simultanei
+  out:
+    description: Nome del file scaricato. È sempre relativo al percorso impostato dall'opzione --dir. Questa opzione non è valida quando viene utilizzata l'opzione --force-sequential.
+    name: Nome del file
+  parameterized-uri:
+    description: 'Abilita il supporto URI parametrizzato. È possibile specificare un insieme di parti: http://{sv1,sv2,sv3}/foo.iso. È anche possibile utilizzare un contatore a passi per specificare sequenze numerizzate: http://host/image[000-100:2].img. Il contatore a passi è facoltativo. Se tutti gli URI non puntano allo stesso file, come nel secondo esempio sopra, è necessario utilizzare l''opzione -Z.'
+    name: Abilita il supporto URI parametrizzato
+  pause-metadata:
+    description: 'Sospende i download successivi dopo il download del file torrent. In aria2, ci sono 3 tipi di download di file torrent: (1) Download di file .torrent. (2) File torrent scaricati tramite magnet link. (3) Download di file Metalink. Questi file torrent, una volta scaricati, continueranno a scaricare in base al contenuto del file. Questa opzione metterà in pausa questi download successivi. Questa opzione è efficace solo se l''opzione --enable-rpc è abilitata.'
+    name: Sospendi dopo il download del file torrent
+  peer-agent:
+    description: Specifica la stringa utilizzata per la versione del client del nodo durante l'handshake esteso di BT.
+    name: Peer Agent
+  peer-id-prefix:
+    description: Specifica il prefisso per l'ID del nodo. L'ID del nodo in BT ha una lunghezza di 20 byte. Se supera i 20 byte, verranno utilizzati solo i primi 20 byte. Se è più breve di 20 byte, verranno aggiunti dati casuali per raggiungere i 20 byte.
+    name: Prefisso ID nodo
+  piece-length:
+    description: Imposta la dimensione di allocazione per i download HTTP/FTP. aria2 divide i file in base a questo limite. Tutte le sezioni saranno multipli di questa lunghezza. Questa opzione non è valida per i download BitTorrent.
+    name: Dimensione del blocco file
+  proxy-method:
+    description: Imposta il metodo da utilizzare per richiedere il server proxy. Il metodo può essere impostato su GET o TUNNEL. I download HTTPS ignoreranno questa opzione e utilizzeranno sempre TUNNEL.
+    name: Metodo di richiesta del server proxy
+  quiet:
+    name: Disabilita l'output della console
+  realtime-chunk-checksum:
+    description: Se viene fornita la checksum del blocco dati, verifica i blocchi dati con la checksum durante il download.
+    name: Controllo integrità dati in tempo reale
+  referer:
+    description: Imposta il referer della richiesta HTTP (Referer). Questa opzione influisce su tutti i download HTTP/HTTPS. Se impostata su *, il referer verrà impostato sul link di download. Questa opzione può essere utilizzata insieme all'opzione --parameterized-uri.
+    name: Referer
+  remote-time:
+    description: Ottiene il timestamp del file remoto da un servizio HTTP/FTP e lo imposta sul file locale, se disponibile
+    name: Ottieni il tempo del file dal server
+  remove-control-file:
+    description: Rimuove il file di controllo prima del download. In combinazione con l'opzione --allow-overwrite=true, il download del file inizierà sempre dall'inizio. Questa opzione può essere utile per gli utenti che utilizzano proxy che non supportano la ripresa di download interrotti.
+    name: Rimuovi file di controllo
+  retry-wait:
+    description: Imposta l'intervallo di tempo (in secondi) tra i tentativi di ritentativo. Quando impostato su un valore maggiore di 0, aria2 ritenterà quando riceve una risposta 503 dal server HTTP.
+    name: Tempo di attesa per il ritentativo
+  reuse-uri:
+    description: Quando tutti gli URI forniti sono stati utilizzati, continua a utilizzare gli URI già utilizzati.
+    name: Riutilizza URI
+  rlimit-nofile:
+    description: 'Imposta il soft limit per il numero di file descrittori aperti. Questa opzione è efficace solo se: a. Il sistema la supporta (POSIX). b. Il limite non supera l''hard limit. c. Il limite specificato è maggiore del soft limit corrente. Questo è equivalente all''impostazione di ulimit, tranne per il fatto che non può abbassare il limite. Questa opzione è efficace solo se il sistema supporta l''API rlimit.'
+    name: Numero massimo di file descrittori aperti
+  rpc-allow-origin-all:
+    description: Aggiunge il campo Access-Control-Allow-Origin all'intestazione di risposta RPC con il valore *.
+    name: Accetta tutte le richieste remote
+  rpc-listen-all:
+    description: Ascolta le richieste JSON-RPC/XML-RPC su tutte le schede di rete, se impostato su "No", ascolta solo le richieste dalla rete locale.
+    name: Ascolta su tutte le schede di rete
+  rpc-listen-port:
+    name: Porta di ascolto
+  rpc-max-request-size:
+    description: Imposta la dimensione massima della richiesta JSON-RPC/XML-RPC. Se aria2 rileva che la richiesta supera il numero di byte impostato, la connessione verrà chiusa direttamente.
+    name: Dimensione massima della richiesta
+  rpc-save-upload-metadata:
+    description: Salva i file torrent o Metalink caricati nella directory specificata dall'opzione dir. Il nome del file è composto da metadati hash SHA-1 e da un'estensione. Per i file torrent, l'estensione è '.torrent'. Per Metalink è '.meta4'. Se questa opzione è impostata su "No", i download aggiunti tramite i metodi aria2.addTorrent() o aria2.addMetalink() non possono essere salvati con l'opzione --save-session.
+    name: Salva i file torrent caricati
+  rpc-secure:
+    description: RPC verrà trasmesso tramite crittografia SSL/TLS. Il client RPC deve utilizzare il protocollo https per connettersi al server. Per i client WebSocket, utilizzare il protocollo wss. Usa le opzioni --rpc-certificate e --rpc-private-key per impostare il certificato e la chiave privata del server.
+    name: Abilita SSL/TLS
+  save-cookies:
+    description: Salva i cookie in un file nel formato Mozilla/Firefox(1.x/2.x)/Netscape. Se il file esiste già, verrà sovrascritto. I cookie scaduti verranno comunque salvati, ma il loro tempo di scadenza verrà impostato a 0.
+    name: Percorso salvataggio cookie
+  save-not-found:
+    description: Quando si utilizza l'opzione --save-session, salva l'attività di download anche se i file nell'attività non esistono. Questa opzione salverà anche questa situazione nel file di controllo.
+    name: Salva i file non trovati
+  save-session-interval:
+    description: Salva i download con errori o non completati nel file specificato dall'opzione --save-session ogni tot secondi. Se impostato su 0, la sessione verrà salvata solo quando aria2 esce.
+    name: Intervallo di salvataggio sessione
+  save-session:
+    description: Salva i download con errori e non completati in un file specificato all'uscita. Puoi ricaricarli usando l'opzione --input-file quando riavvii aria2. Se desideri comprimere l'output con GZip, puoi aggiungere l'estensione .gz al nome del file. Si noti che i metadati dei download aggiunti tramite i metodi RPC aria2.addTorrent() e aria2.addMetalink() non verranno salvati se non vengono salvati nel file. I download eliminati con aria2.remove() e aria2.forceRemove() non verranno salvati.
+    name: File di salvataggio sessione
+  seed-ratio:
+    description: Specifica il rapporto di condivisione. La condivisione termina quando il rapporto di condivisione raggiunge il valore impostato in questa opzione. Si consiglia vivamente di impostare questa opzione su un valore maggiore o uguale a 1.0. Se non si desidera limitare il rapporto di condivisione, è possibile impostarlo su 0.0. Se si imposta anche l'opzione --seed-time, la condivisione terminerà quando una delle due condizioni sarà soddisfatta.
+    name: Rapporto di condivisione minimo
+  seed-time:
+    description: Specifica il tempo di condivisione in minuti (in formato decimale). Se questa opzione è impostata su 0, la condivisione non avverrà dopo il completamento del download del task BT.
+    name: Tempo di condivisione minimo
+  server-stat-of:
+    description: Specifica il nome del file per salvare lo stato del server. È possibile utilizzare il parametro --server-stat-if per leggere i dati salvati.
+    name: Salva stato server
+  server-stat-timeout:
+    description: Specifica il tempo di scadenza dello stato del server (in secondi).
+    name: Timeout stato server
+  show-console-readout:
+    name: Mostra output console
+  socket-recv-buffer-size:
+    description: Imposta la dimensione massima del buffer di ricezione socket in byte. Se impostato su 0, questa opzione viene disattivata. Il valore di questa opzione viene impostato sul descrittore del file socket quando si chiama setsockopt() con l'opzione SO_RCVBUF.
+    name: Dimensione buffer di ricezione socket
+  split:
+    description: Utilizza N connessioni per il download. Se vengono forniti più indirizzi URI di N, verranno utilizzati i primi N indirizzi e gli indirizzi rimanenti saranno utilizzati come backup. Se gli indirizzi URI forniti sono meno di N, verranno utilizzati ripetutamente per garantire che siano attive N connessioni contemporaneamente. Il numero di connessioni allo stesso server è limitato dall'opzione --max-connection-per-server.
+    name: Connessioni per download
+  ssh-host-key-md:
+    description: 'Imposta il checksum della chiave pubblica SSH del server. Il formato dell''opzione è TIPO=DIGEST. TIPO è il tipo di hash. I tipi di hash supportati sono sha-1 e md5. DIGEST è il digest esadecimale. Ad esempio: sha-1=b030503d4de4539dc7885e6f0f5e256704edf4c3. Questa opzione può essere utilizzata per verificare la chiave pubblica del server quando si utilizza SFTP. Se questa opzione non è impostata, verrà mantenuta la verifica predefinita senza alcuna azione.'
+    name: Checksum Chiave Pubblica SSH
+  stop:
+    description: Arresta l'applicazione dopo SEC secondi. Con 0 la funzione è disabilitata.
+    name: Tempo di arresto automatico
+  stream-piece-selector:
+    description: Specifica l'algoritmo di selezione pezzi per il download HTTP/FTP. I pezzi sono segmenti di lunghezza fissa durante il download parallelo. Se impostato su "predefinito", aria2 selezionerà i pezzi riducendo il numero di connessioni. Poiché la creazione di connessioni è costosa, questo è il comportamento predefinito ragionevole. Se impostato su "sequenziale", aria2 selezionerà i pezzi con l'indice più basso. Un indice di 0 indica il primo pezzo del file. Questo è utile per lo streaming video. L'opzione --enable-http-pipelining contribuisce a ridurre i costi di riconnessione. Si noti che aria2 dipende dall'opzione --min-split-size, quindi è necessario impostare un valore ragionevole per --min-split-size. Se impostato su "casuale", aria2 selezionerà casualmente un pezzo. Come "sequenziale", dipende dall'opzione --min-split-size. Se impostato su "geometrico", aria2 selezionerà prima il pezzo con l'indice più basso, quindi riserverà spazio per i pezzi selezionati in precedenza utilizzando una crescita esponenziale. Ciò ridurrà il numero di connessioni mentre i primi pezzi del file saranno scaricati per primi. Questo è utile anche per lo streaming video.
+    name: Algoritmo selezione pezzi
+  summary-interval:
+    description: Imposta l'intervallo di output del riepilogo dell'avanzamento del download (in secondi). Impostare su 0 per disattivare l'output.
+    name: Intervallo di output del riepilogo del download
+  timeout:
+    name: Timeout
+  truncate-console-readout:
+    description: Tronca l'output della console su una singola riga.
+    name: Tronca l'output della console
+  uri-selector:
+    description: Specifica l'algoritmo di selezione URI. I valori possibili includono "sequenziale", "feedback" e "adattivo". Se impostato su "sequenziale", gli URI verranno utilizzati nell'ordine in cui compaiono nell'elenco. Se impostato su "feedback", aria2 selezionerà il server con la velocità di download più rapida dall'elenco di URI, ignorando i mirror non validi. La velocità di download precedentemente misurata sarà parte del file di stato del server, vedere le opzioni --server-stat-of e --server-stat-if. Se impostato su "adattivo", verrà selezionato il miglior mirror e la connessione in sospeso. Si noti che i mirror restituiti non sono stati testati e verranno testati nuovamente solo se tutti i mirror sono già stati testati. Ad esempio, "feedback" utilizza il file di stato del server.
+    name: Algoritmo selezione URI
+  use-head:
+    description: Utilizza il metodo HEAD durante la prima richiesta al server HTTP
+    name: Utilizza metodo HEAD
+  user-agent:
+    name: Agente Utente Personalizzato
+common:
+  confirm: Conferma
+  cancel: Annulla
+webui:
+  global: Globale
+  version: Versione
+  language: Lingua
+  theme: Tema
+  theme-light: Chiaro
+  theme-dark: Scuro
+  theme-system: Segui le impostazioni di sistema
+  debug-mode: Modalità debug
+  page-title: Titolo pagina
+  page-title-help: 'Segnaposto: ${title} (pagina corrente), ${rpcprofile} (nome connessione), ${downspeed}, ${upspeed}, ${downloading}, ${waiting}, ${stopped}. La velocità accetta un modificatore di scala, es. ${downspeed:scale=1}; prefix=X / suffix=X aggiungono testo attorno.'
+  notif-granted: Notifiche del browser attivate
+  notif-denied: Permesso di notifica non concesso; impossibile attivare
+  notif-unsupported: Questo browser non supporta le notifiche desktop
+  browser-notification: Abilita notifica browser
+  browser-notification-sound: Suono notifica browser
+  browser-notification-frequency: Frequenza notifica browser
+  ws-reconnect-interval: Intervallo di riconnessione automatica WebSocket
+  ws-reconnect-interval-help: Attesa iniziale (ms) prima della riconnessione automatica; raddoppia a ogni tentativo, con un tetto di circa 30 s. Imposta 0 per disattivare la riconnessione automatica. Solo per connessioni WebSocket.
+  title-refresh-interval: Aggiornamento intervallo titolo pagina
+  global-stat-refresh-interval: Intervallo stato globale
+  task-refresh-interval: Intervallo informazioni attività
+  keyboard-shortcuts: Scorciatoie da tastiera
+  keyboard-shortcuts-help: 'Se attive: Ctrl/Cmd+A seleziona tutto, Canc rimuove la selezione, Ctrl/Cmd+F porta il focus sulla ricerca (digitando in un campo non si attivano selezione/rimozione)'
+  swipe-gesture: Gesti di scorrimento
+  drag-and-drop-tasks: Riordina le attività con trascinamento
+  rpc-list-display-order: Ordine di visualizzazione elenco RPC
+  independent-display-order: Ogni elenco attività usa un ordine di visualizzazione indipendente
+  after-creating-new-task: Azione dopo la creazione di nuove attività
+  after-retrying-task: Azione dopo il nuovo tentativo
+  remove-old-task-after-retrying: Rimuovi l'attività originale dopo il nuovo tentativo
+  confirm-task-removal: Conferma prima di rimuovere le attività
+  include-prefix-when-copying: Includi il prefisso nella copia dal dettaglio attività
+  show-pieces-info: Soglia piece nel dettaglio attività
+  show-pieces-info-help: 'Sotto questa soglia ogni piece ha una cella; sopra, più piece vengono unite in una cella. Il numero di celle resta sempre limitato per non rallentare il browser, e questa opzione non nasconde più la vista piece: scegli «Non mostrare le piece» per nasconderla del tutto.'
+  unlimited: Illimitato
+  freq-high: Alta (Fino a 10 notifiche/minuto)
+  freq-middle: Media (Fino a 1 notifica/minuto)
+  freq-low: Bassa (max 1 notifica / 5 minuti)
+  recently-used: Usate di recente
+  rpc-alias: Alias RPC
+  goto-task-list: Vai all'elenco delle attività
+  goto-task-detail: Vai alla pagina di dettaglio dell'attività
+  goto-downloading: Vai alla pagina dei download in corso
+  stay-current: Rimani sulla pagina corrente
+  refresh-current-page: Ricarica la pagina corrente
+  always: Mostra tutte le piece una per una
+  never: Non mostrare le piece
+  pieces-le: Mostra piece una per una fino a {value}
+  import-settings: Importa impostazioni
+  export-settings: Esporta impostazioni
+  reset-settings: Ripristina impostazioni
+  confirm-reset: Ripristinare davvero tutte le impostazioni?
+  import: Importa
+  copy: Copia
+  download: Download
+  operation-succeeded: Operazione completata con successo
+  copy-failed: Copia non riuscita
+  import-invalid: Formato dei dati delle impostazioni non valido!
+  setting:
+    reload-hint: Richiede il ricaricamento della pagina
+  time:
+    seconds: Secondi
+    minutes: Minuti
+    milliseconds: Millisecondi
+    disabled: Disattivato
+  stat:
+    downloading: In download
+    upload: Velocità di upload
+  speed-float:
+    close: Chiudi il grafico della velocità
+    drag-hint: Tieni premuto qui per spostare
+    click-hint: Fai clic per il grafico della velocità
+    load-failed: Caricamento del grafico della velocità non riuscito

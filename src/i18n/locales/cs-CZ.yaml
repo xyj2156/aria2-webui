@@ -1,0 +1,725 @@
+app:
+  name: Aria2 WebUI
+lang:
+  label: Jazyk
+theme:
+  toggle: Přepnout motiv
+settings:
+  immediate-hint: Změny se do aria2 posílají ihned (některé volby vyžadují restart aria2)
+  connect-error: Nelze se připojit k aria2!
+setting:
+  validate:
+    empty: Hodnota volby nesmí být prázdná!
+    invalid-number: Zadané číslo je neplatné!
+    below-min: Zadané číslo je menší než minimální hodnota {value}!
+    above-max: Zadané číslo je větší než maximální hodnota {value}!
+    invalid: Zadaná hodnota je neplatná!
+option:
+  'true': Ano
+  'false': Ne
+format:
+  settings:
+    total-count: '{count} položek'
+menu:
+  group:
+    task: Úlohy
+    aria2-settings: Nastavení Aria2
+  webui-settings: Nastavení rozhraní
+  downloading: Stahuje se
+  waiting: Čekání
+  stopped: Dokončené / zastavené
+  settings: Nastavení
+  base-settings: Základní nastavení
+  protocol-settings: Nastavení HTTP/FTP/SFTP
+  http-setting: Nastavení HTTP
+  ftp-sftp-setting: Nastavení FTP/SFTP
+  bittorrent-setting: Nastavení BitTorrentu
+  metalink-setting: Nastavení Metalinku
+  rpc-setting: Nastavení RPC
+  advanced-setting: Pokročilé nastavení
+connection:
+  name: Název připojení
+  host: Název hostitele
+  port: Port
+  path: Cesta
+  protocol: Protokol
+  secret: Klíč RPC
+  test:
+    success: Připojeno k aria2
+    failed: Připojení k aria2 se nezdařilo
+  status:
+    idle: Nepřipojeno
+    connecting: Připojování
+    connected: Připojeno
+    reconnecting: Opětovné připojování
+    error: Chyba připojení
+  remove:
+    title: Potvrdit smazání
+    content: Opravdu chcete smazat toto připojení?
+    positive: Smazat
+    negative: Zrušit
+  switch:
+    tooltip: Přepnout připojení aria2
+    none: Žádné připojení
+task:
+  loading: Načítání…
+  count: vybráno {selected} z {total}
+  search:
+    placeholder: Hledat název úlohy
+  empty:
+    none: Žádné úlohy
+    filtered: Žádné odpovídající úlohy
+  refresh-failed: Obnovení se nezdařilo
+  duration:
+    more-than-a-day: Více než den
+  status:
+    downloading: Stahuje se
+    seeding: Sdílení
+    waiting: Čekání
+    paused: Pozastaveno
+    completed: Dokončeno
+    error: Chyba
+    removed: Odstraněno
+  meta:
+    seeders: Zdroje
+    remain: Zbývající
+    error-code: 'Kód chyby:'
+  action:
+    pause: Pozastavit
+    resume: Spustit
+    remove: Odebrat
+    retry: Zkusit znovu
+    clear-completed: Vymazat dokončené
+    refresh: Obnovit
+    saved: Uloženo
+    view: Zobrazit
+    expand: Rozbalit vše
+    collapse: Sbalit vše
+  retry:
+    not-retryable: Tuto úlohu nelze vytvořit znovu (aria2 uchovává soubory torrent / metalink jen dočasně). Přidejte ji prosím znovu.
+  notify:
+    completed: Stahování dokončeno
+    failed: Stahování selhalo
+  chart-loading: Načítání grafu...
+  tab:
+    overview: Přehled
+    pieces: Díly
+    files: Soubory
+    peers: Peery
+    settings: Nastavení
+  pieces:
+    completed: Dokončeno
+    uncompleted: Nedokončeno
+    info: Hotových {completed} z {total} dílů
+    view-distribution: Rozdělení
+    view-pie: Koláčový graf
+    group-auto: Automatické seskupení
+    group-step: '{size} dílů / sloupec'
+    summary-per-piece: Původních {total} dílů, zobrazeny po jednom
+    summary-grouped: Původních {total} dílů, {size} sloučeno do sloupce, {bars} sloupců
+    cell-single: Díl {index} · {state}
+    cell-range: Díly {start}–{end} · hotových {done}/{count} ({pct} %)
+  files:
+    name: Název souboru
+    empty: Žádné soubory
+    restart-tip: Úprava během stahování úlohu spustí znovu
+    none-selected: Vyberte alespoň jeden soubor
+    select-all: Vybrat vše
+    select-none: Zrušit výběr
+    select-invert: Invertovat výběr
+    confirm: Potvrdit
+  peers:
+    address: Adresa
+    client: Klient
+    status: Stav
+    download: Stáhnout
+    upload: Nahrát
+    local: Tento klient
+    empty: Žádné připojené peery
+  detail:
+    auto-refresh-hint: Automatické obnovování pozastaveno
+    invalid-url: Neplatná adresa úlohy
+    task-not-found: Úloha nenalezena
+  field:
+    name: Název
+    size: Velikost
+    selected-files: Vybrané soubory
+    file-count: '{count} souborů'
+    status: Stav
+    error-description: Popis chyby
+    progress: Pokrok
+    health: Zdraví
+    download: Stáhnout
+    upload: Nahrát
+    share-ratio: Poměr sdílení
+    remaining: Zbývající
+    seeders-connections: Zdroje / spojení
+    seed-creation-time: Čas vytvoření sdílení
+    info-hash: Hash informace
+    download-url: Adresa stahování
+    download-dir: Dir stažení
+    speed: Rychlost
+    tracker-servers: Servery BT trackeru
+  menu:
+    select-all: Vybrat vše
+    select-completed: Vybrat dokončené
+    select-failed: Vybrat neúspěšné / odebrané
+  confirm:
+    negative: Zrušit
+    remove:
+      title: Potvrdit odstranění
+      content: Odebrat {count} vybraných úloh?
+      positive: Odebrat
+    clear:
+      title: Vymazat dokončené
+      content: Vymazat všechny záznamy dokončených / odebraných úloh? (soubory na disku zůstanou)
+      positive: Vymazat
+  new:
+    button: Nový
+    title: Nové stahování
+    source:
+      links: Odkazy
+      torrent: Torrent
+    links:
+      placeholder: Jedna adresa na řádek (http / https / ftp / sftp / magnet odkaz)
+      valid-count: '{count} platných odkazů'
+      ignored-count: ', ignorováno {count} řádků'
+      empty: Zadejte alespoň jeden platný odkaz
+    torrent:
+      pick: Vybrat soubor
+      hint: Podporuje soubory .torrent / .metalink / .meta4
+      none: Zatím nevybrán žádný soubor
+      no-file: Nevybrán žádný soubor
+      empty: Vybraný soubor je prázdný
+      too-large: Soubor překračuje limit {size}
+      read-failed: Soubor se nepodařilo přečíst
+      unknown-type: Nerozpoznaný typ souboru, vyberte torrent nebo Metalink
+    options:
+      title: Volby před stahováním
+      hint: Prázdné volby se neposílají; použijí se globální výchozí hodnoty aria2
+    action:
+      download: Stáhnout nyní
+      download-later: Stáhnout později
+      cancel: Zrušit
+      submitting: Vytváření…
+    result:
+      success: Vytvořeno {count} úloh
+      failed: 'Vytvoření se nezdařilo: {message}'
+options:
+  all-proxy-passwd:
+    name: Heslo proxy
+  all-proxy-user:
+    name: Uživatelské jméno proxy
+  all-proxy:
+    description: Použít proxy server pro všechny protokoly. Také můžete tuto konfiguraci přepsat a specifikovat proxy server pro konkrétní protokol pomocí --http-proxy, --https-proxy a --ftp-proxy. Toto ovlivňuje všechna stahování. Formát PROXY je [http://][UŽIVATEL:HESLO@]HOST[:PORT].
+    name: Proxy server
+  allow-overwrite:
+    description: Restartujte stahování od začátku, pokud neexistuje odpovídající kontrolní soubor. Viz také možnost --auto-file-renaming.
+    name: Povolit přepsání
+  allow-piece-length-change:
+    description: Pokud je zadáno "Nepravda", aria2 ukončí stahování, když se délka dílku liší od délky v kontrolním souboru. Pokud je zadáno "Pravda", můžete pokračovat, ale část pokroku stahování bude ztracena.
+    name: Povolit změnu délky dílku
+  always-resume:
+    description: Vždy obnovit stahování. Pokud je zadáno "Pravda", aria2 vždy zkusí obnovit stahování a pokud obnovení není možné, stahování přeruší. Pokud je zadáno "Nepravda", pokud žádné z uvedených URI nepodporuje obnovení nebo aria2 narazí na N URI, které obnovení nepodporují (N je hodnota zadaná pomocí volby --max-resume-failure-tries), aria2 stáhne soubor od začátku. Viz volba --max-resume-failure-tries.
+    name: Vždy obnovit stahování
+  async-dns:
+    name: Asynchronní DNS
+  auto-file-renaming:
+    description: Přejmenujte název souboru, pokud již existuje stejný soubor. Tato volba funguje pouze při stahování přes HTTP(S)/FTP. Nový název souboru bude obsahovat tečku a číslo (1..9999) připojené za názvem, ale před příponou souboru, pokud existuje.
+    name: Automatické přejmenování souboru
+  auto-save-interval:
+    description: Uložte kontrolní soubor (*.aria2) každých SEC sekund. Pokud je zadáno 0, kontrolní soubor se během stahování neukládá. aria2 uloží kontrolní soubor, když se stahování zastaví, bez ohledu na hodnotu. Možné hodnoty jsou mezi 0 a 600.
+    name: Interval automatického ukládání
+  bt-detach-seed-only:
+    description: Vyloučit pouze seedy při počítání současných aktivních stahování (viz možnost -j). To znamená, že pokud je zadáno -j3, tato možnost je zapnuta a 3 stahování jsou aktivní a jedno z nich přejde do režimu seeding, pak je vyňato z počtu aktivních stahování (tím se počet stane 2) a další stahování čekající ve frontě se spustí. Upozorňujeme však, že seeding položka je stále považována za aktivní stahování v metodě RPC.
+    name: Vyloučit pouze seedy
+  bt-enable-hook-after-hash-check:
+    description: Povolit spuštění příkazu hook po kontrole hash (viz možnost -V) v BitTorrent stahování. Ve výchozím nastavení, když kontrola hash uspěje, se spustí příkaz zadaný pomocí --on-bt-download-complete. Chcete-li tuto akci zakázat, zadejte false do této možnosti.
+    name: Povolit hook po kontrolě hash
+  bt-enable-lpd:
+    name: Povolit lokální vyhledávání peerů (LPD)
+  bt-exclude-tracker:
+    description: Čárkou oddělený seznam URI trackerů BitTorrentu, které mají být odstraněny. Můžete použít speciální hodnotu *, která odpovídá všem URI a tím odstraní všechny URI pro oznamování. Při zadávání * v příkazovém řádku shellu nezapomeňte jej escapovat nebo uzavřít do uvozovek.
+    name: BitTorrent vyloučení trackerů
+  bt-external-ip:
+    description: Zadejte externí IP adresu, která se má použít při stahování pomocí BitTorrentu a DHT. Může být odeslána trackeru BitTorrentu. U DHT by měla být tato možnost nastavena pro oznámení, že lokální uzel stahuje konkrétní torrent. To je důležité při použití DHT v privátní síti. Ačkoliv je tato funkce označena jako externí, může přijímat jakýkoliv typ IP adresy.
+    name: Externí IP
+  bt-force-encryption:
+    description: Vyžaduje šifrování datového obsahu zprávy BitTorrent pomocí arc4. Toto je zkratka pro --bt-require-crypto --bt-min-crypto-level=arc4. Tato možnost nemění hodnotu těchto možností. Pokud je zadáno "Pravda", zamítne starší handshake BitTorrent a použije pouze handshake s obfuskováním a vždy šifruje datový obsah zprávy.
+    name: Vynutit šifrování
+  bt-hash-check-seed:
+    description: Pokud je zadáno "Pravda", po kontrole hash pomocí --check-integrity možnosti a dokončení souboru pokračuje seedování souboru. Pokud chcete zkontrolovat soubor a stáhnout jej pouze v případě, že je poškozený nebo neúplný, nastavte tuto možnost na false. Tato možnost má vliv pouze na stahování BitTorrent.
+    name: Kontrola hash před seedováním
+  bt-load-saved-metadata:
+    description: Před získáním torrentových metadat z DHT při stahování pomocí magnetického odkazu se nejdříve pokusí přečíst soubor uložený pomocí možnosti --bt-save-metadata. Pokud je to úspěšné, přeskočí se stahování metadat z DHT.
+    name: Načíst uložený soubor metadat
+  bt-max-open-files:
+    description: Nastavte maximální počet souborů, které lze otevřít při stahování více souborů pomocí BitTorrent/Metalink globálně.
+    name: Maximální počet otevřených souborů
+  bt-max-peers:
+    description: Nastavte maximální počet peerů na torrent. 0 znamená neomezeně.
+    name: Maximální počet peerů
+  bt-metadata-only:
+    description: Stáhněte pouze metadata. Soubory popsané v metadatech nebudou staženy. Tato možnost má vliv pouze při použití BitTorrent Magnet URI.
+    name: Stáhnout pouze metadata
+  bt-min-crypto-level:
+    description: Nastavte minimální úroveň metody šifrování. Pokud peer poskytuje několik metod šifrování, aria2 vybere nejnižší, která splňuje danou úroveň.
+    name: Minimální úroveň šifrování
+  bt-prioritize-piece:
+    description: 'Pokuste se nejprve stáhnout první a poslední části každého souboru. To je užitečné pro náhledy souborů. Argument může obsahovat 2 klíčová slova: head a tail. Pro zahrnutí obou klíčových slov musí být oddělena čárkou. Tato klíčová slova mohou mít jeden parametr, SIZE. Například pokud je specifikováno head=SIZE, části v rozsahu prvních SIZE bajtů každého souboru mají vyšší prioritu. tail=SIZE znamená rozsah posledních SIZE bajtů každého souboru. SIZE může obsahovat K nebo M (1K = 1024, 1M = 1024K).'
+    name: Upřednostnit část
+  bt-remove-unselected-file:
+    description: Odstraní nevybrané soubory po dokončení stahování v BitTorrent. Pro výběr souborů použijte možnost --select-file. Pokud není použita, všechny soubory se považují za vybrané. Používejte tuto možnost s opatrností, protože skutečně odstraní soubory z vašeho disku.
+    name: Odstranit nevybrané soubory
+  bt-request-peer-speed-limit:
+    description: Pokud je celková rychlost stahování u všech torrentů nižší než SPEED, aria2 dočasně zvýší počet peerů, aby dosáhla vyšší rychlosti stahování. Nastavení této možnosti na vaši preferovanou rychlost stahování může v některých případech zvýšit rychlost stahování. Můžete přidat K nebo M (1K = 1024, 1M = 1024K).
+    name: Preferovaná rychlost stahování
+  bt-require-crypto:
+    description: Pokud je zadáno "Pravda", aria2 neakceptuje ani neetabluje spojení se starším handshake BitTorrent (\19BitTorrent protocol). Aria2 tedy vždy používá handshake s obfuskováním.
+    name: Vyžadovat šifrování
+  bt-save-metadata:
+    description: Uložit metadata jako ".torrent" soubor. Tato možnost má vliv pouze při použití BitTorrent Magnet URI. Název souboru je hexadecimálně kódovaný info hash s příponou ".torrent". Adresář, do kterého je uložen, je stejný jako adresář, kde je uložen stažený soubor. Pokud již stejný soubor existuje, metadata se neuloží.
+    name: Uložit metadata
+  bt-seed-unverified:
+    description: Seedujte dříve stažené soubory bez ověření hash částí.
+    name: Neověřovat stažené soubory
+  bt-stop-timeout:
+    description: Zastaví stahování BitTorrent, pokud rychlost stahování je 0 během po sobě jdoucích SEC sekund. Pokud je zadáno 0, tato funkce je deaktivována.
+    name: Časový limit zastavení
+  bt-tracker-connect-timeout:
+    description: Nastavte časový limit připojení k trackeru v sekundách. Po navázání připojení tato možnost již nemá vliv a místo ní se použije možnost --bt-tracker-timeout.
+    name: Časový limit připojení trackeru
+  bt-tracker-interval:
+    description: Nastavte interval v sekundách mezi požadavky trackeru. Tento interval zcela přepisuje hodnotu intervalu a aria2 používá pouze tuto hodnotu, ignoruje minimální interval a hodnotu intervalu v odpovědi trackeru. Pokud je nastavena hodnota 0, aria2 určí interval na základě odpovědi trackeru a pokroku stahování.
+    name: Interval připojení trackeru
+  bt-tracker-timeout:
+    name: Časový limit trackeru
+  bt-tracker:
+    description: Čárkou oddělený seznam dodatečných URI trackerů BitTorrentu. Tyto URI nejsou ovlivněny možností --bt-exclude-tracker, protože jsou přidány po odstranění URI uvedených v možnosti --bt-exclude-tracker.
+    name: BitTorrent trackery
+  check-certificate:
+    name: Kontrola certifikátu
+  check-integrity:
+    description: Ověřuje integritu souboru validací hashů částí nebo celého souboru. Tato volba má účinek pouze u stahování BitTorrent, Metalink s kontrolními součty nebo u HTTP(S)/FTP stahování s volbou --checksum.
+    name: Kontrola integrity
+  checksum:
+    description: 'Nastavit kontrolní součet. Formát hodnoty volby je TYP=DIGEST. TYP je typ hash. Podporované typy hash jsou uvedeny v Hash Algorithms v aria2c -v. DIGEST je hexadecimální digest. Například nastavení sha-1 digestu vypadá takto: sha-1=0192ba11326fe2298c8cb4de616f4d4140213838. Tato volba platí pouze pro HTTP(S)/FTP stahování.'
+    name: Kontrolní součet
+  conditional-get:
+    description: Stahujte soubor pouze tehdy, když je místní soubor starší než vzdálený soubor. Tato funkce funguje pouze u stahování HTTP(S). Nefunguje, pokud je velikost souboru specifikována v Metalink. Ignoruje také hlavičku Content-Disposition. Pokud existuje kontrolní soubor, tato volba bude ignorována. Tato funkce používá hlavičku If-Modified-Since k podmíněnému stahování novějšího souboru. Při získávání času úpravy místního souboru se používá název souboru zadaný uživatelem (viz volba --out) nebo část názvu souboru v URI, pokud --out není specifikováno. Pro přepsání existujícího souboru je vyžadováno --allow-overwrite.
+    name: Podmíněné stahování
+  conf-path:
+    name: Konfigurační soubor
+  connect-timeout:
+    description: Nastavte časový limit připojení v sekundách pro navázání spojení s HTTP/FTP/proxy serverem. Po navázání spojení tato volba přestane mít účinek a použije se volba --timeout.
+    name: Časový limit připojení
+  console-log-level:
+    name: Úroveň konzolového logu
+  content-disposition-default-utf8:
+    description: Zpracovávejte řetězce uvedené v hlavičce Content-Disposition jako UTF-8 namísto ISO-8859-1, například parametr filename, ale ne jeho rozšířenou verzi.
+    name: Použít UTF-8 pro zpracování Content-Disposition
+  continue:
+    description: Pokračuje ve stahování částečně staženého souboru. Použijte tuto volbu pro obnovení stahování, které bylo zahájeno webovým prohlížečem nebo jiným programem, který stahuje soubory sekvenčně od začátku. Tato volba je momentálně použitelná pouze pro HTTP(S)/FTP stahování.
+    name: Obnovit stahování
+  daemon:
+    name: Povolit Daemon
+  deferred-input:
+    description: Pokud je zadáno "Pravda", aria2 nečte všechny URI a možnosti ze souboru zadaného volbou --input-file při spuštění, ale čte je po jednom, když je to potřeba. To může snížit spotřebu paměti, pokud vstupní soubor obsahuje velké množství URI ke stažení. Pokud je zadáno "Nepravda", aria2 čte všechny URI a možnosti při spuštění. Možnost --deferred-input bude deaktivována, když je použita spolu s --save-session.
+    name: Odložené načítání
+  dht-file-path:
+    description: Změňte soubor směrovací tabulky DHT IPv4 na PATH.
+    name: Soubor DHT (IPv4)
+  dht-file-path6:
+    description: Změňte soubor směrovací tabulky DHT IPv6 na PATH.
+    name: Soubor DHT (IPv6)
+  dht-listen-port:
+    description: 'Nastavte UDP port pro naslouchání používaný DHT (IPv4, IPv6) a UDP trackerem. Více portů lze zadat pomocí "," například: 6881,6885. Můžete také použít "-" pro určení rozsahu: 6881-6999. "," a "-" lze kombinovat.'
+    name: Port pro DHT
+  dht-message-timeout:
+    name: Časový limit zprávy DHT
+  dir:
+    name: Stahování cesta
+  disable-ipv6:
+    name: Deaktivovat IPv6
+  disk-cache:
+    description: Povolit cache na disku. Pokud je velikost SIZE nastavena na 0, cache na disku je deaktivována. Tato funkce ukládá stažená data do paměti, která roste až na velikost SIZE bajtů. Úložný prostor cache je vytvořen pro instanci aria2 a je sdílen mezi všemi stahováními. Výhodou cache na disku je snížení I/O operací na disku, protože data jsou zapisována ve větších blocích a jsou přeorganizována podle offsetu souboru. Pokud je zapojeno kontrolování hashů a data jsou uložena v paměti, není nutné je číst z disku. SIZE může zahrnovat K nebo M (1K = 1024, 1M = 1024K).
+    name: Cache na disku
+  download-result:
+    description: Tato volba mění formát výstupu výsledků stahování. Pokud je OPT nastaven na "Výchozí", zobrazí GID, stav, průměrnou rychlost stahování a cestu/URI. Pokud je zapojeno více souborů, je vytištěna cesta/URI prvního požadovaného souboru a ostatní jsou vynechány. Pokud je OPT nastaven na "Úplný", zobrazí GID, stav, průměrnou rychlost stahování, procento pokroku a cestu/URI. Procento pokroku a cesta/URI jsou zobrazeny pro každý požadovaný soubor v každém řádku. Pokud je OPT nastaven na "Skrýt", výsledky stahování jsou skryty.
+    name: Výsledek stahování
+  dry-run:
+    description: Pokud je zadáno "Pravda", aria2 pouze zkontroluje, zda je vzdálený soubor dostupný, a nestahuje žádná data. Tato volba má účinek pouze u HTTP/FTP stahování. Stahování BitTorrentu se zruší, pokud je zadáno "Pravda".
+    name: Zkušební start
+  dscp:
+    description: Nastavte hodnotu DSCP v odchozích IP paketech BitTorrent provozu pro QoS. Tento parametr nastaví pouze bity DSCP v poli TOS IP paketů, nikoliv celé pole. Pokud používáte hodnoty z /usr/include/netinet/ip.h, rozdělte je o 4 (jinak by hodnoty byly nesprávné, např. vaše třída CS1 by se změnila na CS4). Pokud používáte běžně používané hodnoty z RFC, dokumentace síťových poskytovatelů, Wikipedie nebo jiných zdrojů, používejte je tak, jak jsou.
+    name: DSCP
+  enable-color:
+    name: Povolit barvy v terminálu
+  enable-dht:
+    description: Povolit funkčnost DHT IPv4. Tato možnost také povoluje podporu UDP trackeru. Pokud je v torrentu nastaven příznak privatní, aria2 tuto funkci nepoužije pro dané stahování, i když je zadáno "Pravda".
+    name: Povolit DHT (IPv4)
+  enable-dht6:
+    description: Povolit funkčnost DHT IPv6. Pokud je v torrentu nastaven příznak přivatní, aria2 tuto funkci nepoužije pro dané stahování, i když je zadáno "Pravda". Použijte možnost --dht-listen-port pro zadání čísla portu pro naslouchání.
+    name: Povolit DHT (IPv6)
+  enable-http-keep-alive:
+    description: Povolit přetrvávající připojení HTTP/1.1.
+    name: Povolit přetrvávající připojení
+  enable-http-pipelining:
+    description: Povolit HTTP/1.1 pipelining.
+    name: Povolit HTTP pipelining
+  enable-mmap:
+    description: Mapujte soubory do paměti. Tato volba nebude fungovat, pokud není prostor pro soubory předem alokován. Viz --file-allocation.
+    name: Povolit MMap
+  enable-peer-exchange:
+    description: Povolit rozšíření výměny peerů. Pokud je v torrentu nastaven příznak privatní, tato funkce je pro toto stahování deaktivována, i když je zadáno "Pravda".
+    name: Povolit výměnu peerů
+  enable-rpc:
+    name: Povolit JSON-RPC/XML-RPC server
+  event-poll:
+    description: Specifikujte metodu pro volení událostí. Možné hodnoty jsou "Epoll", "Kqueue", "Port", "Poll" a "Vybrat". Pro každou z "Epoll", "Kqueue", "Port" a "Poll", je k dispozici, pokud to systém podporuje. "Epoll" je k dispozici na novějších verzích Linuxu. "Kqueue" je k dispozici na různých systémech *BSD včetně Mac OS X. "Port" je k dispozici na Open Solaris. Výchozí hodnota se může lišit podle použitého systému.
+    name: Metoda volení událostí
+  file-allocation:
+    description: Specifikujte metodu alokace souboru. "Žadné" nealokuje prostor souboru předem. "Předalokace" alokuje prostor souboru před začátkem stahování. To může nějaký čas trvat, v závislosti na velikosti souboru. Pokud používáte novější souborové systémy jako ext4 (s podporou extents), btrfs, xfs nebo NTFS (pouze MinGW verze), "Falloc" je nejlepší volba. Alokuje velké (několik GiB) soubory téměř okamžitě. Nepoužívejte "Falloc" na starších souborových systémech jako ext3 a FAT32, protože to trvá téměř stejně dlouho jako předalokace a zcela zablokuje aria2, dokud alokace neskončí. "Falloc" nemusí být k dispozici, pokud váš systém nemá funkci posix_fallocate(3). "Zkrátit" používá systémový hovor ftruncate(2) nebo platformě specifický ekvivalent pro zkrácení souboru na specifikovanou délku. U multi-souborových torrent stahování jsou alokovány i soubory sousedící vpřed k uvedeným souborům, pokud sdílejí stejný kus.
+    name: Metoda alokace souboru
+  follow-metalink:
+    description: Pokud je nastaveno "Pravda" nebo pouze paměť, při stahování souboru s příponou .meta4 nebo .metalink nebo s typem obsahu application/metalink4+xml nebo application/metalink+xml, aria2 jej interpretuje jako soubor metalink a stáhne soubory v něm uvedené. Pokud je zadáno pouze paměť, soubor metalink se neukládá na disk, ale pouze do paměti. Pokud je zadáno "Nepravda", soubor .metalink se stáhne na disk, ale nebude interpretován jako metalink a jeho obsah se nestáhne.
+    name: Sledovat Metalink
+  follow-torrent:
+    description: Pokud je zadáno "Pravda" nebo pouze paměť, při stažení souboru s příponou .torrent nebo s obsahem typu application/x-bittorrent aria2 jej analyzuje jako torrentový soubor a stáhne v něm zmíněné soubory. Pokud je zadáno pouze paměť, torrentový soubor není uložen na disk, ale zůstává pouze v paměti. Pokud je zadáno "Nepravda", .torrent soubor je stažen na disk, ale není analyzován jako torrent a jeho obsah není stažen.
+    name: Sledovat torrent
+  force-save:
+    description: Uloží stahování pomocí volby --save-session, i když je stahování dokončeno nebo odstraněno. Tato volba také uloží kontrolní soubor v těchto situacích. To může být užitečné pro uložení BitTorrent seeding, které je rozpoznáno jako dokončený stav.
+    name: Vynutit uložení
+  ftp-passwd:
+    description: Pokud je uživatelské jméno vloženo, ale heslo v URI chybí, aria2 se pokusí získat heslo z .netrc. Pokud je heslo nalezeno v .netrc, použije jej jako heslo. Pokud ne, použije heslo zadané v této možnosti.
+    name: Výchozí heslo FTP
+  ftp-pasv:
+    description: Použít pasivní režim v FTP. Pokud je zadáno false, bude použit aktivní režim. Tato možnost je ignorována pro přenos SFTP.
+    name: Pasivní režim
+  ftp-proxy-passwd:
+    name: Heslo pro FTP proxy
+  ftp-proxy-user:
+    name: Uživatelské jméno pro FTP proxy
+  ftp-proxy:
+    name: FTP Proxy Server
+  ftp-reuse-connection:
+    name: Znovu použít připojení
+  ftp-type:
+    name: Typ přenosu
+  ftp-user:
+    name: Výchozí uživatelské jméno FTP
+  hash-check-only:
+    description: Pokud je zadáno"Pravda", po kontrole hashů pomocí volby --check-integrity, přeruší stahování, bez ohledu na to, zda je stahování dokončeno.
+    name: Kontrola hashů pouze
+  header:
+    description: 'Připojit záhlaví k HTTP požadavkovému záhlaví. Uveďte jednu položku na řádek, každá položka obsahuje "název záhlaví: hodnota záhlaví".'
+    name: Vlastní záhlaví
+  http-accept-gzip:
+    description: 'Odesílá hlavičku požadavku Accept: deflate, gzip a dekomprimuje odpověď, pokud vzdálený server odpoví s Content-Encoding: gzip nebo Content-Encoding: deflate.'
+    name: Akceptovat GZip
+  http-auth-challenge:
+    description: Odesílá hlavičku HTTP autorizace pouze tehdy, pokud je požadována serverem. Pokud je nastaveno false, hlavička autorizace je vždy odesílána na server. Výjimkou je, pokud je uživatelské jméno a heslo vloženo do URI, hlavička autorizace je vždy odeslána na server bez ohledu na tuto možnost.
+    name: Autentizační výzva
+  http-no-cache:
+    description: 'Odesílá hlavičky Cache-Control: no-cache a Pragma: no-cache, aby se předešlo uloženému obsahu. Pokud je zadáno false, tyto hlavičky nejsou odesílány a můžete přidat hlavičku Cache-Control s libovolnou direktivou pomocí možnosti --header.'
+    name: Bez cache
+  http-passwd:
+    name: Výchozí heslo HTTP
+  http-proxy-passwd:
+    name: Heslo pro HTTP proxy
+  http-proxy-user:
+    name: Uživatelské jméno pro HTTP proxy
+  http-proxy:
+    name: HTTP proxy server
+  http-user:
+    name: Výchozí uživatelské jméno HTTP
+  https-proxy-passwd:
+    name: Heslo pro HTTPS proxy
+  https-proxy-user:
+    name: Uživatelské jméno pro HTTPS proxy
+  https-proxy:
+    name: HTTPS proxy server
+  human-readable:
+    description: Tiskněte velikosti a rychlosti ve formátu čitelném pro člověka (např. 1.2Ki, 3.4Mi) v konzolovém výstupu.
+    name: Konzolový výstup ve formátu čitelném pro člověka
+  keep-unfinished-download-result:
+    description: Udržujte nedokončené výsledky stahování, i když tím přesáhnete limit --max-download-result. To je užitečné, pokud musí být všechny nedokončené stahování uloženy v souboru relace (viz volba --save-session). Mějte na paměti, že neexistuje žádný horní limit pro počet nedokončených výsledků stahování, které je třeba uchovat. Pokud to není žádoucí, tuto volbu vypněte.
+    name: Udržet nedokončené výsledky stahování
+  listen-port:
+    description: 'Nastavte číslo TCP portu pro stahování BitTorrent. Více portů lze zadat pomocí "," například: 6881,6885. Můžete také použít "-" pro určení rozsahu: 6881-6999. "," a "-" lze kombinovat: 6881-6889,6999.'
+    name: Port pro naslouchání
+  log-level:
+    name: Úroveň protokolování
+  log:
+    description: Název souboru logu. Pokud je zadáno "-", log se zapisuje na standardní výstup. Pokud je zadán prázdný řetězec (""), nebo pokud je tato volba vynechána, log se vůbec nezapisuje na disk.
+    name: Soubor logu
+  lowest-speed-limit:
+    description: Ukončit spojení, pokud je rychlost stahování nižší nebo rovna této hodnotě (bajty za sekundu). 0 znamená, že aria2 nemá žádný limit na nejnižší rychlost. Můžete připojit K nebo M (1K = 1024, 1M = 1024K). Tato volba neovlivňuje stahování BitTorrentu.
+    name: Nejnižší rychlost stahování
+  max-concurrent-downloads:
+    name: Maximální počet současných stahování
+  max-connection-per-server:
+    name: Maximální počet připojení na server
+  max-download-limit:
+    description: Určuje maximální rychlost stahování pro každý soubor v bajtech za sekundu. 0 znamená neomezeno. Můžete přidat K nebo M (1K = 1024, 1M = 1024K).
+    name: Maximální limit stahování
+  max-download-result:
+    description: Určuje maximální počet výsledků stahování, které budou uchovávány v paměti. Výsledky stahování zahrnují dokončené/selhané/odstraněné stahování. Výsledky stahování jsou uchovávány v FIFO frontě a může obsahovat maximálně NUM výsledků stahování. Když je fronta plná a je vytvořen nový výsledek stahování, nejstarší výsledek je odstraněn z přední části fronty a nový je přidán na konec. Nastavení vyššího čísla v této volbě může vést k vyšší spotřebě paměti po tisících stahování. Specifikování hodnoty 0 znamená, že výsledky stahování nebudou uchovávány. Nezapomeňte, že neukončené stahování se uchovává v paměti bez ohledu na tuto volbu. Viz také volba --keep-unfinished-download-result.
+    name: Maximální počet výsledků stahování
+  max-file-not-found:
+    description: Pokud aria2 obdrží stav "soubor nenalezen" od vzdálených HTTP/FTP serverů NUM krát bez získání jediného bajtu, vynutí selhání stahování. Zadejte 0 pro deaktivaci této volby. Tato volba je účinná pouze při použití HTTP/FTP serverů. Počet pokusů se počítá do --max-tries, takže by měla být také nastavena.
+    name: Maximální počet pokusů o nalezení souboru
+  max-mmap-limit:
+    description: Určuje maximální velikost souboru pro povolení Mmap (viz volba --enable-mmap). Velikost souboru je určena součtem všech souborů obsažených v jednom stahování. Například pokud stahování obsahuje 5 souborů, celková velikost souborů je součet těchto souborů. Pokud je velikost souboru přísně větší než velikost určená touto volbou, Mmap bude zakázáno.
+    name: Maximální limit MMap
+  max-overall-download-limit:
+    description: Určuje maximální celkovou rychlost stahování v bajtech za sekundu. 0 znamená neomezeno. Můžete přidat K nebo M (1K = 1024, 1M = 1024K).
+    name: Globální maximální limit stahování
+  max-overall-upload-limit:
+    description: Nastavte maximální celkovou rychlost nahrávání v bajtech za sekundu. 0 znamená neomezeně. Můžete přidat K nebo M (1K = 1024, 1M = 1024K).
+    name: Globální maximální limit nahrávání
+  max-resume-failure-tries:
+    description: Při použití s volbou --always-resume=false, aria2 stáhne soubor od začátku, když zjistí N URI, které nepodporují obnovení. Pokud je N rovno 0, aria2 stáhne soubor od začátku, když všechny zadané URI nepodporují obnovení. Viz volba --always-resume.
+    name: Maximální počet pokusů o obnovení po selhání
+  max-tries:
+    description: Nastavit počet pokusů. 0 znamená neomezený počet.
+    name: Maximální počet pokusů
+  max-upload-limit:
+    description: Nastavte maximální rychlost nahrávání pro každý torrent v bajtech za sekundu. 0 znamená neomezeně. Můžete přidat K nebo M (1K = 1024, 1M = 1024K).
+    name: Maximální limit nahrávání
+  metalink-base-uri:
+    description: Zadejte základní URI pro rozlišení relativního URI v elementech metalink:url a metalink:metaurl v souboru metalink uloženém na lokálním disku. Pokud URI ukazuje na adresář, musí končit znakem /.
+    name: Základní URI
+  metalink-enable-unique-protocol:
+    description: Pokud je zadáno "Pravda" a v souboru metalink je pro zrcadlo dostupných několik protokolů, aria2 použije jeden z nich. Pomocí volby --metalink-preferred-protocol můžete specifikovat preferenci protokolu.
+    name: Povolit unikátní protokol
+  metalink-language:
+    name: Jazyk
+  metalink-location:
+    description: Umístění preferovaného serveru. Je možné zadat seznam umístění oddělený čárkami, například jp,us.
+    name: Preferované umístění serveru
+  metalink-os:
+    description: Operační systém souboru ke stažení.
+    name: Operační systém
+  metalink-preferred-protocol:
+    description: Zadejte preferovaný protokol. Možné hodnoty jsou http, https, ftp a "Žadné". Zadejte "Žadné" pro deaktivaci této funkce.
+    name: Preferovaný protokol
+  metalink-version:
+    description: Verze souboru ke stažení.
+    name: Verze
+  min-split-size:
+    description: 'aria2 nerozdělí méně než 2*SIZE bajtů. Například, pokud stahujete 20MiB soubor a SIZE je 10M, aria2 může rozdělit soubor na 2 rozsahy [0-10MiB) a [10MiB-20MiB) a stáhnout je pomocí 2 zdrojů (pokud --split >= 2, samozřejmě). Pokud je SIZE 15M, protože 2*15M > 20MiB, aria2 nerozdělí soubor a stáhne ho pomocí 1 zdroje. Můžete připojit K nebo M (1K = 1024, 1M = 1024K). Možné hodnoty: 1M-1024M.'
+    name: Minimální velikost části
+  min-tls-version:
+    description: Určuje minimální verzi SSL/TLS pro povolení.
+    name: Minimální verze TLS
+  netrc-path:
+    name: Cesta k .netrc
+  no-conf:
+    name: Zakázat konfigurační soubor
+  no-file-allocation-limit:
+    description: Bez alokace souboru pro soubory menší než URČITÁ velikost. Můžete přidat K nebo M (1K = 1024, 1M = 1024K).
+    name: Bez limitu alokace souboru
+  no-netrc:
+    name: Zakázat netrc
+  no-proxy:
+    description: Specifikujte seznam názvů hostitelů, domén a síťových adres oddělených čárkami s nebo bez masky podsítě, kde se proxy nemá používat.
+    name: Seznam bez proxy
+  optimize-concurrent-downloads:
+    description: Optimalizuje počet souběžných stahování podle dostupné šířky pásma. aria2 používá rychlost stahování pozorovanou v předchozích stahováních k přizpůsobení počtu stahování spuštěných paralelně podle pravidla N = A + B Log10(rýchlost v Mbps). Koeficienty A a B lze přizpůsobit v argumentech volby s oddělením A a B dvojtečkou. Výchozí hodnoty (A=5, B=25) vedou k používání typických 5 paralelních stahování na 1Mbps síťích a více než 50 na 100Mbps sítích. Počet paralelních stahování zůstává omezen maximem definovaným parametrem --max-concurrent-downloads.
+    name: Optimalizovat souběžné stahování
+  out:
+    description: Název staženého souboru. Vždy je relativní k adresáři uvedenému v možnosti --dir. Při použití možnosti --force-sequential je tato možnost ignorována.
+    name: Název souboru
+  parameterized-uri:
+    description: 'Povolí podporu parametrizovaných URI. Můžete specifikovat sadu částí: http://{sv1,sv2,sv3}/foo.iso. Také můžete specifikovat číselné posloupnosti s krokovým čítačem: http://host/image[000-100:2].img. Krokový čítač může být vynechán. Pokud všechny URI neodkazují na stejný soubor, jako v druhém příkladu výše, je nutná volba -Z.'
+    name: Povolit parametrizované URI
+  pause-metadata:
+    description: 'Pozastavit stahování vytvořená na základě stažených metadat. V aria2 existují tři typy stahování metadat: (1) stahování souboru .torrent, (2) stahování metadat torrentu pomocí magnetického odkazu, (3) stahování souboru metalink. Tato stahování metadat vytvoří stahování pomocí svých metadat. Tato možnost pozastaví tato následná stahování. Tato možnost je účinná pouze tehdy, když je zadáno --enable-rpc=true.'
+    name: Pozastavit po stažení metadat
+  peer-agent:
+    description: Zadejte řetězec použitý během rozšířeného handshaku BitTorrent pro verzi klienta peeru.
+    name: Agent peeru
+  peer-id-prefix:
+    description: Zadejte předponu ID peeru. Peer ID v BitTorrentu má délku 20 bajtů. Pokud je zadáno více než 20 bajtů, použije se pouze prvních 20. Pokud je zadáno méně než 20 bajtů, přidají se náhodná data, aby byla délka 20 bajtů.
+    name: Předpona Peer ID
+  piece-length:
+    description: Určuje velikost bloku pro HTTP/FTP stahování. Toto je hranice, kdy aria2 rozdělí soubor. Všechna dělení probíhají na násobcích této velikosti. Tato volba bude ignorována při BitTorrent stahováních. Bude také ignorována, pokud Metalink soubor obsahuje hashe kousků.
+    name: Velikost bloku
+  proxy-method:
+    description: Nastavte metodu použitou v proxy požadavku. Metoda je buď "GET" nebo "Tunel". Stahování přes HTTPS vždy používá "Tunel" bez ohledu na tuto možnost.
+    name: Metoda proxy
+  quiet:
+    name: Zakázat výstup do konzole
+  realtime-chunk-checksum:
+    description: Validuje blok dat výpočtem kontrolního součtu během stahování souboru, pokud jsou poskytnuty kontrolní součty bloků.
+    name: Reálná kontrola součtů datového bloku
+  referer:
+    description: Nastavte HTTP odkazující stránku (Referer). Toto ovlivňuje všechna HTTP/HTTPS stahování. Pokud je zadána *, adresa URI stahování se také používá jako odkazující stránka. To může být užitečné při použití společně s možností --parameterized-uri.
+    name: Odkazující stránka
+  remote-time:
+    description: Získá časovou značku vzdáleného souboru z HTTP/FTP serveru a pokud je dostupné, aplikuje ji na místní soubor.
+    name: Časová značka vzdáleného souboru
+  remove-control-file:
+    description: Odstranit kontrolní soubor před stažením. Použití s volbou --allow-overwrite=true vždy začne stahování od začátku. Tato volba bude užitečná pro uživatele za proxy servery, které zakazují obnovení.
+    name: Odstranit kontrolní soubor
+  retry-wait:
+    description: Nastavte počet sekund čekání mezi opakováními. Pokud je SEC > 0, aria2 znovu zkouší stahování, když HTTP server vrátí odpověď 503.
+    name: Čekání na opakování
+  reuse-uri:
+    description: Znovu použít již použitá URI, pokud nezbývají žádná nepoužitá URI.
+    name: Znovu použít URI
+  rlimit-nofile:
+    description: 'Nastavte měkký limit pro otevřené popisovače souborů. Tento limit bude mít efekt pouze pokud: a. Systém jej podporuje (posix). b. Limit nepřesahuje tvrdý limit. c. Zadaný limit je větší než aktuální měkký limit. Toto je ekvivalentní nastavení nofile pomocí ulimit, s tím rozdílem, že nikdy nezměníte limit na nižší hodnotu. Tato volba je dostupná pouze na systémech podporujících API rlimit.'
+    name: Měkký limit otevřených popisovačů souborů
+  rpc-allow-origin-all:
+    description: Přidat pole hlavičky Access-Control-Allow-Origin s hodnotou * do odpovědi RPC.
+    name: Povolit všechny požadavky původu
+  rpc-listen-all:
+    description: Naslouchat příchozím požadavkům JSON-RPC/XML-RPC na všech síťových rozhraních. Pokud je zadáno "Nepravda", naslouchá pouze na lokálním loopback rozhraní.
+    name: Naslouchat na všech síťových rozhraních
+  rpc-listen-port:
+    name: Port naslouchání
+  rpc-max-request-size:
+    description: Nastavte maximální velikost požadavku JSON-RPC/XML-RPC. Pokud aria2 zjistí, že požadavek přesahuje velikost SIZE bajtů, připojení přeruší.
+    name: Maximální velikost požadavku
+  rpc-save-upload-metadata:
+    description: Uložte metadata nahraných torrentů nebo metalinků do adresáře určeného možností --dir. Název souboru se skládá z hexadecimálního řetězce SHA-1 hashe metadat a přípony. Pro torrent je přípona '.torrent'. Pro metalink je to '.meta4'. Pokud je této možnosti zadáno "Nepravda", stahování přidaná aria2.addTorrent() nebo aria2.addMetalink() nebudou uložena pomocí volby --save-session.
+    name: Uložit metadata nahrávání
+  rpc-secure:
+    description: Přenos RPC bude šifrován pomocí SSL/TLS. Klienti RPC musí používat schéma https pro přístup k serveru. Pro klienta WebSocket použijte schéma wss. K určení certifikátu serveru a soukromého klíče použijte možnosti --rpc-certificate a --rpc-private-key.
+    name: Povolit SSL/TLS
+  save-cookies:
+    description: Uložit cookies do SOUBORU ve formátu Mozilla/Firefox(1.x/2.x)/Netscape. Pokud SOUBOR již existuje, bude přepsán. Session cookies jsou také uloženy a jejich hodnoty vypršení platnosti jsou považovány za 0.
+    name: Cesta k souboru Cookies
+  save-not-found:
+    description: Uloží stahování pomocí volby --save-session, i když soubor nebyl nalezen na serveru. Tato volba také uloží kontrolní soubor v těchto situacích.
+    name: Uložit soubor, který nebyl nalezen
+  save-session-interval:
+    description: Uloží chybné/nehotové stahování do souboru specifikovaného volbou --save-session každých SEC sekund. Pokud je zadáno 0, soubor se uloží pouze při ukončení aria2.
+    name: Interval pro ukládání sezení
+  save-session:
+    description: Uloží chybné/nehotové stahování do SOUBORU při ukončení. Tento výstupní soubor můžete předat aria2c s volbou --input-file při restartu. Pokud chcete, aby byl soubor uložen v komprimovaném formátu, přidejte příponu .gz.
+    name: Soubor pro uložení sezení
+  seed-ratio:
+    description: Nastavte podíl sdílení. Seedujte dokončené torrenty, dokud podíl sdílení nedosáhne RATIO. Důrazně doporučujeme zadat rovno nebo více než 1.0. Zadejte 0.0, pokud máte v úmyslu seedovat bez ohledu na podíl sdílení. Pokud je tato možnost zadána společně s možností --seed-time, seedování skončí, jakmile je splněna alespoň jedna z podmínek.
+    name: Minimální podíl sdílení
+  seed-time:
+    description: Specifikujte dobu sdílení v (desetinných) minutách. Zadání --seed-time=0 zakáže sdílení po dokončení stahování.
+    name: Minimální čas seedování
+  server-stat-of:
+    description: Určete název souboru, do kterého se uloží profil výkonu serverů. Uložená data můžete načíst pomocí možnosti --server-stat-if.
+    name: Výstup statistiky serveru
+  server-stat-timeout:
+    description: Určuje timeout v sekundách pro zneplatnění profilu výkonu serverů od posledního kontaktu s nimi.
+    name: Timeout statistiky serveru
+  show-console-readout:
+    name: Zobrazit výstup v konzoli
+  socket-recv-buffer-size:
+    description: Určuje maximální velikost přijímacího bufferu socketu v bajtech. Pokud zadáte 0, tato volba bude zakázána. Tato hodnota bude nastavena na socket souborového deskriptoru pomocí socketové volby SO_RCVBUF a funkce setsockopt().
+    name: Velikost přijímacího bufferu socketu
+  split:
+    description: Stáhněte soubor pomocí N připojení. Pokud je zadáno více než N URI, prvních N URI je použito a zbývající URI slouží jako záložní. Pokud je zadáno méně než N URI, tato URI se použijí vícekrát, aby bylo současně vytvořeno celkem N připojení. Počet připojení ke stejnému hostiteli je omezen možností --max-connection-per-server.
+    name: Počet rozdělení
+  ssh-host-key-md:
+    description: 'Nastavte kontrolní součet veřejného SSH klíče. Formát hodnoty možnosti je TYPE=DIGEST. TYPE je typ hash. Podporované typy hash jsou sha-1 nebo md5. DIGEST je hexadecimální digest. Například: sha-1=b030503d4de4539dc7885e6f0f5e256704edf4c3. Tato možnost může být použita k ověření veřejného klíče serveru při použití SFTP. Pokud tato možnost není nastavena (což je výchozí), ověřování neprobíhá.'
+    name: Kontrolní součet veřejného SSH klíče
+  stop:
+    description: Zastaví aplikaci po uplynutí SEC sekund. Pokud je zadáno 0, tato funkce je zakázána.
+    name: Automatické vypnutí
+  stream-piece-selector:
+    description: Určete algoritmus výběru částí použitý při stahování HTTP/FTP. Část znamená segment s pevnou délkou, který se stahuje paralelně při segmentovaném stahování. Pokud je zadán výchozí algoritmus, aria2 vybírá části tak, aby snížila počet vytváření připojení. To je rozumné výchozí chování, protože vytváření připojení je nákladná operace. Pokud je zadán "V pořadí", aria2 vybírá část s minimálním indexem. Index=0 znamená začátek souboru. To může být užitečné pro sledování filmu při stahování. Možnost --enable-http-pipelining může být užitečná pro snížení režijních nákladů na opakované připojení. Pamatujte, že aria2 respektuje možnost --min-split-size, takže bude nutné nastavit rozumnou hodnotu pro možnost --min-split-size. Pokud je zadán "Náhodný", aria2 vybírá části náhodně. Stejně jako u "V pořadí" se respektuje možnost --min-split-size. Pokud je zadán geom, na začátku aria2 vybírá část s minimálním indexem jako u "V pořadí", ale exponenciálně zvyšuje vzdálenost od dříve vybrané části. To sníží počet vytváření připojení a zároveň stáhne začátek souboru jako první. To bude užitečné pro sledování filmu při stahování.
+    name: Algoritmus výběru částí
+  summary-interval:
+    description: Určuje interval v sekundách pro zobrazení souhrnu pokroku stahování. Nastavení na 0 potlačí výstup.
+    name: Interval pro výstup souhrnu stahování
+  timeout:
+    name: Timeout
+  truncate-console-readout:
+    description: Ořízne výstup do konzole tak, aby se vešel na jeden řádek.
+    name: Oříznout výstup v konzoli
+  uri-selector:
+    description: Určete algoritmus výběru URI. Možné hodnoty jsou "V pořadí", "Zpětná vazba" a "Adaptivní". Pokud je zadán "V pořadí", URI se zkouší v pořadí, ve kterém se objevily v seznamu URI. Pokud je zadán "Zpětná vazba", aria2 používá rychlost stahování pozorovanou v předchozích stahováních a vybírá nejrychlejší server v seznamu URI. To také efektivně přeskočí nefunkční zrcadla. Pozorovaná rychlost stahování je součástí výkonového profilu serverů uvedeného v --server-stat-of a --server-stat-if. Pokud je zadán "Adaptivní", vybere jedno z nejlepších zrcadel pro první a rezervované připojení. Pro doplňková připojení vrací zrcadla, která ještě nebyla testována, a pokud byla všechna již testována, vrací zrcadla, která je třeba znovu otestovat. Jinak již nevybírá žádná další zrcadla. Stejně jako "Zpětná vazba" používá výkonový profil serverů.
+    name: Algoritmus výběru URI
+  use-head:
+    description: Použít metodu HEAD pro první požadavek na HTTP server.
+    name: Použít metodu HEAD
+  user-agent:
+    name: Uživatelský agent
+common:
+  confirm: Potvrdit
+  cancel: Zrušit
+webui:
+  global: Globální
+  version: Verze
+  language: Jazyk
+  theme: Motiv
+  theme-light: Světlý
+  theme-dark: Tmavý
+  theme-system: Řídit se nastavením systému
+  debug-mode: Režim ladění
+  page-title: Titul stránky
+  page-title-help: 'Zástupné symboly: ${title} (aktuální stránka), ${rpcprofile} (název připojení), ${downspeed}, ${upspeed}, ${downloading}, ${waiting}, ${stopped}. U rychlosti lze použít modifikátor měřítka, např. ${downspeed:scale=1}; prefix=X / suffix=X přidají text kolem.'
+  notif-granted: Oznámení prohlížeče zapnuta
+  notif-denied: Oznámení nebyla povolena, nelze zapnout
+  notif-unsupported: Tento prohlížeč nepodporuje oznámení plochy
+  browser-notification: Povolit upozornění v prohlížeči
+  browser-notification-sound: Zvuk upozornění prohlížeče
+  browser-notification-frequency: Frekvence upozornění v prohlížeči
+  ws-reconnect-interval: Interval automatického připojení WebSocketu
+  ws-reconnect-interval-help: Počáteční prodleva (ms) před automatickým znovupřipojením; každým pokusem se zdvojnásobí, nejvýše asi 30 s. Nastavením 0 automatické znovupřipojení vypnete. Platí jen pro spojení WebSocket.
+  title-refresh-interval: Interval aktualizace titulku stránky
+  global-stat-refresh-interval: Interval aktualizace globální statistiky
+  task-refresh-interval: Interval aktualizace informací o úloze
+  keyboard-shortcuts: Klávesové zkratky
+  keyboard-shortcuts-help: 'Po zapnutí: Ctrl/Cmd+A vybere vše, Delete odebere vybrané, Ctrl/Cmd+F zobrazí hledání (psaní ve vstupním poli výběr/odebrání nespustí)'
+  swipe-gesture: Gesto přejetí
+  drag-and-drop-tasks: Změnit pořadí úloh pomocí přetahování
+  rpc-list-display-order: Pořadí zobrazení seznamu RPC
+  independent-display-order: Každá stránka seznamu úloh používá nezávislé pořadí zobrazení
+  after-creating-new-task: Akce po vytvoření nových úloh
+  after-retrying-task: Akce po opětovném spuštění úlohy
+  remove-old-task-after-retrying: Odstranit staré úlohy po opětovném spuštění
+  confirm-task-removal: Potvrdit odstranění úlohy
+  include-prefix-when-copying: Zahrnout předponu při kopírování z detailu úlohy
+  show-pieces-info: Práh dílů v detailu úlohy
+  show-pieces-info-help: Do tohoto prahu se kreslí jeden díl na buňku, nad ním se několik dílů sloučí do jedné buňky. Počet buněk je vždy omezen, aby prohlížeč zůstal svižný; tato volba už zobrazení dílů neskrývá – zcela je skryje až volba „Díly nezobrazovat“.
+  unlimited: Neomezeno
+  freq-high: Vysoká (až 10 upozornění za 1 minutu)
+  freq-middle: Střední (až 1 upozornění za 1 minutu)
+  freq-low: Nízká (až 1 upozornění za 5 minut)
+  recently-used: Nedávno použité
+  rpc-alias: Alias RPC
+  goto-task-list: Přejít na stránku seznamu úloh
+  goto-task-detail: Přejít na stránku detailu úlohy
+  goto-downloading: Přejít na stránku stahovaných úloh
+  stay-current: Zůstat na aktuální stránce
+  refresh-current-page: Načíst aktuální stránku znovu
+  always: Zobrazit každý díl zvlášť
+  never: Díly nezobrazovat
+  pieces-le: Zobrazit díly po jednom do {value}
+  import-settings: Importovat nastavení
+  export-settings: Exportovat nastavení
+  reset-settings: Obnovit nastavení
+  confirm-reset: Opravdu chcete obnovit všechna nastavení?
+  import: Importovat
+  copy: Kopírovat
+  download: Stáhnout
+  operation-succeeded: Operace byla úspěšná
+  copy-failed: Kopírování se nezdařilo
+  import-invalid: Neplatný formát dat nastavení!
+  setting:
+    reload-hint: Vyžaduje načtení stránky znovu
+  time:
+    seconds: Sekundy
+    minutes: Minuty
+    milliseconds: Milisekundy
+    disabled: Zakázané
+  stat:
+    downloading: Stahuje se
+    upload: Rychlost odesílání
+  speed-float:
+    close: Zavřít graf rychlosti
+    drag-hint: Táhněte odtud pro přesun
+    click-hint: Klikněte pro graf rychlosti
+    load-failed: Graf rychlosti se nepodařilo načíst

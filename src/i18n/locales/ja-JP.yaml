@@ -1,0 +1,725 @@
+app:
+  name: Aria2 WebUI
+lang:
+  label: 言語
+theme:
+  toggle: テーマを切り替える
+settings:
+  immediate-hint: 変更はすぐに aria2 へ送信されます（一部のオプションは aria2 の再起動が必要です）
+  connect-error: aria2 に接続できません！
+setting:
+  validate:
+    empty: オプションの値を空にすることはできません！
+    invalid-number: 入力された数値が無効です！
+    below-min: 入力した数値が最小値 {value} 未満です!
+    above-max: 入力した数値が最大値 {value} を超えています!
+    invalid: 入力値が無効です！
+option:
+  'true': はい
+  'false': いいえ
+format:
+  settings:
+    total-count: '{count} 項目'
+menu:
+  group:
+    task: タスク
+    aria2-settings: Aria2 設定
+  webui-settings: WebUI 設定
+  downloading: ダウンロード中
+  waiting: 待機中
+  stopped: 完了 / 停止済み
+  settings: 設定
+  base-settings: 基本設定
+  protocol-settings: HTTP/FTP/SFTP 設定
+  http-setting: HTTP 設定
+  ftp-sftp-setting: FTP/SFTP 設定
+  bittorrent-setting: BitTorrent 設定
+  metalink-setting: Metalink 設定
+  rpc-setting: RPC 設定
+  advanced-setting: 詳細設定
+connection:
+  name: 接続名
+  host: ホスト名
+  port: ポート
+  path: パス
+  protocol: プロトコル
+  secret: RPC シークレット
+  test:
+    success: aria2 に接続しました
+    failed: aria2 に接続できませんでした
+  status:
+    idle: 未接続
+    connecting: 接続中
+    connected: 接続済み
+    reconnecting: 再接続中
+    error: 接続エラー
+  remove:
+    title: 削除の確認
+    content: この接続を削除しますか?
+    positive: 削除
+    negative: キャンセル
+  switch:
+    tooltip: aria2 接続を切り替える
+    none: 接続なし
+task:
+  loading: 読み込み中…
+  count: '{total} 件中 {selected} 件を選択中'
+  search:
+    placeholder: タスク名を検索
+  empty:
+    none: タスクはありません
+    filtered: 条件に合うタスクはありません
+  refresh-failed: 更新に失敗しました
+  duration:
+    more-than-a-day: 1 日以上
+  status:
+    downloading: ダウンロード中
+    seeding: シード中
+    waiting: 待機中
+    paused: 一時停止中
+    completed: 完了
+    error: エラー
+    removed: 削除済み
+  meta:
+    seeders: シード
+    remain: 残り
+    error-code: 'エラーコード:'
+  action:
+    pause: 一時停止
+    resume: 開始
+    remove: 削除
+    retry: 再試行
+    clear-completed: 完了済みを消去
+    refresh: 更新
+    saved: 保存しました
+    view: 表示
+    expand: すべて展開
+    collapse: すべて折りたたむ
+  retry:
+    not-retryable: このタスクは再作成できません（torrent / metalink ファイルは aria2 に保存されません）。再度追加してください。
+  notify:
+    completed: ダウンロードが完了しました
+    failed: ダウンロードに失敗しました
+  chart-loading: グラフを読み込み中...
+  tab:
+    overview: 概要
+    pieces: ピース
+    files: ファイル
+    peers: ピア
+    settings: 設定
+  pieces:
+    completed: 完了
+    uncompleted: 未完了
+    info: '{total} ピース中 {completed} ピース完了'
+    view-distribution: 分布
+    view-pie: 完了度パイ
+    group-auto: 自動まとめる
+    group-step: 1 本あたり {size} ピース
+    summary-per-piece: 元のピース {total} 件、1 ピースずつ表示
+    summary-grouped: 元のピース {total} 件、1 本に {size} 件まとめ、{bars} 本
+    cell-single: ピース {index} · {state}
+    cell-range: ピース {start}-{end} · 完了 {done}/{count}（{pct}%）
+  files:
+    name: ファイル名
+    empty: ファイルはありません
+    restart-tip: ダウンロード中に変更するとこのタスクは最初からやり直されます
+    none-selected: ファイルを 1 つ以上選択してください
+    select-all: すべて選択
+    select-none: 選択解除
+    select-invert: 選択を反転
+    confirm: 確認
+  peers:
+    address: アドレス
+    client: クライアント
+    status: ステータス
+    download: ダウンロード
+    upload: アップロード
+    local: このクライアント
+    empty: 接続中のピアがいません
+  detail:
+    auto-refresh-hint: 自動更新を停止しました
+    invalid-url: タスクのアドレスが不正です
+    task-not-found: タスクが見つかりません
+  field:
+    name: 名前
+    size: サイズ
+    selected-files: 選択したファイル
+    file-count: '{count} 個のファイル'
+    status: ステータス
+    error-description: エラーの説明
+    progress: 進捗
+    health: 健全性
+    download: ダウンロード
+    upload: アップロード
+    share-ratio: シェア率
+    remaining: 残り
+    seeders-connections: シード / 接続数
+    seed-creation-time: シード作成日時
+    info-hash: 情報ハッシュ
+    download-url: ダウンロードアドレス
+    download-dir: ダウンロード先ディレクトリ
+    speed: 速度
+    tracker-servers: BT トラッカーサーバー
+  menu:
+    select-all: すべて選択
+    select-completed: 完了済みを選択
+    select-failed: 失敗 / 削除済みを選択
+  confirm:
+    negative: キャンセル
+    remove:
+      title: 削除の確認
+      content: 選択した {count} 件のタスクを削除しますか?
+      positive: 削除
+    clear:
+      title: 完了済みを消去
+      content: 完了済み / 削除済みのタスク記録をすべて消去しますか?（ディスク上のファイルは残ります）
+      positive: 消去
+  new:
+    button: 新規
+    title: 新規ダウンロード
+    source:
+      links: リンク
+      torrent: torrent ファイル
+    links:
+      placeholder: 1 行に 1 つのダウンロードアドレス（http / https / ftp / sftp / マグネットリンク）
+      valid-count: 有効なリンク {count} 件
+      ignored-count: 、{count} 行を無視しました
+      empty: 有効なリンクを 1 つ以上入力してください
+    torrent:
+      pick: ファイルを選択
+      hint: .torrent / .metalink / .meta4 ファイルに対応
+      none: まだファイルが選択されていません
+      no-file: ファイルが選択されていません
+      empty: 選択したファイルは空です
+      too-large: ファイルが上限 {size} を超えています
+      read-failed: ファイルを読み込めませんでした
+      unknown-type: ファイル種別を認識できません。torrent または Metalink ファイルを選択してください
+    options:
+      title: ダウンロード前のオプション
+      hint: 空のオプションは送信されず、aria2 のグローバル既定値が適用されます
+    action:
+      download: 今すぐダウンロード
+      download-later: 後でダウンロード
+      cancel: キャンセル
+      submitting: 作成中…
+    result:
+      success: '{count} 件のタスクを作成しました'
+      failed: '作成に失敗しました: {message}'
+options:
+  all-proxy-passwd:
+    name: プロキシパスワード
+  all-proxy-user:
+    name: プロキシユーザー名
+  all-proxy:
+    description: すべてのプロトコルに対してプロキシサーバーを使用します。--http-proxy, --https-proxy, --ftp-proxy で個別に上書き可能です。PROXY の形式は [http://][USER:PASSWORD@]HOST[:PORT] です。
+    name: プロキシサーバー
+  allow-overwrite:
+    description: 対応するコントロールファイルがない場合、ダウンロードを最初から開始します。--auto-file-renaming と関連します。
+    name: 上書きを許可
+  allow-piece-length-change:
+    description: ピース長がコントロールファイルと異なる場合にダウンロードを続行するかどうかを指定します。true で続行しますが進捗の一部が失われます。
+    name: ピース長変更を許可
+  always-resume:
+    description: 常にリジュームを試みます。false の場合、すべての URI がリジューム非対応と判定されれば最初からダウンロードします。
+    name: 常にリジューム
+  async-dns:
+    name: 非同期 DNS
+  auto-file-renaming:
+    description: 同名ファイルが存在する場合に自動的にファイル名を変更します（HTTP(S)/FTP のみ）。
+    name: 自動ファイル名変更
+  auto-save-interval:
+    description: コントロールファイル（*.aria2）を保存する間隔（秒）。0 で保存しません。停止時には保存されます。0-600 の範囲。
+    name: 自動保存間隔
+  bt-detach-seed-only:
+    description: 'シードのみを同時アクティブダウンロード数から除外します（例: -j3 で 3 つのダウンロードのうち 1 つがシードになった場合、カウントから外れて次の待機中が開始されます）。'
+    name: シード状態のタスクを同時制限から除外シードのみ分離
+  bt-enable-hook-after-hash-check:
+    description: ハッシュチェック後にフックコマンドを呼び出すことを許可します。
+    name: ハッシュチェック後のフックを有効にする
+  bt-enable-lpd:
+    name: ローカルピア発見を有効にする
+  bt-exclude-tracker:
+    description: 除外する BitTorrent トラッカー URL のカンマ区切りリスト。* を使うとすべて除外します。
+    name: トラッカー除外
+  bt-external-ip:
+    description: BitTorrent/DHT で使用する外部 IP を指定します。DHT でプライベートネットワークを使用する場合に重要です。
+    name: 外部 IP
+  bt-force-encryption:
+    description: BitTorrent ペイロード暗号化を arc4 で必須にします。
+    name: 暗号化を強制
+  bt-hash-check-seed:
+    description: hash-check の後、ファイルが完全であればシードを継続します。
+    name: シード前のハッシュチェック
+  bt-load-saved-metadata:
+    description: マグネットで DHT からメタデータを取得する前に --bt-save-metadata で保存したファイルを読み込みます。
+    name: 保存済みメタデータを読み込む
+  bt-max-open-files:
+    description: BitTorrent/Metalink のマルチファイルダウンロードで開く最大ファイル数を指定します。
+    name: 最大オープンファイル数
+  bt-max-peers:
+    description: トレントごとの最大ピア数を指定します。0 は無制限。
+    name: 最大ピア数
+  bt-metadata-only:
+    description: メタデータのみをダウンロードし、実ファイルはダウンロードしません（マグネットURI 時）。
+    name: メタデータのみダウンロード
+  bt-min-crypto-level:
+    description: 使用する暗号方式の最小レベルを設定します。
+    name: 最小暗号レベル
+  bt-prioritize-piece:
+    description: 各ファイルの先頭と末尾を優先的にダウンロードします。head, tail キーワードとサイズ指定が可能です。
+    name: ピース優先
+  bt-remove-unselected-file:
+    description: ダウンロード完了時に選択されていないファイルを削除します。注意して使用してください。
+    name: 未選択ファイルを削除
+  bt-request-peer-speed-limit:
+    description: 各トレントの合計ダウンロード速度が指定値未満の場合、一時的にピア数を増やして速度向上を試みます。
+    name: 要求ピア速度制限
+  bt-require-crypto:
+    description: 従来の BitTorrent プロトコルを拒否し、常に暗号化された接続のみを許可します。
+    name: 暗号を要求
+  bt-save-metadata:
+    description: マグネットURI を使用した際に .torrent メタデータを保存します。ファイル名は info-hash に基づきます。
+    name: メタデータを保存
+  bt-seed-unverified:
+    description: ピースハッシュ検証を行わずに既存ファイルをシードします。
+    name: 未検証ファイルをシード
+  bt-stop-timeout:
+    description: ダウンロード速度が連続 SEC 秒間 0 の場合にシードを停止します。0 で無効。
+    name: シード停止タイムアウト
+  bt-tracker-connect-timeout:
+    description: トラッカへの TCP 接続確立のタイムアウト（秒）。
+    name: トラッカ接続タイムアウト
+  bt-tracker-interval:
+    description: トラッカへのリクエスト間隔（秒）。0 を指定すると応答や進捗に基づいて自動決定されます。
+    name: トラッカ接続間隔
+  bt-tracker-timeout:
+    name: トラッカタイムアウト
+  bt-tracker:
+    description: 追加する BitTorrent トラッカーの URI をカンマ区切りで指定します。
+    name: トラッカー
+  check-certificate:
+    name: 証明書検証
+  check-integrity:
+    description: チェックサムやハッシュを用いてファイルの整合性を検証します。このオプションは BitTorrent と Metalink（ハッシュあり）、および --checksum を使用した HTTP(S)/FTP ダウンロードにのみ有効です。
+    name: 整合性チェック
+  checksum:
+    description: 'チェックサムを設定します。形式は TYPE=DIGEST。TYPE はハッシュ種類、DIGEST は16進ダイジェストです（例: sha-1=...）。このオプションは HTTP(S)/FTP にのみ適用されます。'
+    name: チェックサム
+  conditional-get:
+    description: ローカルファイルがリモートより古い場合のみダウンロードします（HTTP(S)）。Metalink の場合は無効です。
+    name: 更新時のみダウンロード (Conditional GET)
+  conf-path:
+    name: 設定ファイル
+  connect-timeout:
+    description: サーバーまたはプロキシへの接続を確立するためのタイムアウト（秒）を入力します。接続確立後は --timeout が使用されます。
+    name: 接続タイムアウト
+  console-log-level:
+    name: コンソールログレベル
+  content-disposition-default-utf8:
+    description: Content-Disposition ヘッダの引用された文字列を ISO-8859-1 ではなく UTF-8 として扱います。
+    name: ファイル名の文字コードをUTF-8として処理
+  continue:
+    description: 部分的にダウンロードされたファイルの続きから再開します。ブラウザや他プログラムが先頭から順番にダウンロードしたものを再開するにはこのオプションを使用します。現在、このオプションは HTTP(S)/FTP のみ対象です。
+    name: ダウンロードを継続
+  daemon:
+    name: デーモン有効化
+  deferred-input:
+    description: 有効を指定すると --input-file の URI/オプションを一度に読み込まず必要時に逐次読み込みます。大きな入力ファイルでメモリ使用量を削減できます。
+    name: 遅延入力
+  dht-file-path:
+    description: DHT ルーティングテーブルファイル（IPv4）のパスを変更します。
+    name: DHT ファイル (IPv4)
+  dht-file-path6:
+    description: DHT ルーティングテーブルファイル（IPv6）のパスを変更します。
+    name: DHT ファイル (IPv6)
+  dht-listen-port:
+    description: DHT（IPv4/IPv6）と UDP トラッカで使用する受信 UDP ポートを設定します。カンマ区切りや範囲指定が可能です。
+    name: DHT リッスンポート
+  dht-message-timeout:
+    name: DHT メッセージタイムアウト
+  dir:
+    name: ダウンロード先ディレクトリ
+  disable-ipv6:
+    name: IPv6 を無効化
+  disk-cache:
+    description: ディスクキャッシュを有効にします。サイズを 0 にすると無効化。
+    name: ディスクキャッシュ
+  download-result:
+    description: ダウンロード結果の表示形式を変更します。opt=default/full/hidden など。
+    name: ダウンロード結果フォーマット
+  dry-run:
+    description: 有効を指定すると aria2 はリモートファイルの存在のみを確認し、データはダウンロードしません（HTTP/FTP）。BitTorrent のダウンロードはキャンセルされます。
+    name: ドライラン
+  dscp:
+    description: BitTorrent トラフィックの DSCP 値を設定します。
+    name: DSCP
+  enable-color:
+    name: ターミナルで色を有効にする
+  enable-dht:
+    description: DHT 機能を有効にします。private フラグ付きトレントでは無効になります。
+    name: DHT を有効にする (IPv4)
+  enable-dht6:
+    description: DHT IPv6 機能を有効にします。
+    name: DHT を有効にする (IPv6)
+  enable-http-keep-alive:
+    description: HTTP/1.1 の持続接続を有効にします。
+    name: HTTP Keep-Alive を有効にする
+  enable-http-pipelining:
+    description: HTTP/1.1 パイプラインを有効にします。
+    name: HTTP パイプラインを有効にする
+  enable-mmap:
+    description: ファイルをメモリマップします。ファイル割当方式との兼ね合いに注意してください。
+    name: mmap を有効にする
+  enable-peer-exchange:
+    description: Peer Exchange 拡張を有効にします。private フラグ付きトレントでは無効になります。
+    name: ピア交換を有効にする
+  enable-rpc:
+    name: JSON-RPC/XML-RPC サーバを有効にする
+  event-poll:
+    description: epoll/kqueue/port/poll/select などを指定します。システム依存です。
+    name: イベントポーリング方式
+  file-allocation:
+    description: none/prealloc/falloc/trunc などを指定します。使用するファイルシステムによって推奨方式が異なります。
+    name: ファイル割当方式
+  follow-metalink:
+    description: .meta4/.metalink ファイルや content-type が application/metalink4+xml の場合、それを解析して中のファイルをダウンロードします。mem 指定でディスクに書き込みません。
+    name: Metalink に従う
+  follow-torrent:
+    description: .torrent ファイルや content-type が application/x-bittorrent の場合、それを解析して中のファイルをダウンロードします。mem を指定するとディスクに書き込まずメモリ上で処理します。
+    name: トレントに従う
+  force-save:
+    description: ダウンロード完了や削除時でも --save-session に保存します。
+    name: 強制保存
+  ftp-passwd:
+    description: URI にユーザー名が埋め込まれパスワードがない場合、.netrc で解決を試みます。
+    name: FTP デフォルトパスワード
+  ftp-pasv:
+    description: FTP のパッシブモードを使用します。false の場合はアクティブモードを使用します。
+    name: パッシブモード
+  ftp-proxy-passwd:
+    name: FTP プロキシパスワード
+  ftp-proxy-user:
+    name: FTP プロキシユーザー名
+  ftp-proxy:
+    name: FTP プロキシサーバー
+  ftp-reuse-connection:
+    name: FTP 接続再利用
+  ftp-type:
+    name: FTP 転送タイプ
+  ftp-user:
+    name: FTP デフォルトユーザー名
+  hash-check-only:
+    description: 有効を指定するとハッシュ検証後にダウンロードを取り消します。
+    name: ハッシュ検証のみ
+  header:
+    description: 'HTTP リクエストヘッダに HEADER を追加します。各行に "ヘッダー名: ヘッダー値" の形式で記述します。'
+    name: カスタムヘッダ
+  http-accept-gzip:
+    description: 'Accept-Encoding: gzip ヘッダを送信し、サーバが gzip 応答を返す場合は解凍して処理します。'
+    name: GZip を受け入れる
+  http-auth-challenge:
+    description: サーバから要求された時のみ Authorization ヘッダを送信します。false の場合は常に送信します。ただし URI にユーザー名とパスワードが含まれている場合は常に送信します。
+    name: 認証チャレンジ
+  http-no-cache:
+    description: 'Cache-Control: no-cache と Pragma ヘッダを送信してキャッシュを防ぎます。'
+    name: キャッシュ無効
+  http-passwd:
+    name: HTTP デフォルトパスワード
+  http-proxy-passwd:
+    name: HTTP プロキシパスワード
+  http-proxy-user:
+    name: HTTP プロキシユーザー名
+  http-proxy:
+    name: HTTP プロキシサーバー
+  http-user:
+    name: HTTP デフォルトユーザー名
+  https-proxy-passwd:
+    name: HTTPS プロキシパスワード
+  https-proxy-user:
+    name: HTTPS プロキシユーザー名
+  https-proxy:
+    name: HTTPS プロキシサーバー
+  human-readable:
+    description: サイズや速度を読みやすい単位（KiB, MiB等）で表示します。
+    name: 人間可読出力
+  keep-unfinished-download-result:
+    description: 未完了のダウンロード結果を --max-download-result を超えても保持します。
+    name: 未完了結果を保持
+  listen-port:
+    description: BitTorrent の TCP リスンポートを設定します。カンマ区切りや範囲指定が可能です。
+    name: リスンポート
+  log-level:
+    name: ログレベル
+  log:
+    description: ログファイルの名前。- を指定すると標準出力にログを書き込みます。空文字列（""）か指定しない場合、ディスクにログは書き込まれません。
+    name: ログファイル
+  lowest-speed-limit:
+    description: ダウンロード速度がこの値（バイト/秒）以下の場合に接続を終了します。0 は制限なし。K または M を付与可能（1K=1024, 1M=1024K）。BitTorrent には影響しません。
+    name: 最低速度制限
+  max-concurrent-downloads:
+    name: 最大同時ダウンロード数
+  max-connection-per-server:
+    name: サーバーごとの最大接続数
+  max-download-limit:
+    description: 各ダウンロードの最大速度（バイト/秒）。0 は無制限。
+    name: ダウンロード上限
+  max-download-result:
+    description: メモリに保持するダウンロード結果の最大数を指定します。0 は保存しない。
+    name: 保存するダウンロード結果数
+  max-file-not-found:
+    description: HTTP/FTP サーバから "file not found" を NUM 回受け取った場合にダウンロードを失敗させます。0 を指定して無効化可能。
+    name: ファイル未検出時の最大リトライ回数
+  max-mmap-limit:
+    description: mmap を有効にするファイルサイズの上限を指定します。
+    name: mmap の最大サイズ
+  max-overall-download-limit:
+    description: 全体のダウンロード速度上限（バイト/秒）。0 は無制限。
+    name: 全体ダウンロード上限
+  max-overall-upload-limit:
+    description: 全体のアップロード速度上限（バイト/秒）。0 は無制限。
+    name: 全体アップロード上限
+  max-resume-failure-tries:
+    description: --always-resume=false 時に N 回リジューム失敗で最初からダウンロードします。
+    name: リジューム失敗最大回数
+  max-tries:
+    description: リトライ回数を設定します。0 は無制限。
+    name: 最大リトライ回数
+  max-upload-limit:
+    description: 各トレントの最大アップロード速度（バイト/秒）。0 は無制限。
+    name: アップロード上限
+  metalink-base-uri:
+    description: ローカルに保存された metalink の相対 URI 解決に使用するベース URI を指定します。ディレクトリを指す場合は / で終わらせます。
+    name: ベース URI
+  metalink-enable-unique-protocol:
+    description: 同一ミラーに複数プロトコルが存在する場合に一つを選んで使用します。
+    name: ユニークプロトコルを有効にする
+  metalink-language:
+    name: 言語
+  metalink-location:
+    description: '優先するサーバーロケーションのカンマ区切りリスト（例: jp, us）。'
+    name: サーバーの優先ロケーション
+  metalink-os:
+    description: ダウンロード対象ファイルの OS を指定します。
+    name: OS
+  metalink-preferred-protocol:
+    description: 優先するプロトコルを指定します。http, https, ftp, none を指定可能です。
+    name: 優先プロトコル
+  metalink-version:
+    description: ダウンロード対象ファイルのバージョンを指定します。
+    name: バージョン
+  min-split-size:
+    description: 'aria2 は 2*SIZE 未満の範囲で分割しません。K/M を付けられます（例: 1M-1024M）。'
+    name: 最小分割サイズ
+  min-tls-version:
+    description: 許容する最低 TLS バージョンを指定します。
+    name: 最小 TLS バージョン
+  netrc-path:
+    name: .netrc パス
+  no-conf:
+    name: 設定ファイルを無効化
+  no-file-allocation-limit:
+    description: サイズ 未満のファイルに対して割当を行わないようにします。
+    name: ファイル割当制限なし
+  no-netrc:
+    name: netrc を無効化
+  no-proxy:
+    description: カンマ区切りでプロキシを使用しないホスト名/ドメイン/ネットワークを指定します。
+    name: プロキシ除外リスト
+  optimize-concurrent-downloads:
+    description: 利用可能帯域幅に基づき同時ダウンロード数を最適化します。
+    name: 同時ダウンロード最適化
+  out:
+    description: ダウンロードするファイル名。--dir に対する相対パスです。--force-sequential 使用時は無視されます。
+    name: ファイル名
+  parameterized-uri:
+    description: 波括弧や数値レンジを使った URI 指定を有効にします。
+    name: パラメタライズド URI を有効にする
+  pause-metadata:
+    description: メタデータから生成されたダウンロード（.torrent, magnet, metalink）をポーズします。--enable-rpc=true のときに有効です。
+    name: メタデータダウンロード後にポーズ
+  peer-agent:
+    description: ピアプロトコルで使用されるクライアントバージョンの文字列を指定します。
+    name: ピアエージェント
+  peer-id-prefix:
+    description: ピア ID のプレフィックスを指定します。20 バイトより長い場合は先頭 20 バイトを使用します。
+    name: ピア ID プレフィックス
+  piece-length:
+    description: HTTP/FTP ダウンロード時のピース長を設定します。Metalink のハッシュがある場合は無視されます。
+    name: ピース長
+  proxy-method:
+    description: プロキシリクエストで使用する方式を設定します。METHOD は GET または TUNNEL。HTTPS は常に TUNNEL を使用します。
+    name: プロキシ方式
+  quiet:
+    name: コンソール出力を抑制
+  realtime-chunk-checksum:
+    description: ダウンロード中にチャンクのチェックサムを計算して検証します。
+    name: リアルタイムチャンクチェックサム
+  referer:
+    description: HTTP Referer を設定します。* を指定するとダウンロード URI が Referer として使用されます。
+    name: Referer
+  remote-time:
+    description: HTTP/FTP サーバのタイムスタンプを取得し、ローカルファイルに適用します。
+    name: リモートのタイムスタンプ
+  remove-control-file:
+    description: ダウンロード前にコントロールファイルを削除します。--allow-overwrite と併用の挙動に注意。
+    name: コントロールファイルを削除
+  retry-wait:
+    description: リトライ間に待機する秒数を設定します。SEC > 0 の場合、HTTP 503 の際に再試行します。
+    name: リトライ間隔
+  reuse-uri:
+    description: 既に使用された URI を再利用します。
+    name: URI 再利用
+  rlimit-nofile:
+    description: オープンファイル記述子のソフトリミットを設定します。posix 対応システムでのみ有効。
+    name: オープンファイル記述子上限
+  rpc-allow-origin-all:
+    description: 'RPC レスポンスに Access-Control-Allow-Origin: * を追加します。'
+    name: 全オリジン許可
+  rpc-listen-all:
+    description: JSON-RPC/XML-RPC のリクエストを全インターフェースで受け付けます。false の場合はローカルループのみ待機します。
+    name: 全インターフェースで待機
+  rpc-listen-port:
+    name: リッスンポート
+  rpc-max-request-size:
+    description: JSON-RPC/XML-RPC の最大リクエストサイズ（バイト）。これを超えるリクエストは切断されます。
+    name: 最大リクエストサイズ
+  rpc-save-upload-metadata:
+    description: aria2.addTorrent()/aria2.addMetalink() でアップロードされたメタデータを --dir に保存します。false を指定すると保存されません。
+    name: アップロードメタデータを保存
+  rpc-secure:
+    description: RPC トランスポートを SSL/TLS で暗号化します。クライアントは https/wss を使用します。--rpc-certificate と --rpc-private-key を指定してください。
+    name: SSL/TLS を有効にする
+  save-cookies:
+    description: Mozilla/Firefox/Netscape 形式のファイルにクッキーを保存します。既存ファイルがある場合は上書きされます。
+    name: クッキー保存先
+  save-not-found:
+    description: ファイルが見つからない場合でも --save-session に保存します。
+    name: 未発見ファイルも保存
+  save-session-interval:
+    description: --save-session ファイルを保存する間隔（秒）。0 で終了時のみ保存。
+    name: セッション保存間隔
+  save-session:
+    description: 終了時にエラー/未完了のダウンロードを保存するファイル名を指定します。拡張子に .gz をつけると gzip 圧縮されます。
+    name: セッション保存ファイル
+  seed-ratio:
+    description: シードを継続する比率を指定します。1.0 以上を推奨します。0.0 を指定すると比率に関係なくシードします。
+    name: 最小シード比率
+  seed-time:
+    description: シード時間（分）。--seed-time=0 でシードを無効化できます。
+    name: 最小シード時間
+  server-stat-of:
+    description: サーバーのパフォーマンスプロファイルを保存するファイル名を指定します。--server-stat-if で読み込めます。
+    name: サーバー統計出力ファイル
+  server-stat-timeout:
+    description: サーバー統計が最後に更新されてからの有効期限（秒）。
+    name: サーバー統計タイムアウト
+  show-console-readout:
+    name: コンソール出力を表示
+  socket-recv-buffer-size:
+    description: ソケットの SO_RCVBUF を設定します。0 は無効。
+    name: ソケット受信バッファサイズ
+  split:
+    description: N 接続でファイルを分割ダウンロードします。URI が N より多い場合、最初の N を使用し残りをバックアップとして使用します。
+    name: 分割数
+  ssh-host-key-md:
+    description: 'SFTP 使用時にホスト公開鍵のハッシュを検証します。形式は TYPE=DIGEST です（例: sha-1=...）。'
+    name: SSH ホスト公開鍵のダイジェスト
+  stop:
+    description: 10 秒経過後にアプリを停止します。0 で無効。
+    name: 自動停止時間
+  stream-piece-selector:
+    description: HTTP/FTP ダウンロードで使用するピース選択アルゴリズムを指定します。デフォルトは接続回数を減らす選択を行います。inorder, random, geom などの指定が可能です。
+    name: ピース選択アルゴリズム
+  summary-interval:
+    description: 進捗サマリを表示する間隔（秒）。0 で抑制されます。
+    name: サマリ表示間隔
+  timeout:
+    name: タイムアウト
+  truncate-console-readout:
+    description: コンソール出力を一行に収まるように切り詰めます。
+    name: コンソール出力を切り詰め
+  uri-selector:
+    description: URI 選択アルゴリズムを指定します。inorder, comment, adaptive など。
+    name: URI 選択アルゴリズム
+  use-head:
+    description: 最初のリクエストに HEAD メソッドを使用します。
+    name: HEAD メソッドを使用
+  user-agent:
+    name: カスタムユーザーエージェント
+common:
+  confirm: 確認
+  cancel: キャンセル
+webui:
+  global: 全体
+  version: バージョン
+  language: 言語
+  theme: テーマ
+  theme-light: ライト
+  theme-dark: ダーク
+  theme-system: システム設定に従う
+  debug-mode: デバッグモード
+  page-title: ページタイトル
+  page-title-help: '使用可能なプレースホルダー: ${title}（現在のページ）、${rpcprofile}（接続名）、${downspeed}、${upspeed}、${downloading}、${waiting}、${stopped}。速度には桁数を制御する修飾子を付けられます（例 ${downspeed:scale=1}）。prefix=X / suffix=X で前後の文字列を追加できます。'
+  notif-granted: ブラウザ通知を有効にしました
+  notif-denied: 通知の許可がなく、有効化できません
+  notif-unsupported: このブラウザはデスクトップ通知に対応していません
+  browser-notification: ブラウザ通知を有効にする
+  browser-notification-sound: 通知音
+  browser-notification-frequency: 通知頻度
+  ws-reconnect-interval: WebSocket 自動再接続間隔
+  ws-reconnect-interval-help: 自動再接続を開始するまでの待ち時間（ミリ秒）。試行ごとに倍になり、約 30 秒で頭打ちです。0 にすると自動再接続は無効になります。WebSocket 接続のみ有効です。
+  title-refresh-interval: ページタイトル更新間隔
+  global-stat-refresh-interval: グローバル統計更新間隔
+  task-refresh-interval: タスク情報更新間隔
+  keyboard-shortcuts: キーボードショートカット
+  keyboard-shortcuts-help: '有効時: Ctrl/Cmd+A で全選択、Delete で選択を削除、Ctrl/Cmd+F で検索ボックスに移動（入力欄での入力中は全選択・削除を発火しません）'
+  swipe-gesture: スワイプジェスチャ
+  drag-and-drop-tasks: ドラッグ＆ドロップでタスクの順序を変更
+  rpc-list-display-order: RPC リスト表示順
+  independent-display-order: 各タスクリストページごとに個別の表示順を使用する
+  after-creating-new-task: タスク作成後の動作
+  after-retrying-task: タスク再試行後の動作
+  remove-old-task-after-retrying: 再試行後に古いタスクを削除
+  confirm-task-removal: タスク削除を確認
+  include-prefix-when-copying: タスク詳細からコピーする際に接頭辞を含める
+  show-pieces-info: タスク詳細での 1 ピース表示の上限
+  show-pieces-info-help: この値以下のピース数は 1 ピース 1 マスで描画し、超えると複数のピースを 1 マ스에まとめます。マスの数には常に上限があるのでブラウザは重くなりにくく、この項目でピース図が隠れることはありません。完全に隠すには「ピース図を表示しない」を選択してください。
+  unlimited: 無制限
+  freq-high: 高 (最大 1 分間に 10 通知)
+  freq-middle: 中 (最大 1 分間に 1 通知)
+  freq-low: 低 (最大 5 分間に 1 通知)
+  recently-used: 最近使用
+  rpc-alias: RPC 別名
+  goto-task-list: タスク一覧ページへ移動
+  goto-task-detail: タスク詳細ページへ移動
+  goto-downloading: ダウンロード中タスクページへ移動
+  stay-current: 現在のページに留まる
+  refresh-current-page: 現在のページを更新
+  always: 件数制限なく 1 ピースずつ表示
+  never: ピース図を表示しない
+  pieces-le: '{value} ピースまでは 1 ピースずつ表示'
+  import-settings: 設定をインポート
+  export-settings: 設定をエクスポート
+  reset-settings: 設定をリセット
+  confirm-reset: すべての設定をリセットしますか？
+  import: インポート
+  copy: コピー
+  download: ダウンロード
+  operation-succeeded: 操作が成功しました
+  copy-failed: コピーに失敗しました
+  import-invalid: 設定データの形式が無効です！
+  setting:
+    reload-hint: 反映にはページの再更新が必要です
+  time:
+    seconds: 秒
+    minutes: 分
+    milliseconds: ミリ秒
+    disabled: 無効
+  stat:
+    downloading: ダウンロード中
+    upload: アップロード速度
+  speed-float:
+    close: 速度グラフを閉じる
+    drag-hint: ここをドラッグして移動
+    click-hint: クリックで速度グラフを表示
+    load-failed: 速度グラフを読み込めませんでした

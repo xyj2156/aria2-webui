@@ -20,7 +20,8 @@ import { resolveBrowserLocale } from '@/i18n/index.js';
 
 /**
  * @typedef {Object} WebuiSettings
- * @property {string}  language                                   界面语言代码（zh-CN / en-US）——单一事实源，
+ * @property {string}  language                                   界面语言代码（BCP-47，如 zh-CN / en-US / de-DE，
+ *                                                                 全集见 @/i18n/languages.json）——单一事实源，
  *                                                                 由 @/composables/use-language-sync 同步到 i18n 引擎
  * @property {'light'|'dark'|'system'} theme                      主题模式
  * @property {string}  title                                      页面标题模板

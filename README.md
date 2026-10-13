@@ -25,14 +25,14 @@ An out-of-the-box, modern web UI for [aria2](https://github.com/aria2/aria2), bu
 - **分片可视化**：以图表方式渲染分片（pieces）进度，直观看到每个分块的状态。
 - **全局速率**：实时下载/上传速率与全局状态浮层。
 - **完善设置**：主题（明/暗）、语言、全局速率限制、页面标题刷新间隔等；含 aria2 RPC 设置与 Web UI 自身设置。
-- **中英双语**：界面内置 `zh-CN` / `en-US` 两套语言，跟随浏览器或手动切换。
+- **11 种语言**：`zh-CN` / `zh-TW` / `en-US` / `de-DE` / `fr-FR` / `es-ES` / `it-IT` / `ja-JP` / `pl-PL` / `ru-RU` / `cs-CZ`，跟随浏览器或手动切换；语言包按需动态加载。
 
 - **Multiple connections**: switch between several aria2 RPC endpoints from the top bar; credentials are kept locally.
 - **Task views**: downloading / waiting / stopped / completed groups, with pause, resume, remove, sort, and drag-to-reorder of the waiting queue.
 - **Piece visualization**: per-chunk (pieces) progress rendered as a chart.
 - **Global speed**: live download/upload throughput and a global-status overlay.
 - **Rich settings**: theme (light/dark), language, global speed limit, page-title refresh interval, plus aria2 RPC settings and Web-UI-specific settings.
-- **Bilingual UI**: built-in `zh-CN` / `en-US`, following the browser or manually switched.
+- **11 语言界面 / 11-language UI**: `zh-CN` / `zh-TW` / `en-US` / `de-DE` / `fr-FR` / `es-ES` / `it-IT` / `ja-JP` / `pl-PL` / `ru-RU` / `cs-CZ`, following the browser or manually switched; language packs load on demand.
 
 ## 技术栈 / Tech Stack
 
@@ -49,9 +49,14 @@ This project uses [pnpm](https://pnpm.io/) as its package manager.
 ```bash
 pnpm install
 pnpm dev       # 启动开发服务器 / start dev server
-pnpm build     # 生产构建，产物在 dist/ / production build → dist/
+pnpm build     # 生产构建（先跑 i18n 审计），产物在 dist/ / production build (runs the i18n audit first) → dist/
 pnpm preview   # 预览构建结果 / preview the build
+pnpm i18n:audit # 只做语言包体检 / run only the language-pack audit
 ```
+
+多语言：界面文案在 `src/i18n/locales/<语言代码>.yaml`（键集以 `zh-CN.yaml` 为准），母语自称与浏览器语言别名在 `src/i18n/languages.json`，组件库内置文案的按需入口在 `src/i18n/naive.js`。**加一门语言 = 丢一个 yaml + 在 languages.json 登记一行**，语言包由 `import.meta.glob` 自动发现；`pnpm build` 前置的 `scripts/i18n-audit.mjs` 会盯住注册表一一对应、键集与 `{占位符}` 一致、代码里 `t('键')` 无缺漏、Naive 侧有入口，不通过就出不了产物。
+
+Internationalization: UI strings live in `src/i18n/locales/<locale>.yaml` (key set anchored on `zh-CN.yaml`), native self-names and browser-language aliases in `src/i18n/languages.json`, and the on-demand component-library locales in `src/i18n/naive.js`. **Adding a language means dropping in one yaml file and one registry line** — packs are discovered via `import.meta.glob`, and `scripts/i18n-audit.mjs` (a build prerequisite) enforces registry parity, key/placeholder parity, no dangling `t('key')` references and Naive UI coverage.
 
 开发时通过环境变量 `VITE_ARIA2_HOST` / `VITE_ARIA2_SECRET` 等指定默认 RPC 端点（详见 `src/rpc`）。
 
