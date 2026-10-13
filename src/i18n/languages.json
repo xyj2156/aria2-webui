@@ -1,0 +1,11 @@
+{
+  "en-US": {
+    "name": "English",
+    "nativeName": "English"
+  },
+  "zh-CN": {
+    "name": "Simplified Chinese",
+    "nativeName": "简体中文",
+    "aliases": ["zh-Hans", "zh-CHS", "zh-SG"]
+  }
+}

@@ -75,7 +75,7 @@ const targets = [
 for (const { file, data } of targets) {
   const original = readFileSync(file, 'utf8');
   const { body } = stripOptionsBlock(original);
-  const optionsYaml = dump({ options: data.options ?? {} }, { lineWidth: 0, quotingType: '"' });
+  const optionsYaml = dump({ options: data.options ?? {} }, { lineWidth: -1, quotingType: "'" });
   writeFileSync(file, `${body}\n\n${optionsYaml}`);
 }
 

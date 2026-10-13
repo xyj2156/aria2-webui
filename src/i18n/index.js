@@ -14,6 +14,12 @@
  * 加载策略：
  * 兜底语言（zh-CN）静态导入，永远立即可用。其余语言首次用到时才动态 import()，
  * 加载完塞进缓存。t() 始终同步，取不到当前语言文案时自动走兜底，不等异步。
+ *
+ * 新增一门语言只做两件事：
+ * 1. 往 ./locales/ 丢一个 `<语言代码>.yaml`（键集与 zh-CN 对齐，`pnpm build` 里的审计会盯）；
+ * 2. 在 ./languages.json 里登记母语自称（下拉框要在不加载文案包的前提下就知道显示名）。
+ * 文案包由 import.meta.glob 自动发现，不用改本文件；语言代码必须是 BCP-47
+ * （如 pt-BR），否则对不上 ./naive.js 的组件库文案表，审计同样会报。
  */
 
 import { computed, ref } from 'vue';
@@ -21,6 +27,7 @@ import { load } from 'js-yaml';
 
 // 兜底语言静态导入，永远立即可用
 import zhCNYaml from './locales/zh-CN.yaml?raw';
+import languagesMeta from './languages.json';
 
 /** 兜底语言：新增语言时只改这一处 */
 const FALLBACK_LOCALE = 'zh-CN';
@@ -30,12 +37,64 @@ const messageCache = new Map();
 messageCache.set(FALLBACK_LOCALE, load(zhCNYaml));
 
 /**
- * 各语言的按需加载器。
- * 新增语言时在这里加一行、同时在 LANGUAGES 表里加一条。
+ * 文案包按需加载器，由目录扫描自动生成。
+ * 用 query + import: 'default' 两个选项让 loader() 直接拿到 yaml 文本；glob 的键本身不含
+ * query 后缀（形如 ./locales/de-DE.yaml），但为防版本差异仍先剥掉可能的问号尾巴。
  */
-const messageLoaders = {
-  'en-US': () => import('./locales/en-US.yaml?raw').then((m) => load(m.default)),
-};
+const messageLoaders = Object.fromEntries(
+  Object.entries(import.meta.glob('./locales/*.yaml', { query: '?raw', import: 'default' }))
+    .map(([path, loader]) => [path.split('?')[0].match(/\/locales\/([^/]+)\.yaml$/)?.[1], loader])
+    .filter(([code]) => Boolean(code) && code !== FALLBACK_LOCALE)
+    .map(([code, loader]) => [code, async () => load(await loader())]),
+);
+
+// glob 一个都没匹配上 = 语言包目录或写法出了问题，此时只剩兜底语言且不会报错，必须当场吼一声
+if (import.meta.env?.DEV && Object.keys(messageLoaders).length + 1 < Object.keys(languagesMeta).length) {
+  console.warn(
+    `[i18n] languages.json 注册了 ${Object.keys(languagesMeta).length} 门语言，但 locales 扫描只拿到 ${Object.keys(messageLoaders).length + 1} 份文案包，检查 src/i18n/locales 下的文件名`,
+  );
+}
+
+/**
+ * 语言注册表。label 是母语自称，取自 languages.json，不参与翻译。
+ * 只登记「有文案包且有母语名」的语言，缺一律由审计脚本报出来。
+ * @type {Array<{ code: string, label: string }>}
+ */
+export const LANGUAGES = Object.keys(languagesMeta)
+  .filter((code) => messageLoaders[code] || code === FALLBACK_LOCALE)
+  .map((code) => ({ code, label: languagesMeta[code].nativeName }));
+
+/** @param {string} code @returns {typeof LANGUAGES[number]|undefined} */
+function findLanguage(code) {
+  return LANGUAGES.find((item) => item.code === code);
+}
+
+/** 语言代码 → 我们登记的语言（含别名），全部小写，便于与浏览器标签不区分大小写匹配 */
+const codeIndex = new Map();
+for (const [code, meta] of Object.entries(languagesMeta)) {
+  codeIndex.set(code.toLowerCase(), code);
+  for (const alias of meta.aliases ?? []) {
+    codeIndex.set(alias.toLowerCase(), code);
+  }
+}
+
+/**
+ * 浏览器语言 → 我们的语言代码。顺序：整标签精确匹配 → 别名匹配（zh-HK → zh-TW）
+ * → 主语言子标签匹配（es-AR → es-ES）→ 兜底语言。
+ * 别名必须排在主语言子标签之前，否则 zh-TW 会被 zh-CN 抢走。
+ * @param {string} [browserLanguage] 留口子便于测试
+ * @returns {string}
+ */
+export function resolveBrowserLocale(browserLanguage) {
+  const browser = String(browserLanguage ?? (typeof navigator === 'undefined' ? '' : navigator.language) ?? '').toLowerCase();
+  if (codeIndex.has(browser)) {
+    return codeIndex.get(browser);
+  }
+
+  const primary = browser.split('-')[0];
+  const byPrimary = [...codeIndex.keys()].find((key) => key.split('-')[0] === primary);
+  return byPrimary ? codeIndex.get(byPrimary) : FALLBACK_LOCALE;
+}
 
 /**
  * 确保指定语言的文案已加载到缓存。
@@ -56,38 +115,6 @@ async function ensureMessages(code) {
 /** @param {string} code @returns {Record<string, unknown>} */
 function getMessages(code) {
   return messageCache.get(code) || messageCache.get(FALLBACK_LOCALE);
-}
-
-/**
- * 语言注册表。label 是母语自称，不参与翻译。
- * @type {Array<{ code: string, label: string }>}
- */
-export const LANGUAGES = [
-  { code: 'zh-CN', label: '简体中文' },
-  { code: 'en-US', label: 'English' },
-];
-
-/** @param {string} code @returns {typeof LANGUAGES[number]|undefined} */
-function findLanguage(code) {
-  return LANGUAGES.find((item) => item.code === code);
-}
-
-/**
- * 浏览器语言 → 我们的语言代码。先整体匹配，再退到主语言子标签（zh-TW → zh-CN），
- * 都对不上就用兜底语言。
- * @param {string} [browserLanguage] 留口子便于测试
- * @returns {string}
- */
-export function resolveBrowserLocale(browserLanguage) {
-  const browser = String(browserLanguage ?? (typeof navigator === 'undefined' ? '' : navigator.language) ?? '').toLowerCase();
-  const exact = LANGUAGES.find((item) => item.code.toLowerCase() === browser);
-  if (exact) {
-    return exact.code;
-  }
-
-  const primary = browser.split('-')[0];
-  const byPrimary = LANGUAGES.find((item) => item.code.toLowerCase().split('-')[0] === primary);
-  return byPrimary ? byPrimary.code : FALLBACK_LOCALE;
 }
 
 /**

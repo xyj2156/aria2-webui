@@ -6,6 +6,7 @@
 # A clone with core.autocrlf=true would silently rewrite both, so pin LF here.
 *.txt text eol=lf
 *.json text eol=lf
+*.yaml text eol=lf
 *.patch text eol=lf
 *.mjs text eol=lf
 *.sh text eol=lf
