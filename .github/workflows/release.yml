@@ -227,6 +227,17 @@ jobs:
               cp legal-webui/LICENSE "$d/LICENSE"
               cp legal-webui/NOTICE  "$d/NOTICE"
               cp legal-webui/THIRD-PARTY-NOTICES.txt "$d/THIRD-PARTY-NOTICES.txt"
+              # Section A of those notices cites texts as LICENSES/<file>, so the
+              # static zip has to carry the files it names — a recipient reading a
+              # license should not first have to visit the repository.  The list is
+              # the same machine-readable one the platform archives use.
+              mkdir -p "$d/LICENSES"
+              node "$GITHUB_WORKSPACE/scripts/gen-third-party-notices.mjs" \
+                --platform webui --list-license-files |
+                while read -r text; do
+                  cp "$GITHUB_WORKSPACE/licenses/$text" "$d/LICENSES/"
+                done
+              cp "$GITHUB_WORKSPACE/licenses/manifest.json" "$d/LICENSES/"
             else
               out="$GITHUB_WORKSPACE/aria2-${ARIA2_TAG}-webui-${VERSION}-${name}.zip"
               case "$name" in
