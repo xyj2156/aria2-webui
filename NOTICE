@@ -12,3 +12,44 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+Interface translations
+----------------------
+
+Parts of the interface strings under src/i18n/locales are derived from
+AriaNg <https://github.com/mayswind/AriaNg>, released under the MIT License:
+
+  The MIT License (MIT)
+
+  Copyright (c) 2016-2026 MaysWind (i@mayswind.net)
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+What was taken is AriaNg's community-maintained translation work: the aria2
+option names and descriptions, and labels whose English wording was inherited
+unchanged.  What this project added is the message-key structure itself, the
+strings AriaNg never had, the entries AriaNg left untranslated, and the
+contextual corrections.  Each affected file is therefore a modified derivative;
+src/i18n/locales/README.md records the per-language breakdown.
+
+The MIT text is reproduced above in full because this NOTICE file travels
+inside every published archive, and is also vendored at
+licenses/AriaNg-MIT.txt.  This project's own code and strings remain under the
+Apache License, Version 2.0 stated above; the MIT material stays under its own
+terms.

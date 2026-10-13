@@ -1,6 +1,6 @@
 {
   "$comment": "Machine-readable inventory of every third-party component linked into or bundled with a published aria2-webui archive. Consumed by scripts/gen-third-party-notices.mjs, which hard-fails when a vendored license text no longer matches its recorded sha256. Keep `licenseFiles` hashes in sync with the files in this directory.",
-  "revision": "2026-10-12.1",
+  "revision": "2026-10-13.1",
   "project": {
     "name": "aria2-webui",
     "repository": "https://github.com/xyj2156/aria2-webui",
@@ -27,8 +27,8 @@
       "platforms": ["win", "linux", "macos", "webui"],
       "name": "the Web UI (source in this repository; compiled assets embedded in the binary or shipped as the dist archive)",
       "spdx": "Apache-2.0",
-      "licenseFiles": ["Apache-2.0.txt"],
-      "statement": "Apache License 2.0, Copyright (c) 2026 阿杰很厉害 <506907958@qq.com>. See the repository LICENSE and NOTICE files; NOTICE is reproduced in this archive. Apache-2.0 is incompatible with GPLv2 but compatible with GPLv3, which is why the combined binary above is conveyed under GPL-3.0-or-later."
+      "licenseFiles": ["Apache-2.0.txt", "AriaNg-MIT.txt"],
+      "statement": "Apache License 2.0, Copyright (c) 2026 阿杰很厉害 <506907958@qq.com>. See the repository LICENSE and NOTICE files; NOTICE is reproduced in this archive. Apache-2.0 is incompatible with GPLv2 but compatible with GPLv3, which is why the combined binary above is conveyed under GPL-3.0-or-later. Interface translations under src/i18n/locales are partly derived from AriaNg (https://github.com/mayswind/AriaNg), Copyright (c) 2016-2026 MaysWind, used under the MIT License reproduced in LICENSES/AriaNg-MIT.txt: the aria2 option names and descriptions, plus labels whose English wording was inherited unchanged, reuse the human translations AriaNg's community maintains. This project authored everything else — its own message-key structure, the strings AriaNg never had, every entry AriaNg left untranslated or that it had lost, and the contextual corrections — so each language file is a modified derivative, not a copy. See src/i18n/locales/README.md for the per-file breakdown."
     },
     {
       "platforms": ["win", "linux", "macos"],
@@ -47,6 +47,7 @@
     "GCC-exception-3.1.txt": { "sha256": "7103d4f7f7e2f8ce10d282a05e0689637f8d6d9ef7b399d808d1da313e69b960", "bytes": 3390, "spdxText": "GCC-exception-3.1", "source": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/GCC-exception-3.1.txt" },
     "aria2-GPL-2.0-upstream.txt": { "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643", "bytes": 18092, "spdxText": "GPL-2.0-only", "source": "aria2 release-1.37.0:COPYING (verbatim, unmodified)" },
     "aria2-LICENSE.OpenSSL.txt": { "sha256": "8bf8790acc763bbae4e03f90fd28ee25acdf6daadd3b2adc90101365a403ed07", "bytes": 6968, "spdxText": "LicenseRef-aria2-OpenSSL-exception", "source": "aria2 release-1.37.0:LICENSE.OpenSSL (verbatim, unmodified)" },
+    "AriaNg-MIT.txt": { "sha256": "cbfd5dc92e3fd24a52362a439a12f4584868bbb5bb28faaed37abd2d972fc9d7", "bytes": 1097, "spdxText": "MIT", "source": "https://github.com/mayswind/AriaNg LICENSE (verbatim, unmodified)" },
     "c-ares-MIT.txt": { "sha256": "db4eb63fe09daebdf57d3f79b091bb5ee5070c0d761040e83264e648d307af4c", "bytes": 766, "spdxText": "MIT", "source": "https://github.com/c-ares/c-ares/blob/cares-1_19_1/LICENSE.md" },
     "expat-MIT.txt": { "sha256": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534", "bytes": 1144, "spdxText": "MIT", "source": "https://github.com/libexpat/libexpat/blob/R_2_5_0/expat/COPYING" },
     "gmp-LICENSE-statement.txt": { "sha256": "6f07d25e6a17f04355ecea2615193ee50011144081d37249ce434a609482c5b0", "bytes": 1010, "spdxText": "LGPL-3.0-or-later OR GPL-2.0-or-later", "source": "gmp-6.3.0.tar.xz README, lines 1-28 (verbatim)" },

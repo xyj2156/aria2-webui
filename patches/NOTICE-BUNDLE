@@ -10,6 +10,13 @@ this panel would be pointless without the program it embeds into.
 The embedded Web UI source and the build scripts of this repository are
 licensed under the Apache License, Version 2.0.
 
+The embedded panel also carries interface translations derived from AriaNg
+<https://github.com/mayswind/AriaNg>, Copyright (c) 2016-2026 MaysWind, used
+under the MIT License.  Thanks to the AriaNg authors and to the many translators
+whose community language files this panel reuses; the license text is in
+LICENSES/AriaNg-MIT.txt and is reproduced in this archive's NOTICE and in
+THIRD-PARTY-NOTICES.txt.
+
 This product statically links, and this archive carries the notices of, the
 following third-party components: OpenSSL, c-ares, Expat, SQLite, zlib,
 libssh2, GNU MP (GMP), musl libc, the MinGW-w64 runtime and winpthread, plus

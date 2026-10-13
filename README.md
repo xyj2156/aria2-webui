@@ -15,6 +15,10 @@ An out-of-the-box, modern web UI for [aria2](https://github.com/aria2/aria2), bu
 > This is an **unofficial, third-party** web UI for aria2 and is **not affiliated with or endorsed by** the aria2 project.
 >
 > **A special thank-you to [Tatsuhiro Tsujikawa (@tatsuhiro-t)](https://github.com/tatsuhiro-t), the author of aria2, and to all of its contributors.** Everything this project does stands on the shoulders of aria2 — a powerful, elegant, cross-platform open-source download tool. The "aria2" name, related trademarks, and aria2's source copyright belong to their respective owners and are referenced/depended upon here only under their respective licenses.
+>
+> **同样感谢 [AriaNg](https://github.com/mayswind/AriaNg)（Copyright (c) 2016-2026 MaysWind，MIT 许可）的作者与社区译者。** 本项目的文案键结构与 AriaNg 无关，但 aria2 选项的名称/说明以及一部分沿用英文原文的标签，复用了 AriaNg 多语言包里多年积累的人工译文；其余由本项目自译，并修正了若干上下文错位与术语不统一，逐文件构成见 `src/i18n/locales/README.md`，许可证文本见 `licenses/AriaNg-MIT.txt` 与 `NOTICE`。
+>
+> **Thanks also to [AriaNg](https://github.com/mayswind/AriaNg) (Copyright (c) 2016-2026 MaysWind, MIT License), its authors and its community of translators.** This project's message-key structure is its own, but the aria2 option names and descriptions and a number of labels whose English wording was inherited reuse the human translations AriaNg's community has built up over the years; the rest was authored here, along with corrections for scope and terminology. The per-file breakdown is in `src/i18n/locales/README.md`, and the license text ships in `licenses/AriaNg-MIT.txt` and `NOTICE`.
 
 ---
 
