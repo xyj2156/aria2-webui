@@ -288,6 +288,10 @@ jobs:
 
             用法 / Usage: Windows 运行 `start.bat`；Linux/macOS 运行 `./start.sh`，然后打开 http://localhost:6800/
 
+            配置 / Configuration: 端口、下载目录、日志、并发与 BT 做种等默认值都在包内的 `aria2.conf`，改完 `stop` 再 `start` 即生效；启动脚本只传 `--conf-path`，因为 aria2 里命令行优先级高于配置文件，默认值留在脚本里会让用户改不动。 / every default now lives in the shipped `aria2.conf` (edit it, then stop and start again); the launcher passes only `--conf-path`, since command-line options outrank the configuration file in aria2.
+
+            面板自身没有登录，因此规定「暴露即鉴权」/ the panel has no login of its own, so exposure requires a password: Linux/macOS 首次启动会生成随机 RPC 密码、写入 `aria2.conf` 并打印一条已填好密码的面板链接（换成本机地址即可从其它设备打开）；Windows 默认只听本机，要开放到局域网请先在 `aria2.conf` 里设 `rpc-secret`。
+
             ---
 
             许可 / License — 每个压缩包内都带 `LICENSE`、`NOTICE`、`THIRD-PARTY-NOTICES.txt` 与 `LICENSES/` 许可证全文，不必访问本仓库即可知道权利与义务 / every archive carries its own LICENSE, NOTICE, THIRD-PARTY-NOTICES.txt and the full license texts under LICENSES/:

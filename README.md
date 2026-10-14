@@ -88,6 +88,10 @@ The `patches/`, `docker/`, and `.github/workflows/release.yml` in this repo toge
 >
 > Note: a `workflow_dispatch` run only builds the platform artifacts to validate the pipeline and does **not** publish unless it is told which release it stands for; Releases are produced on `v*` tag pushes. To **re-publish an existing version** (for example to fix license files missing from its artifacts), pass that tag in the `release_tag` input — assets with the same name are replaced and the tag history is left alone.
 
+每个平台包都带一份 `aria2.conf`：端口、下载目录、日志、并发与分片、BT 做种等默认值都在那里，启动脚本只传 `--conf-path`（aria2 里命令行优先级高于配置文件，默认值留在脚本里就等于让用户改不动）。改完 `stop` 再 `start` 即生效。面板自身没有登录，所以包里规定「暴露即鉴权」：Linux/macOS 默认监听局域网，`start.sh` 首次启动生成随机 RPC 密码并打印一条已经带好密码的面板链接；Windows 默认只听本机，要开放到局域网必须自己在 `aria2.conf` 里设 `rpc-secret`，否则启动脚本会把这一轮收回本机并说明原因。
+
+Every platform archive ships an `aria2.conf` holding the defaults (port, download folder, log, concurrency, BT seeding) while the launcher passes only `--conf-path` — in aria2 command-line options outrank the configuration file, so a default left in the launcher would silently override what users edit. Linux/macOS listen on the LAN and `start.sh` generates an RPC password on first run, printing a panel link with that password already filled in; Windows binds loopback and only opens up once you set `rpc-secret` itself.
+
 详见 [`patches/README.md`](./patches/README.md)。
 
 See [`patches/README.md`](./patches/README.md) for details.

@@ -106,16 +106,10 @@ BASE="$(basename "$BIN")"
 chmod u+w "$OUT/$BASE" 2>/dev/null || true
 "$STRIP" "$OUT/$BASE" 2>/dev/null || true
 
-# Launcher scripts (ASCII only, CRLF, to avoid cmd codepage issues).
-if [ "$PKG_MODE" = "win" ]; then
-  printf '@echo off\r\ncd /d "%%~dp0"\r\nif not exist "%%~dp0downloads" mkdir "%%~dp0downloads"\r\nstart "aria2c" "%%~dp0%s" --enable-rpc --rpc-listen-port=6800 --dir="%%~dp0downloads" --log="%%~dp0aria2.log" --log-level=notice\r\ntimeout /t 2 /nobreak >nul\r\nstart "" http://localhost:6800/\r\npause\r\n' "$BASE" > "$OUT/start.bat"
-  printf '@echo off\r\ntaskkill /f /im %s >nul 2>&1\r\n' "$BASE" > "$OUT/stop.bat"
-  printf 'aria2c with embedded Web UI (Windows x64)\r\nRun start.bat, then open http://localhost:6800/\r\n' > "$OUT/README.txt"
-else
-  printf '#!/bin/sh\ncd "$(dirname "$0")"\nexec "./%s" --enable-rpc --rpc-listen-port=6800 --rpc-listen-all --dir="$(pwd)/downloads" "$@"\n' "$BASE" > "$OUT/start.sh"
-  chmod +x "$OUT/start.sh"
-  printf 'aria2c with embedded Web UI (%s)\nRun ./start.sh, then open http://<host>:6800/\n' "$PKG_MODE" > "$OUT/README.txt"
-fi
+# The launchable layer — bundled aria2.conf, start/stop launchers, README.txt —
+# lives in make-launchers.sh so it can be rehearsed and inspected without a
+# compiler, a container or an aria2 build.
+BIN_NAME="$BASE" PKG_MODE="$PKG_MODE" OUT="$OUT" bash "$SCRIPT_DIR/make-launchers.sh"
 
 echo "==> done: $OUT"
 ls -la "$OUT"

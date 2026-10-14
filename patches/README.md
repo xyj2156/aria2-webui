@@ -20,7 +20,11 @@
   `CONF_EXTRA` 该平台 configure 参数、`PKG_MODE` win|unix、`STRIP` 剥离工具。
   流程：`git apply` 补丁 → 生成 blob → 跳过 autopoint 的 `autoreconf -i -f`
   （附 `config.rpath`/`po/Makefile.in.in` 兜底）→ `configure` → `make` →
-  `make install` 取真身 → strip → 生成 start/stop 启动脚本。
+  `make install` 取真身 → strip → 调 `make-launchers.sh` 产出可启动层。
+- `make-launchers.sh` —— 发布包「可启动层」的唯一生成点：包内 `aria2.conf`、
+  `start.bat`/`stop.bat`（win）或 `start.sh`（unix）、`README.txt`。单独成文件是因为
+  这一层用户会改、会来提 issue，而它不需要编译器就能验证——本地按 `PKG_MODE` 跑一次
+  就是 CI 逐字产出的那份内容。换行按平台走（win 出 CRLF、其余 LF），全部无 BOM。
 - `LICENSE-BUNDLE` / `NOTICE-BUNDLE` —— 发布进每个**二进制包**的 `LICENSE` / `NOTICE`：
   说明组合作品三部分授权（aria2c=GPL-3.0-or-later、内嵌界面=Apache-2.0、启动脚本=Apache-2.0）、
   无担保、以及对应源码的取得途径。未内嵌进二进制的 `dist` 包不放这两份，它只有 Apache-2.0。
@@ -58,8 +62,9 @@ docker run --rm -v "$PWD":/w \
 触发：推 `v*` tag；或 `workflow_dispatch` 并填 `release_tag` 以重发某个既有版本
 （分支运行的 `github.ref_name` 是分支名，不填就会把产物命名成 `…-webui-main-…`）。
 
-- 每个平台一个 zip：`aria2-<aria2tag>-webui-<版本>-<平台>.zip`，包内除二进制与启动脚本外，
-  还有 `LICENSE`、`NOTICE`、`THIRD-PARTY-NOTICES.txt` 与 `LICENSES/` 全文。
+- 每个平台一个 zip：`aria2-<aria2tag>-webui-<版本>-<平台>.zip`，包内是二进制 +
+  `aria2.conf` + 启动脚本 + `README.txt`，另有 `LICENSE`、`NOTICE`、
+  `THIRD-PARTY-NOTICES.txt` 与 `LICENSES/` 全文。
 - `aria2-webui-<版本>-dist.zip`：未打包进二进制的 Web UI 静态产物，只带 Apache-2.0 授权与前端依赖声明。
 - `aria2-<aria2tag>-webui-<版本>-sources.tar.gz`：GPL 对应源码——已打补丁的 aria2 源码树
   （含生成的 `src/WebUiBlob.cc`）+ `build-recipe/`（本仓库 `git archive` 的完整构建配方）。
@@ -69,3 +74,18 @@ docker run --rm -v "$PWD":/w \
 - 补丁与生成器平台无关，三端复用；差异只在工具链与 `CONF_EXTRA`。
 - 换 aria2 基线时，`ARIA2_TAG`、`ARIA2_SHA`、`licenses/manifest.json` 的 `upstream` 段
   必须一起改——`clone-aria2.sh` 会在不一致时直接失败，而不是悄悄构建出对不上号的东西。
+- 为什么所有默认值都放 `aria2.conf`、启动脚本只传 `--conf-path`：**aria2 里命令行参数的
+  优先级高于配置文件**（实测：conf 写 6813、命令行写 6816，实际只听 6816）。只要启动脚本
+  还留着 `--rpc-listen-port`/`--dir`/`--log`，用户在 `aria2.conf` 里改这几项就永远无效，
+  配置文件看着像坏了。这一条不变，脚本里就不能再塞回任何业务默认值。
+- 生成 `aria2.conf` 时已实测确认：CRLF 会被正确剥离、中文注释安全、**UTF-8 BOM 会让首行
+  注释变成 `Unknown option` 告警**（不致命，但每台机器都难看）；`console-level`、
+  `bt-tracker-partition`、`rpc-listen-address`、`rpc-save-upload-area` 不能作为 conf 键
+  （命令行专用或不存在）；`input-file=` 指向不存在的文件会让 aria2 启动即退出，所以该项
+  只能注释着给说明。
+- 不变式「暴露即鉴权」：面板自身没有登录，`rpc-listen-all=true` 而同网段任何设备都能驱动
+  下载器并把文件写到磁盘任意位置。因此 Linux/macOS 的 `start.sh` 首启会自动生成随机密钥
+  追加进 `aria2.conf` 并打印一条已填密钥的链接；Windows 的 `start.bat` 则用命令行
+  `--rpc-listen-all=false` 把这一轮强制收回本机（命令行优先级高于 conf，正好可用作兜底），
+  并打印原因。面板侧由 `src/composables/use-url-secret.js` 采纳 `#rpc-secret=` 并用
+  `replaceState` 抹掉地址栏。
