@@ -7,8 +7,25 @@
  */
 
 import { HTTP_TIMEOUT_MS, RPC_STATUS } from './constants.js';
-import { RpcError } from './errors.js';
+import { RpcError, toRpcError } from './errors.js';
 import { buildRequest, buildRpcUrl, unwrapResponse } from './payload.js';
+
+/** 值得在文案里提一句「可能是密钥」的状态码；400 是 aria2 实际用的那个，401/403 是各类反代用的 */
+const AUTH_LIKE_STATUS = new Set([400, 401, 403]);
+
+/**
+ * 非 2xx 时也先把响应体读出来：拒绝原因在体里，状态码给不出。
+ * 读不动（空体、非 JSON、流被消耗）就返回 null，由调用方退回状态码文案。
+ * @param {Response} response
+ * @returns {Promise<any>}
+ */
+async function readJsonBody(response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
 
 /**
  * @param {() => import('./types.js').RpcConfig} getConfig 每次调用现取配置，切配置不需要重建通道
@@ -67,7 +84,31 @@ export function createHttpTransport(getConfig, setStatus) {
 
     if (!response.ok) {
       setStatus(RPC_STATUS.ERROR);
-      const hint = response.status === 401 ? '（401 通常是 RPC 密钥不对）' : '';
+
+      // 实测事实（真机 aria2 1.37.0）：没填密钥、或密钥不对时，aria2 回的是 **HTTP 400**，
+      // 原因写在响应体的 JSON-RPC error 里（message: "Unauthorized"），并不是 401。所以
+      // 光看状态码永远说不出「这是密钥问题」，「密钥不正确」的引导也就从来没触发过。
+      // 这里先按 JSON-RPC 解一次响应体：解得出原因就照原因报（交给 toRpcError 归成
+      // secretRejected，界面据此引导去改密钥）；解不出（反代截成 HTML、空体、限流页）
+      // 才退回状态码文案。
+      const payload = await readJsonBody(response);
+
+      if (payload && typeof payload === 'object' && payload.error) {
+        const mapped = toRpcError(payload.error, method);
+
+        // kind 用 rpc：aria2 好好答话了，只是不接受这次鉴权。徽标仍置 error，因为
+        // 「连得上但用不了」在用户眼里就是没连上。
+        throw new RpcError(mapped.message, {
+          kind: 'rpc',
+          code: mapped.code ?? response.status,
+          method,
+          detail: { url, httpStatus: response.status, rpcError: payload.error },
+          secretRejected: mapped.secretRejected,
+        });
+      }
+
+      const hint = AUTH_LIKE_STATUS.has(response.status) ? '（这个状态通常是 RPC 密钥没填或填错）' : '';
+
       throw new RpcError(`aria2 返回了 HTTP ${response.status} ${response.statusText}${hint}`, {
         kind: 'transport',
         code: response.status,

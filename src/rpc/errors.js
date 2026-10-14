@@ -44,6 +44,8 @@ export class RpcError extends Error {
 /**
  * aria2 没配密钥时，某些版本 / 反代会直接吃掉请求并回 401 + "Unauthorized"，
  * 或者回一个 message 里带 Unauthorized 的 RPC 错误。两种都归到「密钥问题」。
+ * 真机 aria2 1.37.0 实测走的是后一条、且 HTTP 状态码是 **400**（不是 401），
+ * 所以 HTTP 通道必须把响应体解出来才判得出来，见 transport-http.js 的同款注释。
  *
  * 这个正则只允许在 toRpcError 里对「aria2 给的原始英文」用一次。
  * 判定结果必须落到 RpcError.secretRejected 标记上，后续一律读标记——
