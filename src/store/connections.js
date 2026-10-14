@@ -71,13 +71,43 @@ function generateId() {
 }
 
 /**
+ * 新建一条连接时该用哪个传输协议。
+ *
+ * 内嵌发布包里面板与 RPC 同源（页面就是 aria2c 自己吐出来的），这时走 WebSocket 明显划算：
+ * aria2 只在 WS 通道上推送事件（onDownloadStart / onDownloadComplete / onDownloadError…），
+ * HTTP 通道永远收不到，任务列表与完成通知只能靠轮询做差集（见 rpc/client.js 的 canPush
+ * 与两处 canPushEvents 分支）。同源即等价于「面板由这个 aria2c 提供」，所以按同源判定。
+ *
+ * 不同源时保守用 http：面板另地部署、后端套在反向代理后面，代理没配 Upgrade 透传就会
+ * 掐断 ws 握手，而 HTTP 至少能通——那种环境该由用户在连接设置里自己选。
+ *
+ * @param {string} host 目标主机
+ * @param {number|string} port 目标端口
+ * @param {Location} [loc] 注入以便测试
+ * @returns {'ws'|'wss'|'http'}
+ */
+export function defaultProtocolFor(host, port, loc = globalThis.location) {
+  if (!loc || !loc.hostname) return 'http';
+
+  const LOCALHOST_ALIASES = ['localhost', '127.0.0.1', '::1', '[::1]'];
+  const sameHost = loc.hostname === host
+    || (LOCALHOST_ALIASES.includes(loc.hostname) && LOCALHOST_ALIASES.includes(host));
+  const pagePort = Number(loc.port) || (loc.protocol === 'https:' ? 443 : 80);
+
+  if (!sameHost || pagePort !== Number(port)) return 'http';
+
+  // 页面是 https 时浏览器会拦掉 ws://，同源就只能升 wss://
+  return loc.protocol === 'https:' ? 'wss' : 'ws';
+}
+
+/**
  * 创建一条带默认值 + 唯一 ID 的连接记录。
  * 未传入的字段会自动填充为 localhost 的默认配置。
  * @param {ConnectionInput} [overrides] 要覆盖的字段
  * @returns {Connection}
  */
 function createConnection(overrides = {}) {
-  return {
+  const merged = {
     id:         generateId(),
     name:       'localhost',
     host:       'localhost',
@@ -88,6 +118,13 @@ function createConnection(overrides = {}) {
     lastUsedAt: 0,
     ...overrides,
   };
+
+  // 只在调用方没指定协议时按同源推断；显式选了 ws/http 就照他说的来
+  if (overrides.protocol === undefined) {
+    merged.protocol = defaultProtocolFor(merged.host, merged.port);
+  }
+
+  return merged;
 }
 
 export const useConnectionStore = defineStore('connections', function () {

@@ -8,6 +8,13 @@
  *    这些不属于任何请求，要分发给订阅者。
  * 3. 断线：对端重启、网络抖一下都会静默断开，得自动重连，
  *    并且重连不能无限快循环（指数退避）。
+ *
+ * 安全口径（源码 aria2 1.37.0 的 HttpServerCommand.cc）：WS 端点硬性要求路径就是
+ * /jsonrpc（换成 /ws 一类的会被回 404），而握手只看 GET + Sec-WebSocket-Key/Version，
+ * **完全不看 Origin**。也就是 WebSocket 不受 CORS 约束——aria2 没设 rpc-secret 时，
+ * 用户浏览器里打开的任意网页都能直连 ws://127.0.0.1:6800/jsonrpc 驱动它，只听本机也挡不住
+ * 这一路。所以「同源/回环」不是免密码的理由，rpc-secret 才是防线；发布包的「暴露即鉴权」
+ * 就是按这个定的（见 patches/make-launchers.sh）。
  */
 
 import {

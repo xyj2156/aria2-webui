@@ -2,8 +2,11 @@
  * HTTP 通道：一次调用 = 一次 fetch，发完即断，没有事件推送。
  *
  * 与旧版 AriaNg 一致的做法：只用浏览器原生 fetch，不引 axios 之类的请求库。
- * 跨域不用我们操心——aria2 的 RPC 响应自带 Access-Control-Allow-Origin: *
- * （真机 aria2 1.37.0 实测），开发服务器直连局域网里的 aria2 是通的。
+ *
+ * 跨域能不能通，取决于对端的 aria2 怎么配：源码里 ACAO 头只有在
+ * rpc-allow-origin-all=true 时才发（HttpServer.cc 判 allowOrigin_ 非空），默认不发，
+ * 所以浏览器直连局域网 aria2 时，本面板与 aria2 同源才稳（内嵌发布包正是如此）。
+ * 另外别把「同源」当成安全边界：WebSocket 不受 CORS 约束，见 transport-ws.js 头注释。
  */
 
 import { HTTP_TIMEOUT_MS, RPC_STATUS } from './constants.js';

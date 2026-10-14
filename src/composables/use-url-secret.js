@@ -15,9 +15,10 @@
  *      而首次 RPC 连接还没发出，避免「先用空密钥连一次、失败再换密钥」的闪烁。
  *
  * 安全边界：链接里没有 rpc-secret 就完全无操作，正常访问路径零影响。带密钥时被外部
- * 页面导航过来确实能改写本地存的密钥，但那是「连不上」级别的干扰——真密钥不会因此
- * 泄漏（跨站发起的 RPC 请求被 CORS 拦住，面板也从不回显已存密钥），用户重开一次
- * 启动链接或在设置页改回来即可。
+ * 页面导航过来确实能改写本地存的密钥，但那是「连不上」级别的干扰——把真值换掉并不能
+ * 让攻击者拿到真值（面板从不回显已存密钥，HTTP 通道的跨站请求又被 CORS 拦住），用户
+ * 重开一次启动链接或在设置页改回来即可。注意 WS 通道不受 CORS 约束，所以密码本身才是
+ * 防线，见 transport-ws.js 的头注释。
  */
 import { useConnectionStore } from '@/store/connections.js';
 
@@ -119,18 +120,19 @@ export function applyUrlSecret() {
 
   const store = useConnectionStore();
   const host = loc.hostname;
-  const protocol = loc.protocol === 'https:' ? 'https' : 'http';
   // 地址栏省略默认端口时 location.port 是空串，这里补齐后再比对，否则永远匹配不上
   const port = Number(loc.port) || (loc.protocol === 'https:' ? 443 : 80);
 
   const target = store.connections.find((conn) => conn.host === host && Number(conn.port) === port);
   if (target) {
+    // 只改密钥：协议是用户可能自己选过的，不顺手覆盖
     store.updateConnection(target.id, {secret});
     store.setActive(target.id);
     return true;
   }
 
-  const added = store.addConnection({name: host, host, port, protocol, secret});
+  // 新建时不指定 protocol，交给 store 的同源推断（面板由 aria2c 自己提供 → ws/wss）
+  const added = store.addConnection({name: host, host, port, secret});
   if (added.ok) store.setActive(added.id);
   return added.ok;
 }
