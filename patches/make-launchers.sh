@@ -16,10 +16,16 @@
 #   PKG_MODE  win | unix (default: unix)
 #
 # Nothing here is committed; aria2.conf ships as UTF-8 without BOM, CRLF on
-# Windows (so Notepad opens it readable) and LF elsewhere.  The launchers and
-# README.txt stay ASCII-only: cmd.exe renders a .bat through the console code
-# page, and a shell on a NAS may not be UTF-8 at all, while the conf file itself
-# is read by aria2 directly and handles UTF-8 fine.
+# Windows (so Notepad opens it readable) and LF elsewhere.
+#
+# The Windows launcher prints Chinese, which forces a code page decision: cmd.exe
+# renders a .bat through the console code page (cp936 on a zh_CN install), so
+# UTF-8 bytes come out as mojibake unless the script switches it first.  It
+# therefore runs `chcp 65001` on the second line and the file is saved UTF-8
+# *without* BOM (a BOM would print as stray characters before @echo off).  On
+# Windows 10/11 — the only realistic target for this package — the default
+# console font covers the glyphs used here; an antique console may show boxes,
+# which is cosmetic: every path mentioned is also in README.txt.
 set -euo pipefail
 
 : "${OUT:?OUT is required}"
@@ -74,6 +80,10 @@ rpc-listen-port=6800
 rpc-listen-all=$RPC_LISTEN_ALL
 # 设了密钥，就要在 Web UI 的「RPC 设置 / 密钥」里填同一个值；用 start.sh 打印的
 # 链接（或手工拼 #rpc-secret=值）打开面板会自动填好并抹掉地址栏
+#
+# 值得设密码的另一个理由：WebSocket 不受 CORS 约束，而 aria2 的握手不校验来源，所以
+# 没有密码时，你在这台机器上打开的任意网页都能直连 ws://localhost:6800/jsonrpc 来驱动
+# 下载器——「只听本机」拦不住这一路，密码才是防线。只用本机也建议设一个。
 #rpc-secret=your-password
 # 只有从其它域名跨域访问面板时才需要，开了就等于放弃上面那层保护
 #rpc-allow-origin-all=true
@@ -138,97 +148,137 @@ EOF
 if [ "$PKG_MODE" = win ]; then
   emit "$OUT/start.bat" <<'EOF'
 @echo off
+chcp 65001 >nul
 cd /d "%~dp0"
-rem Every default lives in aria2.conf (port, download folder, log, ...).
-rem Options given after --conf-path below override that file, on purpose.
-rem If you changed rpc-listen-port, adjust the URL at the end of this file too.
+rem 所有默认值都在同目录的 aria2.conf 里（端口、下载目录、日志等）。
+rem 命令行参数优先级高于那个文件，所以别再往这里加业务默认值，否则用户改了不生效。
 set "SAFEONLY="
 findstr /b /c:"rpc-listen-all=true" aria2.conf >nul 2>&1 && (
   findstr /b /r /c:"rpc-secret=." aria2.conf >nul 2>&1 || set "SAFEONLY=--rpc-listen-all=false"
 )
 if defined SAFEONLY (
-  echo [aria2-webui] aria2.conf asks for LAN access but sets no rpc-secret.
-  echo [aria2-webui] This run listens on 127.0.0.1 only. To use the panel from
-  echo [aria2-webui] another device, set rpc-secret in aria2.conf and start again.
+  echo.
+  echo  注意：aria2.conf 把面板开放到局域网，却没有设 rpc-secret。
+  echo  本次启动已强制只听本机，其它设备连不上是预期行为。
+  echo  要在别的设备上用：先在 aria2.conf 里设好 rpc-secret，再重新 start。
 )
 start "aria2c" "%~dp0aria2c.exe" --conf-path="%~dp0aria2.conf" %SAFEONLY% %*
 timeout /t 2 /nobreak >nul
 start "" http://localhost:6800/
+echo.
+echo  aria2 已启动，面板地址： http://localhost:6800/
+echo  改设置：下载目录、端口、并发、BT 等都在本目录 aria2.conf，改完 stop.bat 再 start.bat 生效。
+echo  别的设备访问：把 localhost 换成本机的局域网 IP，且 aria2.conf 里 rpc-listen-all 要为 true。
+echo.
+echo  打不开面板时，按顺序排查：
+echo   1. 地址要以 http 开头，端口要和 aria2.conf 的 rpc-listen-port 一致，不要写 /jsonrpc。
+echo   2. 页面提示「RPC 密钥不正确」：把 aria2.conf 里 rpc-secret 的值填进面板的 RPC 设置。
+echo   3. 页面完全打不开：先看本目录 aria2.log 的最后几行，通常是端口被占用或配置有笔误。
+echo   4. 改过 rpc-listen-port：本文件最后一行的地址要一起改，否则浏览器还在打旧端口。
+echo   5. 只有其它设备连不上：Windows 防火墙要放行该端口，首次启动弹的授权框点「允许」。
+echo.
+echo  停止：运行本目录 stop.bat；关掉这个窗口不影响后台继续下载。
+echo  更多说明见本目录 README.txt 与 aria2.conf 里的中文注释。
+echo.
 pause
 EOF
   printf '@echo off\r\ntaskkill /f /im %s >nul 2>&1\r\n' "$BIN_NAME" > "$OUT/stop.bat"
   emit "$OUT/README.txt" <<EOF
-aria2c with embedded Web UI (Windows x64)
+aria2c 内嵌 Web UI 版（Windows x64）
 
-Run start.bat, then open http://localhost:6800/
+启动：双击 start.bat，浏览器打开 http://localhost:6800/
+停止：双击 stop.bat（关掉 start.bat 的黑窗口不影响后台下载）
 
-Settings: edit aria2.conf in this folder, then run stop.bat followed by
-start.bat.  Do not put the same option into start.bat as well - command-line
-options take precedence over aria2.conf, so a leftover there silently wins and
-the settings file looks broken.
+改设置
+  全部默认值都在同目录的 aria2.conf 里：下载目录、监听端口、日志、并发与分片、
+  BT 做种等，键名后的注释写明了作用与 aria2 的出厂默认值。改完保存，跑一次
+  stop.bat 再 start.bat 生效。
+  不要把同样的选项再抄进 start.bat —— aria2 里命令行参数的优先级高于配置文件，
+  脚本里残留的默认值会一直赢，看起来就像配置文件不管用。
 
-LAN access is off by default and stays off unless aria2.conf carries an
-rpc-secret, because the panel has no login of its own.  Set rpc-secret in
-aria2.conf and switch rpc-listen-all to true to reach it from other devices.
+从手机或别的设备访问
+  面板自身没有登录，所以本包规定「开放到局域网就必须有密码」：先在 aria2.conf
+  里设好 rpc-secret，再把 rpc-listen-all 改成 true，然后把地址里的 localhost
+  换成本机的局域网 IP。没设密码就改 true 的话，start.bat 会把这一次收回只听本机。
+  Windows 首次监听新端口时防火墙会弹授权框，需要点「允许」。
 
-Licenses: see LICENSE, NOTICE, THIRD-PARTY-NOTICES.txt and LICENSES/.
+许可
+  见同目录 LICENSE、NOTICE、THIRD-PARTY-NOTICES.txt 与 LICENSES/ 下的全文。
 EOF
 else
   emit "$OUT/start.sh" <<'EOF'
 #!/bin/sh
-# Every default lives in aria2.conf.  Arguments given to this script override
-# it, on purpose, since command-line options outrank the configuration file.
+# 所有默认值都在同目录的 aria2.conf 里。命令行参数优先级高于那个文件，
+# 所以本脚本只传 --conf-path；传给本脚本的额外参数会覆盖配置，这是有意的。
 cd "$(dirname "$0")" || exit 1
 CONF="$PWD/aria2.conf"
 
-# Read the port back out of the conf so the link printed below stays honest.
+# 端口从配置里读回来，下面打印的地址才不会说谎。
 PORT=$(grep '^rpc-listen-port=' "$CONF" 2>/dev/null | tail -1 | cut -d= -f2 | tr -d ' \r')
 [ -n "$PORT" ] || PORT=6800
 
-# The panel has no login of its own.  When it is exposed to the LAN without a
-# password, any device on that network can drive the downloader and write files
-# anywhere this user may write - so give it a password instead of a warning.
-# Generated once; delete the rpc-secret line from aria2.conf to turn it off.
+# 面板自身没有登录。开到局域网又没有密码时，同网段任何设备都能驱动下载器、
+# 并把文件写到该用户可写的任意位置——所以给它一个密码，而不是弹一句警告。
+# 只在首次生成；想停用就把 aria2.conf 里那行 rpc-secret= 删掉。
 if grep -q '^rpc-listen-all=true' "$CONF" 2>/dev/null \
    && ! grep -q '^rpc-secret=.' "$CONF" 2>/dev/null; then
   SECRET=$(od -An -tx1 -N 16 /dev/urandom 2>/dev/null | tr -d ' \n')
   if [ -n "$SECRET" ]; then
     {
-      printf '\n# Generated by start.sh: this package listens on the LAN, and the\n'
-      printf '# panel has no login without it.  Delete to disable.\n'
+      printf '\n# 由 start.sh 首次运行时生成：本包监听局域网，面板没有密码就等于敞开。\n'
+      printf '# 想停用密码，删掉下面这行即可。\n'
       printf 'rpc-secret=%s\n' "$SECRET"
     } >> "$CONF"
-    echo "An RPC password was generated and appended to aria2.conf."
-    echo "Open the panel with the password already filled in:"
+    echo "已生成 RPC 密码并追加到 aria2.conf（因为本包默认开放局域网访问）。"
+    echo "用下面这条已经带好密码的地址打开面板，会自动填上："
     echo
     echo "  http://localhost:$PORT/#rpc-secret=$SECRET"
     echo
-    echo "From another device, replace localhost with this host's address."
+    echo "从其它设备访问时，把 localhost 换成本机的地址。"
+    echo "想改成无密码：删掉 aria2.conf 里的 rpc-secret 行（只建议在可信内网这么做）。"
     echo
   fi
 fi
 
+cat <<TXT
+aria2 即将在本机启动，面板地址： http://localhost:$PORT/
+ 改设置：下载目录、端口、并发、BT 等都在同目录 aria2.conf，改完重启本脚本生效。
+ 别的设备访问：把 localhost 换成本机的局域网 IP，且 aria2.conf 里 rpc-listen-all 要为 true。
+
+ 打不开面板时，按顺序排查：
+  1. 地址以 http 开头，端口与 aria2.conf 的 rpc-listen-port 一致，不要写 /jsonrpc。
+  2. 页面提示「RPC 密钥不正确」：把 aria2.conf 里 rpc-secret 的值填进面板的 RPC 设置。
+  3. 页面完全打不开：看同目录 aria2.log 的最后几行，多为端口被占用或配置有笔误。
+  4. 端口没监听：用 ss -lntp 或 lsof -i:$PORT 确认 aria2c 还活着。
+  5. 只有其它设备连不上：本机防火墙（firewalld/ufw）需要放行 $PORT 端口。
+
+ 停止：本脚本在前台运行，Ctrl+C 即可；更多说明见 README.txt 与 aria2.conf 的注释。
+
+TXT
 exec "./aria2c" --conf-path="$CONF" "$@"
 EOF
   chmod +x "$OUT/start.sh"
   emit "$OUT/README.txt" <<EOF
-aria2c with embedded Web UI ($PKG_MODE)
+aria2c 内嵌 Web UI 版（$PKG_MODE）
 
-Run ./start.sh, then open http://<host>:6800/
+启动：./start.sh，然后浏览器打开 http://<本机地址>:6800/
+停止：前台运行时 Ctrl+C
 
-Settings: edit aria2.conf next to this file and start again.  Do not add the
-same option to start.sh as well - command-line options take precedence over
-aria2.conf, so a leftover there silently wins and the settings file looks
-broken.
+改设置
+  全部默认值都在同目录的 aria2.conf 里：下载目录、监听端口、日志、并发与分片、
+  BT 做种等，键名后的注释写明了作用与 aria2 的出厂默认值。改完重启本脚本生效。
+  不要把同样的选项再抄进 start.sh —— aria2 里命令行参数的优先级高于配置文件，
+  脚本里残留的默认值会一直赢，看起来就像配置文件不管用。
 
-This package listens on all interfaces by default.  The panel has no login of
-its own, so on first run start.sh generates an RPC password, appends it to
-aria2.conf and prints a link that fills it in for you; from another device,
-replace localhost in that link with this host's address.  Deleting the
-rpc-secret line returns you to passwordless access - only do that behind a
-firewall, and never on the public internet.
+密码与远程访问
+  面板自身没有登录，本包默认把端口开放到局域网，所以首次运行 start.sh 会生成一个
+  随机 RPC 密码、追加进 aria2.conf，并在终端打印一条已经带好密码的地址；从别的
+  设备访问时把地址里的 localhost 换成本机地址，再在面板的 RPC 设置里填同一个密码。
+  想关掉密码：删掉 aria2.conf 里那行 rpc-secret=，同时建议把 rpc-listen-all 改成
+  false（只听本机）。公网直连永远不建议这么做。
 
-Licenses: see LICENSE, NOTICE, THIRD-PARTY-NOTICES.txt and LICENSES/.
+许可
+  见同目录 LICENSE、NOTICE、THIRD-PARTY-NOTICES.txt 与 LICENSES/ 下的全文。
 EOF
 fi
 

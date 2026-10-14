@@ -89,3 +89,11 @@ docker run --rm -v "$PWD":/w \
   `--rpc-listen-all=false` 把这一轮强制收回本机（命令行优先级高于 conf，正好可用作兜底），
   并打印原因。面板侧由 `src/composables/use-url-secret.js` 采纳 `#rpc-secret=` 并用
   `replaceState` 抹掉地址栏。
+- 但「只听本机」并不等于安全，别拿它当免密码的理由：aria2 的 WebSocket 握手只看
+  `GET + /jsonrpc + Sec-WebSocket-*`，**不校验 Origin**，而 WS 不受 CORS 约束（源码
+  `HttpServerCommand.cc:138` 的 `websocketHandshake`；HTTP 通道的 ACAO 头仅在
+  `rpc-allow-origin-all=true` 时才发，见 `HttpServer.cc:283`）。所以没设 `rpc-secret` 时，
+  用户浏览器里打开的任意网页都能直连 `ws://127.0.0.1:6800/jsonrpc` 驱动下载器。目前
+  Windows 仍默认无密码（本机双击零摩擦优先），只在 `aria2.conf` 里把这条写清楚；要收紧
+  就得让 Windows 也生成强随机密码，而那需要 PowerShell 一类密码学来源——与不触发杀软
+  启发式的目标冲突，属于要单独权衡的产品决策。
