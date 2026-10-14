@@ -7,12 +7,18 @@ import { useWsReconnectSync } from '@/composables/use-ws-reconnect-sync.js';
 import { startGlobalStat } from '@/composables/use-global-status.js';
 import { startPageTitle } from '@/composables/use-page-title.js';
 import { startBrowserNotifications } from '@/composables/use-browser-notification.js';
+import { applyUrlSecret } from '@/composables/use-url-secret.js';
 
 // 主题 / 语言都以设置 store 为单一事实源，启动即同步到 isDark 与 i18n（各应用一次即可）
 useThemeSync();
 useLanguageSync();
 // WS 自动重连间隔同样以设置 store 为单一事实源，启动即同步、改设置即时生效（注入 rpc 引擎）
 useWsReconnectSync();
+
+// 启动链接带了 rpc-secret 就先写进对应的连接配置，再发起首次连接；
+// 链接里没带密钥时这一步什么都不做（密钥本身由 main.js 里排在前面的 import 摘好，
+// 顺序原因见 use-url-secret.js 的文件头）
+applyUrlSecret();
 
 // 尝试连接
 const connectionStore = useConnectionStore();
