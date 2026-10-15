@@ -7,6 +7,8 @@ theme:
 settings:
   immediate-hint: Änderungen werden sofort an aria2 übermittelt (einige Optionen erfordern einen Neustart von aria2)
   connect-error: Verbindung zu aria2 kann nicht hergestellt werden!
+  startup-only-hint: aria2 liest diese Option nur beim Start. Eine Änderung hier wirkt nicht und wird nicht gespeichert. Bitte aria2.conf im selben Ordner bearbeiten und aria2 neu starten.
+  startup-only-tag: Nur Konfig.
 setting:
   validate:
     empty: Optionswert darf nicht leer sein!

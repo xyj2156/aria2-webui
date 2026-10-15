@@ -58,6 +58,15 @@ pnpm preview   # 预览构建结果 / preview the build
 pnpm i18n:audit # 只做语言包体检 / run only the language-pack audit
 ```
 
+设置页里灰掉「aria2 运行时不接受改动」的那些行，名单是生成的，不要手改：
+`node scripts/gen-startup-only-options.mjs --src <aria2 源码目录> --commit <release.yml 钉住的 ARIA2_SHA>`。
+判定依据是 aria2 自己的注册表（`src/OptionHandlerFactory.cc` 里有没有
+`op->setChangeGlobalOption(true)`），换 aria2 基线后重跑一次即可。
+
+The greyed-out rows come from a generated list, not a hand-written one: run
+`node scripts/gen-startup-only-options.mjs --src <aria2 checkout> --commit <ARIA2_SHA pinned in release.yml>`.
+It reads aria2's own registry (whether a handler calls `op->setChangeGlobalOption(true)`), so re-run it whenever the aria2 baseline changes.
+
 多语言：界面文案在 `src/i18n/locales/<语言代码>.yaml`（键集以 `zh-CN.yaml` 为准），母语自称与浏览器语言别名在 `src/i18n/languages.json`，组件库内置文案的按需入口在 `src/i18n/naive.js`。**加一门语言 = 丢一个 yaml + 在 languages.json 登记一行**，语言包由 `import.meta.glob` 自动发现；`pnpm build` 前置的 `scripts/i18n-audit.mjs` 会盯住注册表一一对应、键集与 `{占位符}` 一致、代码里 `t('键')` 无缺漏、Naive 侧有入口，不通过就出不了产物。
 
 Internationalization: UI strings live in `src/i18n/locales/<locale>.yaml` (key set anchored on `zh-CN.yaml`), native self-names and browser-language aliases in `src/i18n/languages.json`, and the on-demand component-library locales in `src/i18n/naive.js`. **Adding a language means dropping in one yaml file and one registry line** — packs are discovered via `import.meta.glob`, and `scripts/i18n-audit.mjs` (a build prerequisite) enforces registry parity, key/placeholder parity, no dangling `t('key')` references and Naive UI coverage.

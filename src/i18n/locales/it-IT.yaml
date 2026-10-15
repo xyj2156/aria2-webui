@@ -7,6 +7,8 @@ theme:
 settings:
   immediate-hint: Le modifiche vengono inviate subito ad aria2 (alcune opzioni richiedono il riavvio di aria2)
   connect-error: Impossibile connettersi a aria2!
+  startup-only-hint: aria2 legge questa opzione solo all’avvio; modificarla qui non ha effetto e non viene salvata. Modifica aria2.conf nella stessa cartella e riavvia aria2.
+  startup-only-tag: Solo config.
 setting:
   validate:
     empty: Il valore dell'opzione non può essere vuoto!

@@ -7,6 +7,8 @@ theme:
 settings:
   immediate-hint: 変更はすぐに aria2 へ送信されます（一部のオプションは aria2 の再起動が必要です）
   connect-error: aria2 に接続できません！
+  startup-only-hint: aria2 はこの項目を起動時のみ読み込むため、ここで変更しても反映されず保存もされません。同じフォルダの aria2.conf を編集して aria2 を再起動してください。
+  startup-only-tag: 設定ファイルのみ
 setting:
   validate:
     empty: オプションの値を空にすることはできません！

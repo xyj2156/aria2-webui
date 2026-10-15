@@ -31,8 +31,10 @@ const itemRefs = new Map();
 
 const itemsByCategory = computed(() => {
   const map = {};
+  // startupOnly: true 只在此处传——本页写入用 changeGlobalOption，aria2 运行时不收的
+  // 选项会被置灰并提示去 aria2.conf 改（详见 option-service.getSpecifiedOptions）
   for (const category of GLOBAL_CATEGORIES) {
-    map[category] = getSpecifiedOptions(getAvailableGlobalOptionsKeys(category));
+    map[category] = getSpecifiedOptions(getAvailableGlobalOptionsKeys(category), { startupOnly: true });
   }
   return map;
 });

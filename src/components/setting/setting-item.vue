@@ -8,6 +8,12 @@
  *
  * 控件按 option.type 选择：text→多行、boolean/option→下拉、其余→输入框。
  * 说明：project 的「设置历史自动补全」依赖 storage + 历史服务（块 08 未含），此处降级为普通输入。
+ *
+ * 行级标记由本组件负责落地（option-service 早就算出 readonly，但此前没有任何消费点，
+ * 等于白算）：readonly 置灰控件并拒绝提交；startupOnly 再挂一枚「启动期」标签，
+ * tooltip 指向包内 aria2.conf —— 因为 aria2 对这类选项的 changeGlobalOption 会回
+ * "OK" 却什么都不改（实测改 rpc-listen-port 后 getGlobalOption 仍报旧值、监听端口也
+ * 没重绑），不给说明就等于界面在骗用户「已保存」。
  */
 import { computed, onUnmounted, ref, watch } from 'vue';
 import {
@@ -171,6 +177,11 @@ function clearTimer() {
 
 function commit(value) {
   clearTimer();
+  // 只读行不提交：控件已置灰，这里再兜一层，避免以编程方式改 draft 时把无效写发出去
+  if (props.option.readonly) {
+    setStatus('ready');
+    return;
+  }
   const invalid = validate(value);
   if (invalid) {
     setStatus('error', invalid);
@@ -221,6 +232,12 @@ defineExpose({ reportResult, status });
       span.label-name {{ nameLabel }}
       span.required-mark(v-if="option.required && !disableRequired") *
       span.label-key ({{ option.key }})
+      n-tooltip(v-if="option.startupOnly" trigger="hover" :show-arrow="false")
+        template(#trigger)
+          //- class 挂在内层 span 上：n-tooltip 不保证把外层 class 落到实际 DOM，
+          //- 挂这里才能让样式与自动化断言都命中
+          span.startup-tag {{ t('settings.startup-only-tag') }}
+        .desc-tip {{ t('settings.startup-only-hint') }}
       n-tooltip.plain(v-if="hasDescription" trigger="hover" :show-arrow="false")
         template(#trigger)
           n-icon(:component="HelpCircleOutline" :size="14")
@@ -236,6 +253,7 @@ defineExpose({ reportResult, status });
         type="textarea"
         :rows="6"
         :value="draft"
+        :disabled="option.readonly"
         @update:value="(v) => { setDraft(v); onInput(); }"
       )
       span.count-hint(v-if="controlKind === 'text' && itemCountText") {{ itemCountText }}
@@ -245,6 +263,7 @@ defineExpose({ reportResult, status });
         size="small"
         :value="draft"
         :options="choices"
+        :disabled="option.readonly"
         @update:value="onSelectChange"
       )
 
@@ -253,6 +272,7 @@ defineExpose({ reportResult, status });
         size="small"
         :value="draft"
         :inputmode="option.type === 'integer' || option.type === 'float' ? 'decimal' : 'text'"
+        :disabled="option.readonly"
         @update:value="(v) => { setDraft(v); onInput(); }"
         @blur="onBlur"
       )
@@ -298,6 +318,18 @@ defineExpose({ reportResult, status });
 }
 .plain {
   display: inline-flex;
+  cursor: help;
+}
+/* 「仅配置文件」小标：橙色描边、help 光标，tooltip 里说清去哪儿改 */
+.startup-tag {
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid rgba(240, 160, 48, 0.55);
+  border-radius: 8px;
+  color: #f0a020;
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
   cursor: help;
 }
 .desc-tip {

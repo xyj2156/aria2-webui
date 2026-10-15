@@ -7,6 +7,8 @@ theme:
 settings:
   immediate-hint: Změny se do aria2 posílají ihned (některé volby vyžadují restart aria2)
   connect-error: Nelze se připojit k aria2!
+  startup-only-hint: aria2 tuto volbu čte pouze při startu, změna v panelu se neprojeví ani neuloží. Upravte aria2.conf ve stejné složce a aria2 restartujte.
+  startup-only-tag: Pouze konfigurace
 setting:
   validate:
     empty: Hodnota volby nesmí být prázdná!

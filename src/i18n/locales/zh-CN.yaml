@@ -7,6 +7,8 @@ theme:
 settings:
   immediate-hint: 改动即时下发到 aria2（部分选项需重启 aria2 进程才生效）
   connect-error: 无法连接 aria2！
+  startup-only-hint: aria2 只在启动时读取这项，在面板里改动既不生效也不保留；请编辑同目录的 aria2.conf 后重启 aria2。
+  startup-only-tag: 仅配置文件
 setting:
   validate:
     empty: 选项值不能为空！

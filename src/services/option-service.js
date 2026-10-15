@@ -11,6 +11,7 @@ import {
   QUICK_SETTING_GROUPS,
   TASK_OPTIONS,
 } from '@/services/aria2-option-meta.js';
+import { STARTUP_ONLY_OPTIONS } from '@/services/aria2-startup-only-options.js';
 
 /**
  * @typedef {Object} OptionItem
@@ -19,6 +20,7 @@ import {
  * @property {string} nameKey   i18n 键 options.<key>.name
  * @property {string} descriptionKey i18n 键 options.<key>.description
  * @property {boolean} readonly
+ * @property {boolean} [startupOnly] 仅全局设置页有意义：aria2 运行时不接受该选项的改动
  * @property {boolean} showHistory
  * @property {string} [category]
  * @property {string} [defaultValue]
@@ -44,17 +46,34 @@ function toItem(meta, extras = {}) {
     nameKey: `options.${meta.key}.name`,
     descriptionKey: `options.${meta.key}.description`,
     readonly: extras.readonly ?? Boolean(meta.readonly),
+    startupOnly: extras.startupOnly ?? false,
     showHistory: extras.showHistory ?? false,
     category: extras.category ?? meta.key,
   };
 }
 
-/** 把「key 或带元信息的对象」展开成渲染用模型 */
+/**
+ * 把「key 或带元信息的对象」展开成渲染用模型。
+ *
+ * options.startupOnly 只应由**全局设置页**传 true：那条路径写入 aria2 用的是
+ * changeGlobalOption，而 aria2 对没标 setChangeGlobalOption 的选项会回 "OK" 却
+ * 什么都不做（实测改 rpc-listen-port 后 getGlobalOption 仍是旧值、端口也没重绑），
+ * 所以这些行必须置灰并说明去哪儿改。新建任务弹窗与任务详情 tab 不传：前者是创建
+ * 下载时带上选项（本来就会生效），后者走 changeOption，是另一套可改集合。
+ *
+ * @param {Array<string|Object>} keys
+ * @param {{disableRequired?: boolean, startupOnly?: boolean}} [options]
+ */
 export function getSpecifiedOptions(keys, options = {}) {
   return (keys ?? []).map((entry) => {
     const key = typeof entry === 'string' ? entry : entry.key;
     const meta = getOptionMeta(key);
     const extras = typeof entry === 'string' ? {} : { readonly: entry.readonly, showHistory: entry.showHistory, category: entry.category };
+    const startupOnly = options.startupOnly === true && STARTUP_ONLY_OPTIONS.has(key);
+    if (startupOnly) {
+      extras.readonly = true;
+    }
+    extras.startupOnly = startupOnly;
     const item = toItem(meta, extras);
     if (options.disableRequired) {
       return { ...item, required: false };

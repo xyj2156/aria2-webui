@@ -7,6 +7,8 @@ theme:
 settings:
   immediate-hint: Changes are pushed to aria2 immediately (some options need an aria2 restart to take effect)
   connect-error: Cannot connect to aria2!
+  startup-only-hint: aria2 reads this option only at startup, so editing it here neither applies nor persists. Change aria2.conf in the same folder and restart aria2.
+  startup-only-tag: Config only
 setting:
   validate:
     empty: Option value cannot be empty!
