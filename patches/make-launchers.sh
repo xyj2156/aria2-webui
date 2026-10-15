@@ -18,14 +18,15 @@
 # Nothing here is committed; aria2.conf ships as UTF-8 without BOM, CRLF on
 # Windows (so Notepad opens it readable) and LF elsewhere.
 #
-# The Windows launcher prints Chinese, which forces a code page decision: cmd.exe
-# renders a .bat through the console code page (cp936 on a zh_CN install), so
-# UTF-8 bytes come out as mojibake unless the script switches it first.  It
-# therefore runs `chcp 65001` on the second line and the file is saved UTF-8
-# *without* BOM (a BOM would print as stray characters before @echo off).  On
-# Windows 10/11 — the only realistic target for this package — the default
-# console font covers the glyphs used here; an antique console may show boxes,
-# which is cosmetic: every path mentioned is also in README.txt.
+# Encoding rules, both learned the hard way:
+#   - aria2.conf must be UTF-8 *without* BOM; a BOM turns the first comment line
+#     into an "Unknown option" warning on every start.
+#   - start.bat must contain only ASCII bytes.  Chinese guidance for Windows users
+#     lives in start-help.txt and is printed with `type` after `chcp 65001`; the
+#     .bat itself never carries a multi-byte character, because cmd.exe resumes
+#     batch files by byte offset and desyncs on UTF-8 text (measured: lines got
+#     cut mid-word and the aria2c start line never ran).  README.txt is UTF-8
+#     because it is read by an editor, not parsed by a shell.
 set -euo pipefail
 
 : "${OUT:?OUT is required}"
@@ -243,44 +244,64 @@ emit_empty_dht "$OUT/dht6.dat"
 # without a password.  Command-line options outrank the conf file, which is
 # what lets the Windows launcher clamp an unsafe setting for that run instead
 # of silently honouring it.
+# The Windows launcher's own bytes must stay ASCII.  This is not a cosmetic
+# code-page preference: cmd.exe resumes a .bat by byte offset, and once a line
+# contains UTF-8 multi-byte text (especially after `chcp 65001` mid-file) the
+# offset desyncs — lines get cut in the middle and the remainder is executed as
+# a command.  Measured on Windows 11 with Chinese echo lines:
+#   'sonrpc。' is not recognized as an internal or external command
+#   'EADME.txt' is not recognized as an internal or external command
+# and the `start "aria2c" …` line never ran at all.  So Chinese user-facing text
+# lives in start-help.txt (UTF-8, printed with `type`, which only writes bytes)
+# and chcp 65001 only affects how the console renders them.
 if [ "$PKG_MODE" = win ]; then
   emit "$OUT/start.bat" <<'EOF'
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-rem 所有默认值都在同目录的 aria2.conf 里（端口、下载目录、日志等）。
-rem 命令行参数优先级高于那个文件，所以别再往这里加业务默认值，否则用户改了不生效。
+rem Every default lives in aria2.conf (port, download folder, log, ...).
+rem Options given after --conf-path below override that file, on purpose.
+rem Keep this file ASCII-only: cmd.exe desyncs its line offsets on UTF-8 bytes.
 set "SAFEONLY="
 findstr /b /c:"rpc-listen-all=true" aria2.conf >nul 2>&1 && (
   findstr /b /r /c:"rpc-secret=." aria2.conf >nul 2>&1 || set "SAFEONLY=--rpc-listen-all=false"
 )
 if defined SAFEONLY (
   echo.
-  echo  注意：aria2.conf 把面板开放到局域网，却没有设 rpc-secret。
-  echo  本次启动已强制只听本机，其它设备连不上是预期行为。
-  echo  要在别的设备上用：先在 aria2.conf 里设好 rpc-secret，再重新 start。
+  echo  [aria2-webui] aria2.conf asks for LAN access but sets no rpc-secret.
+  echo  [aria2-webui] This run listens on 127.0.0.1 only, on purpose.
+  echo  [aria2-webui] To reach the panel from other devices, set rpc-secret in
+  echo  [aria2-webui] aria2.conf first, then start again.
 )
 start "aria2c" "%~dp0aria2c.exe" --conf-path="%~dp0aria2.conf" %SAFEONLY% %*
 timeout /t 2 /nobreak >nul
 start "" http://localhost:6800/
 echo.
-echo  aria2 已启动，面板地址： http://localhost:6800/
-echo  改设置：下载目录、端口、并发、BT 等都在本目录 aria2.conf，改完 stop.bat 再 start.bat 生效。
-echo  别的设备访问：把 localhost 换成本机的局域网 IP，且 aria2.conf 里 rpc-listen-all 要为 true。
-echo.
-echo  打不开面板时，按顺序排查：
-echo   1. 地址要以 http 开头，端口要和 aria2.conf 的 rpc-listen-port 一致，不要写 /jsonrpc。
-echo   2. 页面提示「RPC 密钥不正确」：把 aria2.conf 里 rpc-secret 的值填进面板的 RPC 设置。
-echo   3. 页面完全打不开：先看本目录 aria2.log 的最后几行，通常是端口被占用或配置有笔误。
-echo   4. 改过 rpc-listen-port：本文件最后一行的地址要一起改，否则浏览器还在打旧端口。
-echo   5. 只有其它设备连不上：Windows 防火墙要放行该端口，首次启动弹的授权框点「允许」。
-echo.
-echo  停止：运行本目录 stop.bat；关掉这个窗口不影响后台继续下载。
-echo  更多说明见本目录 README.txt 与 aria2.conf 里的中文注释。
+if exist "%~dp0start-help.txt" type "%~dp0start-help.txt"
 echo.
 pause
 EOF
   printf '@echo off\r\ntaskkill /f /im %s >nul 2>&1\r\n' "$BIN_NAME" > "$OUT/stop.bat"
+  # 侧车：中文用法与排障指引（UTF-8/CRLF，由 start.bat 用 type 原样输出）。
+  # 若控制台代码页不是 UTF-8，这里可能显示成方框，内容与 README.txt 一致，不影响功能。
+  emit "$OUT/start-help.txt" <<EOF
+aria2 已启动，面板地址： http://localhost:6800/
+ 改设置：下载目录、端口、并发、BT 等都在本目录 aria2.conf，改完 stop.bat 再 start.bat 生效。
+ 别的设备访问：把 localhost 换成本机的局域网 IP，且 aria2.conf 里 rpc-listen-all 要为 true，
+              并按提示设好 rpc-secret（面板自身没有登录）。
+
+打不开面板时，按顺序排查：
+  1. 地址要以 http 开头，端口要和 aria2.conf 的 rpc-listen-port 一致，不要写 /jsonrpc。
+  2. 页面提示「RPC 密钥不正确」：把 aria2.conf 里 rpc-secret 的值填进面板的 RPC 设置。
+     也可以在地址后面加 #rpc-secret=你的密码 直接打开，面板会自动填好并抹掉地址栏。
+  3. 页面完全打不开：先看本目录 aria2.log 的最后几行，通常是端口被占用或配置有笔误。
+  4. 改过 rpc-listen-port：本目录 start.bat 里打开浏览器的地址仍写着 6800，要一起改，
+     或者手动把浏览器地址改成新端口。
+  5. 只有其它设备连不上：Windows 防火墙要放行该端口，首次启动弹的授权框点「允许」。
+
+停止：运行本目录 stop.bat；关掉这个窗口不影响后台继续下载。
+更多说明见本目录 README.txt 与 aria2.conf 里的中文注释。
+EOF
   emit "$OUT/README.txt" <<EOF
 aria2c 内嵌 Web UI 版（Windows x64）
 

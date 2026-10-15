@@ -78,6 +78,14 @@ docker run --rm -v "$PWD":/w \
   优先级高于配置文件**（实测：conf 写 6813、命令行写 6816，实际只听 6816）。只要启动脚本
   还留着 `--rpc-listen-port`/`--dir`/`--log`，用户在 `aria2.conf` 里改这几项就永远无效，
   配置文件看着像坏了。这一条不变，脚本里就不能再塞回任何业务默认值。
+- **`start.bat` 只允许 ASCII 字节**——不是风格洁癖，是实测故障：cmd.exe 按字节偏移续读
+  批处理文件，遇到 UTF-8 多字节文本（尤其文件中途执行了 `chcp 65001`）偏移会错位，行被
+  从中间截断、残片当命令执行。实测中文版启动器输出过
+  `'sonrpc。' is not recognized as an internal or external command`，且
+  `start "aria2c" …` 那一行根本没跑到。中文用法与排障提示因此放进侧车
+  `start-help.txt`（UTF-8/CRLF，由 `type` 原样输出，不参与批处理解析），
+  `chcp 65001` 只管渲染。`aria2.conf` 与 `README.txt` 不受此限（前者被 aria2 按字节
+  读取、后者由编辑器打开，都不经过 cmd 解析器）。
 - 生成 `aria2.conf` 时已实测确认：CRLF 会被正确剥离、中文注释安全、**UTF-8 BOM 会让首行
   注释变成 `Unknown option` 告警**（不致命，但每台机器都难看）；产物一律无 BOM。
   `bt-tracker-partition`、`console-level`、`rpc-listen-address`、`rpc-save-upload-area`、
