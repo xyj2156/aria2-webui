@@ -53,6 +53,61 @@ emit() {
   fi
 }
 
+# ---------------------------------------------------------------- DHT tables
+# aria2 serialises its DHT routing table with its own binary format, defined by
+# src/DHTRoutingTableDeserializer.cc:
+#   8B header (a1 a2 02 00 00 00 00 <ver>) | 8B time | 8B reserved
+#   | 20B local node id | 4B reserved | 4B node count | 4B reserved | per node...
+# A version-3 file declaring zero nodes is 56 bytes and loads cleanly, so we ship
+# that instead of leaving the configured paths dangling: a missing or malformed
+# file is logged as an ERROR by DHTSetup, which is exactly the line a puzzled
+# user greps for after the launcher tells them to look at aria2.log.
+#
+# The 20-byte node id is the DHT identity this instance advertises, so it is
+# randomised per build — a constant would fingerprint every install as one node.
+# oct <byte>…  →  the bytes rendered as \ooo escapes, concatenated.  Octal because
+# POSIX printf has no portable \xHH, and escapes living in printf's *format* can
+# never be mistaken for % specifiers whatever the byte value turns out to be.
+oct() {
+  local b
+  for b in "$@"; do printf '\\%03o' "$b"; done
+}
+
+emit_empty_dht() { # emit_empty_dht <dest>
+  local dest="$1" now fmt shift byte
+
+  now="$(date +%s)"
+
+  # header: magic a1 a2, format id 02, three reserved bytes, version 03 (dec 3)
+  fmt="$(oct 161 162 2 0 0 0 0 3)"
+
+  # 8-byte big-endian modification time
+  shift=7
+  while [ "$shift" -ge 0 ]; do
+    byte=$(( (now >> (shift * 8)) & 255 ))
+    fmt="$fmt$(oct "$byte")"
+    shift=$((shift - 1))
+  done
+
+  fmt="$fmt$(oct 0 0 0 0 0 0 0 0)"   # 8B reserved before the local node id
+
+  # 20B local node id, randomised per build
+  local id
+  id="$(od -An -N20 -tu1 /dev/urandom 2>/dev/null | tr -s ' \t' ' ' | tr ' ' '\n' | grep -v '^$' || true)"
+  if [ "$(printf '%s\n' "$id" | grep -c .)" -ne 20 ]; then
+    echo "ERROR: could not read 20 random bytes from /dev/urandom" >&2
+    return 1
+  fi
+  # shellcheck disable=SC2086
+  fmt="$fmt$(oct $id)"
+
+  fmt="$fmt$(oct 0 0 0 0)"           # 4B reserved after the id
+  fmt="$fmt$(oct 0 0 0 0)"           # node count = 0
+  fmt="$fmt$(oct 0 0 0 0)"           # 4B reserved after the count
+
+  printf "$fmt" > "$dest"
+}
+
 # ---------------------------------------------------------------- aria2.conf
 # Everything a user is expected to touch lives here rather than in the launcher,
 # because aria2 gives command-line options precedence over the configuration
@@ -117,9 +172,35 @@ disk-cache=16M
 #max-concurrent-downloads=5
 
 #[BitTorrent]（用到再开，合理取值取决于你是只下还是长期做种）
-# 站点/社区给的 tracker 列表，逗号分隔（默认空）
-#bt-tracker=udp://...:1337/announce,http://...:80/announce
-# 上传达到下载量的 1.0 倍就停止做种；PT 站一般要继续做种，把下面两项都设 0
+# 站点/社区给的 tracker 列表，逗号分隔（默认空）。要现成的、每天更新的：
+# https://ngosang.github.io/trackerslist/trackers_best.txt （还有 trackers_all.txt 更全）
+# 注意别照抄清单里的 udp 形式就以为完事了：实测在丢了 BT 常用端口 UDP 的网络里
+# （家宽运营商常见），同一 host 同一端口的 udp 全无回应、http 形式却秒回——
+# 那种环境下请挑清单里的 http/https 形式填。
+#bt-tracker=http://tracker.opentrackr.org:1337/announce,https://tracker.dler.com:6969/announce
+# DHT 路由表：本包已随附两个同名的合法空表（0 个节点，能正常加载、不会报 ERROR），
+# aria2 会在运行 30 分钟后以及每次退出时把当前学到的节点写回去，越用越准。
+# 相对路径按 aria2c 的工作目录解析，也就是本文件所在目录。
+dht-file-path=dht.dat
+dht-file-path6=dht6.dat
+# 冷启动引导节点（可选）。写法规则是 HOST:PORT —— 这个选项的值是被拼成 http://<值>
+# 用 URI 解析的（源码 HostPortOptionHandler::parseArg），所以分隔符是冒号；写成逗号会被
+# 整个当成域名，只留一条 "Name resolution failed" 的 INFO，属于不报错的静默失效。
+# IPv6 必须加方括号。默认不开：实测单入口点引导并不成立——aria2 只会对它发 ping，
+# 而不少公共节点回 find_node 却不回 ping，45 秒内 5 个 ping、0 个 find_node、0 个回应，
+# 路由表一步都没长出来。真要冷启动，用下面说的现成路由表文件。
+#dht-entry-point=dht.libtorrent.org:25401
+#dht-entry-point6=[2001:41d0:800:d32::1]:51413
+# IPv4 的 DHT 默认就是开的；IPv6 的默认是关的，而 IPv6 节点多为服务器或前缀稳定的
+# 主机，可达性远高于 NAT 后的 IPv4 —— 有公网 IPv6 的话这一项是真正的提速点。
+enable-dht=true
+enable-dht6=true
+# 想跳过冷启动，可以直接拿一份社区维护的路由表覆盖上面的空表（只需覆盖 dht6.dat，
+# IPv4 那份没必要）。实测口径：上游那份 2021 年的表里，IPv4 的 1261 个节点已全部不
+# 回应（96 查询 0 回应），而 IPv6 的 143 个里约 18 个仍在回应，加载后秒级就开始交换
+# 节点。aria2 加载时不检查时间戳（源码读出的时间戳没有任何地方消费），所以过期表不会
+# 报错、只是没作用——别把「加载成功」当成「已经增强」。
+# 做种限制：上传达到下载量的 1.0 倍就停止做种；PT 站一般要继续做种，把下面两项都设 0
 #seed-ratio=1.0
 #seed-time=0
 # 单任务最大对等点数（默认 55）
@@ -130,15 +211,32 @@ disk-cache=16M
 # 局域网内自动发现对等点（默认 false）
 #bt-enable-lpd=true
 
+#[会话保持]（重启后没下完的任务自动回到列表）
+# save-session 只记录未完成/未开始的任务，不保存你在 Web UI 里改过的全局设置。
+# input-file 与它指向同一个文件，重启时就接着上次的进度跑；该文件必须存在，
+# 否则 aria2 启动即报错退出（实测 errorCode=1），所以本包预置了一个空文件。
+# save-session-interval 的出厂默认是 0，含义是「只在正常退出时写盘」——进程被强制
+# 结束就什么都存不下来，所以这里显式设成 60 秒。force-save 保持默认 false，
+# 意思是已完成的任务不会被留在会话文件里。
+save-session=session.dat
+input-file=session.dat
+save-session-interval=60
+
 #[其它]
 # 被下载站按 UA 拦时才改
 #user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36
 #http-proxy=http://127.0.0.1:7890
-# save-session 只保存未完成任务列表，不保存你在 Web UI 里改过的全局设置
-#save-session=session.dat
-# input-file 指向的文件必须存在，否则 aria2 启动就报错退出——先手动建好空文件再开注释
-#input-file=aria2.txt
 EOF
+
+# Ship the two routing tables the conf points at, as valid-but-empty files.
+emit_empty_dht "$OUT/dht.dat"
+emit_empty_dht "$OUT/dht6.dat"
+
+# The conf also points input-file at session.dat, and a missing input-file makes
+# aria2 exit at startup (measured errorCode=1) — so ship an empty one, which
+# SessionLoader reads as "no queued tasks" and which save-session then rewrites
+# every save-session-interval seconds.
+: > "$OUT/session.dat"
 
 # -------------------------------------------------------------- launchers
 # Both scripts carry one safety invariant: the RPC is never exposed to the LAN
@@ -201,6 +299,15 @@ aria2c 内嵌 Web UI 版（Windows x64）
   里设好 rpc-secret，再把 rpc-listen-all 改成 true，然后把地址里的 localhost
   换成本机的局域网 IP。没设密码就改 true 的话，start.bat 会把这一次收回只听本机。
   Windows 首次监听新端口时防火墙会弹授权框，需要点「允许」。
+
+包内的几个文件
+  aria2.conf     设置，唯一需要改的东西
+  aria2.log      日志，出问题时先看它的最后几行
+  downloads/     默认下载目录（首次下载时自动创建）
+  dht.dat        IPv4 的 DHT 路由表；dht6.dat 是 IPv6 的。随包是空表，aria2 会在
+                 运行中与退出时把学到的节点写回去，越用越准
+  session.dat    没下完的任务清单。重启后它们会自动回到列表（每 60 秒存一次，
+                 正常退出时也会存；被强制结束的那次来不及存）
 
 许可
   见同目录 LICENSE、NOTICE、THIRD-PARTY-NOTICES.txt 与 LICENSES/ 下的全文。
@@ -276,6 +383,15 @@ aria2c 内嵌 Web UI 版（$PKG_MODE）
   设备访问时把地址里的 localhost 换成本机地址，再在面板的 RPC 设置里填同一个密码。
   想关掉密码：删掉 aria2.conf 里那行 rpc-secret=，同时建议把 rpc-listen-all 改成
   false（只听本机）。公网直连永远不建议这么做。
+
+包内的几个文件
+  aria2.conf     设置，唯一需要改的东西
+  aria2.log      日志，出问题时先看它的最后几行
+  downloads/     默认下载目录（首次下载时自动创建）
+  dht.dat        IPv4 的 DHT 路由表；dht6.dat 是 IPv6 的。随包是空表，aria2 会在
+                 运行中与退出时把学到的节点写回去，越用越准
+  session.dat    没下完的任务清单。重启后它们会自动回到列表（每 60 秒存一次，
+                 正常退出时也会存；被强制结束的那次来不及存）
 
 许可
   见同目录 LICENSE、NOTICE、THIRD-PARTY-NOTICES.txt 与 LICENSES/ 下的全文。

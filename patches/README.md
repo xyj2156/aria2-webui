@@ -79,16 +79,35 @@ docker run --rm -v "$PWD":/w \
   还留着 `--rpc-listen-port`/`--dir`/`--log`，用户在 `aria2.conf` 里改这几项就永远无效，
   配置文件看着像坏了。这一条不变，脚本里就不能再塞回任何业务默认值。
 - 生成 `aria2.conf` 时已实测确认：CRLF 会被正确剥离、中文注释安全、**UTF-8 BOM 会让首行
-  注释变成 `Unknown option` 告警**（不致命，但每台机器都难看）；`console-level`、
-  `bt-tracker-partition`、`rpc-listen-address`、`rpc-save-upload-area` 不能作为 conf 键
-  （命令行专用或不存在）；`input-file=` 指向不存在的文件会让 aria2 启动即退出，所以该项
-  只能注释着给说明。
+  注释变成 `Unknown option` 告警**（不致命，但每台机器都难看）；产物一律无 BOM。
+  `bt-tracker-partition`、`console-level`、`rpc-listen-address`、`rpc-save-upload-area`、
+  `save-upload-area` 这几个名字写进 conf 会被报 `Unknown option`——原因不是「conf 不支持」，
+  而是 **aria2 1.37 里没有这些选项**（实测 `--console-level` 连命令行都不认，真名是
+  `console-log-level`，且它可作为 conf 键）。按名字查真伪的权威出处是 `src/prefs.cc` 的
+  `makePref("…")` 与 `src/OptionHandlerFactory.cc`，别照抄网上的旧写法。
 - 不变式「暴露即鉴权」：面板自身没有登录，`rpc-listen-all=true` 而同网段任何设备都能驱动
   下载器并把文件写到磁盘任意位置。因此 Linux/macOS 的 `start.sh` 首启会自动生成随机密钥
   追加进 `aria2.conf` 并打印一条已填密钥的链接；Windows 的 `start.bat` 则用命令行
   `--rpc-listen-all=false` 把这一轮强制收回本机（命令行优先级高于 conf，正好可用作兜底），
   并打印原因。面板侧由 `src/composables/use-url-secret.js` 采纳 `#rpc-secret=` 并用
   `replaceState` 抹掉地址栏。
+- DHT 与会话相关的实测口径（都是在这台机器上用真 aria2c 1.37.0 跑出来的）：
+  - aria2 的 DHT 路由表是私有二进制格式（`a1 a2 02 …` + 时间戳 + 20 字节本节点 ID +
+    节点数组，见 `DHTRoutingTableDeserializer.cc`）。**声明 0 个节点的 v3 文件只有 56 字节
+    且能正常加载**，所以包里放的是自己生成的合法空表（节点 ID 每次构建随机，写死会让所有
+    安装共用同一个 DHT 身份），既不报 ERROR 又能被 aria2 后续回写。
+  - aria2 **不检查表的时间戳**（读出的 `serializedTime_` 全仓库无消费者），所以陈旧表不会
+    报错、只是没用。上游 P3TERX 那份停在 2021-09-14：IPv4 的 1261 个节点 96 查询 0 回应，
+    IPv6 的 143 个里约 18 个仍回应（加载后 273 查询 / 21 回应）。它没有自动更新机制，
+    而且 `enable-dht6` 出厂默认是 false —— 不开这个键，IPv6 那份表根本不会被读。
+  - `dht-entry-point` / `…6` 的值是拼成 `http://<值>` 走 URI 解析的（`HostPortOptionHandler`），
+    分隔符是**冒号**，写逗号会把整串当域名、只留一条 INFO 而静默失效；IPv6 需加方括号。
+    单入口点在实践中不足以 bootstrap：aria2 只对它发 ping，公共节点常回 find_node 而不回
+    ping，45 秒实测 5 ping / 0 find_node / 0 回应。故这两项只作为注释给出。
+  - `input-file=` 指向不存在的文件会让 aria2 启动即以 errorCode=1 退出（实测），所以
+    `save-session` 与 `input-file` 共用一个 `session.dat` 并由包里预置空文件。
+    `save-session-interval` 出厂默认 **0 = 只在正常退出时写**，要"自动保存"必须显式给值。
+  - 入口点/公共节点连不上时不产生 ERROR/WARN（实测），所以配置它们不会污染排障日志。
 - 但「只听本机」并不等于安全，别拿它当免密码的理由：aria2 的 WebSocket 握手只看
   `GET + /jsonrpc + Sec-WebSocket-*`，**不校验 Origin**，而 WS 不受 CORS 约束（源码
   `HttpServerCommand.cc:138` 的 `websocketHandshake`；HTTP 通道的 ACAO 头仅在
