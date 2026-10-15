@@ -391,7 +391,7 @@ exec "./aria2c" --conf-path="$CONF" "$@"
 EOF
   chmod +x "$OUT/start.sh"
   emit "$OUT/README.txt" <<EOF
-aria2c 内嵌 Web UI 版（$PKG_MODE）
+aria2c 内嵌 Web UI 版（${PKG_MODE}）
 
 启动：./start.sh，然后浏览器打开 http://<本机地址>:6800/
 停止：前台运行时 Ctrl+C

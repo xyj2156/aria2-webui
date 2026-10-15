@@ -78,6 +78,12 @@ docker run --rm -v "$PWD":/w \
   优先级高于配置文件**（实测：conf 写 6813、命令行写 6816，实际只听 6816）。只要启动脚本
   还留着 `--rpc-listen-port`/`--dir`/`--log`，用户在 `aria2.conf` 里改这几项就永远无效，
   配置文件看着像坏了。这一条不变，脚本里就不能再塞回任何业务默认值。
+- **脚本里紧贴中文的变量必须写成 `${VAR}`**。v1.2.0 首发时 macOS 构建就死在这上面：
+  `make-launchers.sh` 里 `（$PKG_MODE）` 让 macOS runner 的 bash 3.2 在字节模式下把全角
+  括号 `）` 的首字节算进变量名，报 `PKG_MODE<乱码>: unbound variable`，`set -u` 直接中止；
+  同一行在 Linux（bash 5 + UTF-8 locale）下毫无问题，本地 Git Bash 也复现不出来——只有
+  macOS 任务会红。自检命令（改完这个文件顺手跑一次）：
+  `LC_ALL=C grep -nP '\$(?!\{)[A-Z_]+[^\x00-\x7F]' patches/make-launchers.sh` 应为 0 命中。
 - 发布包只有一个控制台窗口：`start.bat` 先 `type` 出 `start-help.txt` 的中文用法，再
   **前台**运行 `aria2c`（浏览器由一条 `start "" /min cmd /c "timeout … & start URL"`
   的短命助手延后打开）。早期版本用 `start "aria2c" aria2c.exe`，aria2c 会拿到**第二个**
