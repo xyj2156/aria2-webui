@@ -405,6 +405,7 @@ options:
   ftp-reuse-connection:
     name: FTP 接続再利用
   ftp-type:
+    description: FTP の転送タイプを binary または ascii で設定します。既定値は binary です。SFTP 転送では無視されます。
     name: FTP 転送タイプ
   ftp-user:
     name: FTP デフォルトユーザー名
@@ -525,6 +526,9 @@ options:
   no-proxy:
     description: カンマ区切りでプロキシを使用しないホスト名/ドメイン/ネットワークを指定します。
     name: プロキシ除外リスト
+  no-want-digest-header:
+    description: true の場合、リクエストで Want-Digest ヘッダーを送信しません。既定値は false です。
+    name: Want-Digest ヘッダーを送らない
   optimize-concurrent-downloads:
     description: 利用可能帯域幅に基づき同時ダウンロード数を最適化します。
     name: 同時ダウンロード最適化

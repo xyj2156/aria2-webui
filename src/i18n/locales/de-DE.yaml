@@ -405,6 +405,7 @@ options:
   ftp-reuse-connection:
     name: Verbindung wiederverwenden
   ftp-type:
+    description: Bestimmt den FTP-Übertragungstyp, binary oder ascii. Standardwert ist binary. Für SFTP-Übertragungen wird diese Option ignoriert.
     name: Übertragungsart
   ftp-user:
     name: FTP-Standard-Benutzername
@@ -525,6 +526,9 @@ options:
   no-proxy:
     description: Geben Sie eine durch Kommas getrennte Liste von Hostnamen, Domains und Netzwerkadressen mit oder ohne Subnetzmaske an, bei denen kein Proxy verwendet werden soll.
     name: Keine Proxy-Liste
+  no-want-digest-header:
+    description: Bei true sendet aria2 den Want-Digest-Header nicht mit. Standardwert ist false.
+    name: Want-Digest-Header weglassen
   optimize-concurrent-downloads:
     description: Optimiert die Anzahl der gleichzeitigen Downloads entsprechend der verfügbaren Bandbreite. aria2 verwendet die Download-Geschwindigkeit aus vorherigen Downloads, um die Anzahl der parallel gestarteten Downloads nach der Regel N = A + B Log10(Geschwindigkeit in Mbps) anzupassen. Die Koeffizienten A und B können im Optionsargument mit Doppelpunkt getrennt angepasst werden. Die Standardwerte (A=5, B=25) führen zu typischerweise 5 parallelen Downloads bei 1Mbps-Netzwerken und über 50 bei 100Mbps-Netzwerken. Die Anzahl der parallelen Downloads bleibt unter dem Maximum, das durch die Option --max-concurrent-downloads definiert ist.
     name: Gleichzeitige Downloads optimieren

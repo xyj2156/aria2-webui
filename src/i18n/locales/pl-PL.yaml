@@ -405,6 +405,7 @@ options:
   ftp-reuse-connection:
     name: Ponowne użycie połączenia
   ftp-type:
+    description: Ustawia typ transferu FTP, binary albo ascii. Domyślną wartością jest binary. Przy SFTP opcja jest ignorowana.
     name: Typ transferu
   ftp-user:
     name: Domyślna nazwa użytkownika FTP
@@ -525,6 +526,9 @@ options:
   no-proxy:
     description: Określ listę nazw hostów, domen i adresów sieciowych z maską podsieci lub bez, gdzie nie powinno się używać proxy.
     name: Lista bez proxy
+  no-want-digest-header:
+    description: Przy true aria2 nie wysyła nagłówka Want-Digest w żądaniach. Domyślną wartością jest false.
+    name: Nie wysyłaj nagłówka Want-Digest
   optimize-concurrent-downloads:
     description: Optymalizuje liczbę równoczesnych pobrań zgodnie z dostępną przepustowością. aria2 wykorzystuje prędkość pobierania z poprzednich pobrań, aby dostosować liczbę pobrań uruchamianych równolegle zgodnie z zasadą N = A + B Log10(prędkość w Mbps). Współczynniki A i B można dostosować, oddzielając je dwukropkiem. Domyślne wartości (A=5, B=25) prowadzą do używania typowo 5 równoczesnych pobrań w sieci 1Mbps i ponad 50 w sieci 100Mbps. Liczba równoczesnych pobrań pozostaje ograniczona maksymalną wartością określoną przez opcję --max-concurrent-downloads.
     name: Optymalizuj Równoczesne Pobierania

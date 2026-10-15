@@ -405,6 +405,7 @@ options:
   ftp-reuse-connection:
     name: Znovu použít připojení
   ftp-type:
+    description: Nastavuje typ přenosu FTP, binary nebo ascii. Výchozí hodnota je binary. Pro přenosy SFTP se ignoruje.
     name: Typ přenosu
   ftp-user:
     name: Výchozí uživatelské jméno FTP
@@ -525,6 +526,9 @@ options:
   no-proxy:
     description: Specifikujte seznam názvů hostitelů, domén a síťových adres oddělených čárkami s nebo bez masky podsítě, kde se proxy nemá používat.
     name: Seznam bez proxy
+  no-want-digest-header:
+    description: Je-li true, aria2 v požadavcích neposílá hlavičku Want-Digest. Výchozí hodnota je false.
+    name: Neodesílat hlavičku Want-Digest
   optimize-concurrent-downloads:
     description: Optimalizuje počet souběžných stahování podle dostupné šířky pásma. aria2 používá rychlost stahování pozorovanou v předchozích stahováních k přizpůsobení počtu stahování spuštěných paralelně podle pravidla N = A + B Log10(rýchlost v Mbps). Koeficienty A a B lze přizpůsobit v argumentech volby s oddělením A a B dvojtečkou. Výchozí hodnoty (A=5, B=25) vedou k používání typických 5 paralelních stahování na 1Mbps síťích a více než 50 na 100Mbps sítích. Počet paralelních stahování zůstává omezen maximem definovaným parametrem --max-concurrent-downloads.
     name: Optimalizovat souběžné stahování

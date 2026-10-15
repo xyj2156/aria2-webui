@@ -405,6 +405,7 @@ options:
   ftp-reuse-connection:
     name: 連線復用
   ftp-type:
+    description: 設置 FTP 傳輸類型，可填 binary 或 ascii，預設是 binary。SFTP 傳輸會忽略此選項。
     name: 傳輸類型
   ftp-user:
     name: FTP 預設使用者名稱
@@ -525,6 +526,9 @@ options:
   no-proxy:
     description: 設定不使用代理伺服器的主機名, 域名, 包含或不包含子網掩碼的網路位址, 多個使用逗號分隔.
     name: 不使用代理伺服器清單
+  no-want-digest-header:
+    description: 設為「是」時，請求裡不再發送 Want-Digest 標頭。預設是「否」。
+    name: 不發送 Want-Digest 標頭
   optimize-concurrent-downloads:
     description: 根據可用頻寬最佳化同時下載的數量. aria2 使用之前統計的下載速度通過規則 N = A + B Log10 (速度單位為 Mbps) 得到同時下載的數量. 其中係數 A 和 B 可以在參數中以冒號分隔自訂. 預設值 (A=5, B=25) 可以在 1Mbps 網路上使用通常 5 個同時下載, 在 100Mbps 網路上為 50 個. 同時下載的數量保持在 --max-concurrent-downloads 參數定義的最大之下.
     name: 最佳化同時下載

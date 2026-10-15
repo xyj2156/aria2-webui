@@ -405,6 +405,7 @@ options:
   ftp-reuse-connection:
     name: Reuse Connection
   ftp-type:
+    description: Set the FTP transfer type, binary or ascii. Default value is binary. This option is ignored for SFTP transfers.
     name: Transfer Type
   ftp-user:
     name: FTP Default User Name
@@ -525,6 +526,9 @@ options:
   no-proxy:
     description: Specify a comma separated list of host names, domains and network addresses with or without a subnet mask where no proxy should be used.
     name: No Proxy List
+  no-want-digest-header:
+    description: When true, aria2 does not send the Want-Digest header in its requests. Default value is false.
+    name: Disable Want-Digest Header
   optimize-concurrent-downloads:
     description: Optimizes the number of concurrent downloads according to the bandwidth available. aria2 uses the download speed observed in the previous downloads to adapt the number of downloads launched in parallel according to the rule N = A + B Log10(speed in Mbps). The coefficients A and B can be customized in the option arguments with A and B separated by a colon. The default values (A=5, B=25) lead to using typically 5 parallel downloads on 1Mbps networks and above 50 on 100Mbps networks. The number of parallel downloads remains constrained under the maximum defined by the --max-concurrent-downloads parameter.
     name: Optimize Concurrent Downloads

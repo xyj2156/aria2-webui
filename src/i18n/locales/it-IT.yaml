@@ -405,6 +405,7 @@ options:
   ftp-reuse-connection:
     name: Riutilizzo Connessione
   ftp-type:
+    description: Imposta il tipo di trasferimento FTP, binary o ascii. Il valore predefinito è binary. Ignorato per i trasferimenti SFTP.
     name: Tipo di Trasferimento
   ftp-user:
     name: Nome Utente FTP Predefinito
@@ -525,6 +526,9 @@ options:
   no-proxy:
     description: Imposta gli hostname, i nomi di dominio, gli indirizzi di rete con o senza subnet mask da non utilizzare il server proxy. Utilizzare la virgola per separare più voci.
     name: Elenco dei server proxy da non utilizzare
+  no-want-digest-header:
+    description: Se vero, aria2 non invia l’intestazione Want-Digest nelle richieste. Il valore predefinito è false.
+    name: Non inviare l’intestazione Want-Digest
   optimize-concurrent-downloads:
     description: Ottimizza il numero di download simultanei in base alla larghezza di banda disponibile. aria2 utilizza la velocità di download precedentemente misurata per ottenere il numero di download simultanei tramite la regola N=A + B Log10 (la velocità è in Mbps). I coefficienti A e B possono essere personalizzati separati da due punti nel parametro. Il valore predefinito (A=5, B=25) può utilizzare 5 download simultanei su una rete da 1 Mbps e 50 su una rete da 100 Mbps. Il numero di download simultanei è limitato al massimo definito dal parametro --max-concurrent-downloads.
     name: Ottimizza i download simultanei

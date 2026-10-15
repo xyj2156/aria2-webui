@@ -6,6 +6,16 @@
  *
  * 收录范围：8 个全局分组 + 快捷设置 + 任务级选项里出现的键。未登记的 aria2 选项
  * 退化为纯文本框渲染，不阻断（宁可少校验也不误拦用户输入）。
+ *
+ * 新增或修改这里的键与取值域，必须三处核对，别凭印象（本文件此前就混进了
+ * aria-ng 时代遗留的 http-auth-method、rpc-ca 两个 aria2 1.37.0 并不存在的键，
+ * 以及 ftp-pasv=auto/passive/active、follow-torrent=memonly 两个非法取值）：
+ *   1. `aria2c --help=all` 里有没有这个选项名与这些取值；
+ *   2. 上游源码 src/prefs.cc 的 makePref("…") 是否注册了该名字；
+ *   3. 官网手册 aria2c.html 该选项段落写的取值集合与默认值（锚点 id="cmdoption-<名>"）。
+ * 为什么必须实测：aria2 的 changeGlobalOption 对**不存在的键**一律回 "OK"（静默无效），
+ * 只有**非法取值**才会真报错，所以"保存成功"证明不了任何事；写回后用
+ * aria2.getGlobalOption 读回，才知道是否真被接受。
  */
 
 const S = (key, extra = {}) => ({ key, type: 'string', ...extra });
@@ -69,7 +79,12 @@ export const OPTION_META = Object.fromEntries(
     B('use-head'),
     S('http-user'),
     S('http-passwd'),
-    E('http-auth-method', ['basic', 'digest'], { defaultValue: 'basic' }),
+    // 注：aria-ng 老版有 http-auth-method（basic/digest 选择），aria2 1.37.0 里
+    // 并没有这个选项（--help=all、prefs.cc 的 makePref、官网手册三处都查无此项），
+    // 只有 http-auth-challenge；且 aria2 的 changeGlobalOption 对不存在的键也回
+    // "OK"，写进去只会静默无效，故不再收录。rpc-ca 同理（真实的是
+    // rpc-certificate / rpc-private-key，见下）。
+    B('no-want-digest-header'),
     B('enable-http-keep-alive', { defaultValue: 'true' }),
     B('enable-http-pipelining'),
     T('header'),
@@ -83,7 +98,11 @@ export const OPTION_META = Object.fromEntries(
     SEC('server-stat-timeout', { defaultValue: '86400' }),
     S('ftp-user'),
     S('ftp-passwd'),
-    E('ftp-pasv', ['auto', 'passive', 'active'], { defaultValue: 'auto' }),
+    // 官网：--ftp-pasv [true|false]，默认 true（false 即主动模式）；旧表里的
+    // auto/passive/active 是 aria-ng 时代的写法，实测写 'passive' 会被 aria2 拒绝。
+    B('ftp-pasv', { defaultValue: 'true' }),
+    // 官网原文：TYPE 取 binary 或 ascii，默认 binary，SFTP 传输时忽略此选项。
+    E('ftp-type', ['binary', 'ascii'], { defaultValue: 'binary' }),
     B('ftp-reuse-connection', { defaultValue: 'true' }),
     S('ssh-host-key-md'),
 
@@ -95,6 +114,8 @@ export const OPTION_META = Object.fromEntries(
     S('bt-external-ip'),
     B('bt-force-encryption'),
     B('bt-hash-check-seed', { defaultValue: 'true' }),
+    // 磁力链下元数据前先读 --bt-save-metadata 存过的文件，读到就不再问 DHT。
+    B('bt-load-saved-metadata'),
     N('bt-max-open-files', { defaultValue: '100', min: 1 }),
     N('bt-max-peers', { defaultValue: '55' }),
     B('bt-metadata-only'),
@@ -117,7 +138,8 @@ export const OPTION_META = Object.fromEntries(
     B('enable-dht', { defaultValue: 'true' }),
     B('enable-dht6'),
     B('enable-peer-exchange', { defaultValue: 'true' }),
-    E('follow-torrent', [...YES_NO, 'memonly'], { defaultValue: 'true' }),
+    // 第三个取值官网写的是 mem，不是 memonly（实测 memonly 会被 aria2 拒绝）。
+    E('follow-torrent', [...YES_NO, 'mem'], { defaultValue: 'true' }),
     N('listen-port', { defaultValue: '6881', min: 1, max: 65535 }),
     SZ('max-overall-upload-limit'),
     SZ('max-upload-limit'),
@@ -127,7 +149,7 @@ export const OPTION_META = Object.fromEntries(
     SEC('seed-time', { defaultValue: '1' }),
 
     // Metalink
-    E('follow-metalink', [...YES_NO, 'memonly'], { defaultValue: 'true' }),
+    E('follow-metalink', [...YES_NO, 'mem'], { defaultValue: 'true' }),
     S('metalink-base-uri'),
     S('metalink-language'),
     S('metalink-location'),
@@ -146,7 +168,6 @@ export const OPTION_META = Object.fromEntries(
     B('rpc-secure'),
     S('rpc-certificate'),
     S('rpc-private-key'),
-    S('rpc-ca'),
 
     // 高级
     B('allow-overwrite'),
@@ -164,6 +185,8 @@ export const OPTION_META = Object.fromEntries(
     SZ('disk-cache'),
     E('download-result', ['default', 'hide', 'full'], { defaultValue: 'default' }),
     S('dscp'),
+    // 与下面的 file-allocation 有关：未预分配空间时映射可能不生效（官网原话）。
+    B('enable-mmap'),
     E('file-allocation', ['none', 'prealloc', 'falloc', 'trunc'], { defaultValue: 'prealloc' }),
     B('force-save'),
     B('hash-check-only'),
@@ -208,15 +231,17 @@ export const GLOBAL_OPTION_GROUPS = {
     'check-certificate', 'http-accept-gzip', 'http-auth-challenge', 'http-no-cache', 'http-user',
     'http-passwd', 'http-proxy', 'http-proxy-user', 'http-proxy-passwd', 'https-proxy',
     'https-proxy-user', 'https-proxy-passwd', 'referer', 'enable-http-keep-alive',
-    'enable-http-pipelining', 'header', 'save-cookies', 'use-head', 'user-agent',
+    'enable-http-pipelining', 'header', 'no-want-digest-header', 'save-cookies', 'use-head',
+    'user-agent',
   ],
   'ftp-sftp': [
     'ftp-user', 'ftp-passwd', 'ftp-pasv', 'ftp-proxy', 'ftp-proxy-user', 'ftp-proxy-passwd',
-    'ftp-reuse-connection', 'ssh-host-key-md',
+    'ftp-reuse-connection', 'ftp-type', 'ssh-host-key-md',
   ],
   bt: [
     'bt-detach-seed-only', 'bt-enable-hook-after-hash-check', 'bt-enable-lpd', 'bt-exclude-tracker',
-    'bt-external-ip', 'bt-force-encryption', 'bt-hash-check-seed', 'bt-max-open-files', 'bt-max-peers',
+    'bt-external-ip', 'bt-force-encryption', 'bt-hash-check-seed', 'bt-load-saved-metadata',
+    'bt-max-open-files', 'bt-max-peers',
     'bt-metadata-only', 'bt-min-crypto-level', 'bt-prioritize-piece', 'bt-remove-unselected-file',
     'bt-require-crypto', 'bt-request-peer-speed-limit', 'bt-save-metadata', 'bt-seed-unverified',
     'bt-stop-timeout', 'bt-tracker', 'bt-tracker-connect-timeout', 'bt-tracker-interval',
@@ -235,7 +260,8 @@ export const GLOBAL_OPTION_GROUPS = {
   advanced: [
     'allow-overwrite', 'allow-piece-length-change', 'always-resume', 'async-dns', 'auto-file-renaming',
     'auto-save-interval', 'conditional-get', 'content-disposition-default-utf8', 'daemon',
-    'deferred-input', 'disable-ipv6', 'disk-cache', 'download-result', 'dscp', 'file-allocation',
+    'deferred-input', 'disable-ipv6', 'disk-cache', 'download-result', 'dscp', 'enable-mmap',
+    'file-allocation',
     'force-save', 'hash-check-only', 'human-readable', 'keep-unfinished-download-result',
     'max-download-limit', 'max-download-result', 'max-mmap-limit', 'max-overall-download-limit',
     'max-resume-failure-tries', 'min-tls-version', 'no-conf', 'no-file-allocation-limit',
@@ -255,7 +281,10 @@ export const QUICK_SETTING_GROUPS = {
 export const TASK_OPTIONS = [
   { ...S('dir', { required: true }), category: 'task', showHistory: true, canUpdate: ['default', 'new', 'paused', 'error', 'complete', 'removed'] },
   { ...S('out'), category: 'task', canUpdate: ['default', 'new', 'paused', 'error', 'complete', 'removed'] },
-  { ...T('uri'), category: 'task', submitFormat: 'array', canUpdate: ['default', 'new', 'paused', 'error', 'complete', 'removed'] },
+  // 原先这里有一行 uri（aria-ng 遗留）：实测 aria2 的 changeOption({uri}) 回 "OK"
+  // 但 aria2.getUris 前后完全不变，属于静默无效的写入。aria2 追加源地址走的是
+  // aria2.addUri([gid], uris)（追加语义，不能整表替换），跟这行的编辑语义对不上，
+  // 所以先撤掉这一行；任务的源地址在详情页的文件区照常显示。
   { ...N('split', { min: 1, max: 512 }), category: 'connection', canUpdate: ['default', 'new', 'paused', 'error', 'complete', 'removed'] },
   { ...N('max-connection-per-server', { min: 1, max: 16 }), category: 'connection', canUpdate: ['default', 'new', 'paused', 'error', 'complete', 'removed'] },
   { ...SZ('min-split-size'), category: 'connection', canUpdate: ['default', 'new', 'paused', 'error', 'complete', 'removed'] },
@@ -268,8 +297,8 @@ export const TASK_OPTIONS = [
   { ...B('dry-run'), category: 'advanced', canShow: ['default', 'new'] },
   { ...B('rpc-save-upload-metadata'), category: 'advanced', canShow: ['default', 'new'] },
   { ...B('pause'), category: 'advanced', canShow: ['default', 'new'], defaultValue: 'false' },
-  { ...E('follow-torrent', [...YES_NO, 'memonly']), category: 'bittorrent', canShow: ['default', 'new'] },
-  { ...E('follow-metalink', [...YES_NO, 'memonly']), category: 'metalink', canShow: ['default', 'new'] },
+  { ...E('follow-torrent', [...YES_NO, 'mem']), category: 'bittorrent', canShow: ['default', 'new'] },
+  { ...E('follow-metalink', [...YES_NO, 'mem']), category: 'metalink', canShow: ['default', 'new'] },
   { ...E('bt-prioritize-piece', ['head', 'tail', 'head,tail'], { submitFormat: 'string' }), category: 'bittorrent' },
   { ...B('bt-remove-unselected-file'), category: 'bittorrent' },
   { ...B('force-save'), category: 'bittorrent' },
