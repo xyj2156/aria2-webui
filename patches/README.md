@@ -78,6 +78,13 @@ docker run --rm -v "$PWD":/w \
   优先级高于配置文件**（实测：conf 写 6813、命令行写 6816，实际只听 6816）。只要启动脚本
   还留着 `--rpc-listen-port`/`--dir`/`--log`，用户在 `aria2.conf` 里改这几项就永远无效，
   配置文件看着像坏了。这一条不变，脚本里就不能再塞回任何业务默认值。
+- 发布包只有一个控制台窗口：`start.bat` 先 `type` 出 `start-help.txt` 的中文用法，再
+  **前台**运行 `aria2c`（浏览器由一条 `start "" /min cmd /c "timeout … & start URL"`
+  的短命助手延后打开）。早期版本用 `start "aria2c" aria2c.exe`，aria2c 会拿到**第二个**
+  控制台并抢走焦点，指引打在没人看的那个窗口里，用户只看到 aria2 的输出（实测反馈
+  "把 bat 中的中文都冲掉了"）。前台模型与 `start.sh` 的 `exec ./aria2c` 一致，
+  也让「本窗口就是 aria2，Ctrl+C 即停」这句话成立——注意这句话反过来意味着
+  **关掉窗口会停掉 aria2**，`README.txt` 与 `start-help.txt` 都按此表述，改动时别写反。
 - **`start.bat` 只允许 ASCII 字节**——不是风格洁癖，是实测故障：cmd.exe 按字节偏移续读
   批处理文件，遇到 UTF-8 多字节文本（尤其文件中途执行了 `chcp 65001`）偏移会错位，行被
   从中间截断、残片当命令执行。实测中文版启动器输出过

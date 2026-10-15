@@ -273,19 +273,21 @@ if defined SAFEONLY (
   echo  [aria2-webui] To reach the panel from other devices, set rpc-secret in
   echo  [aria2-webui] aria2.conf first, then start again.
 )
-start "aria2c" "%~dp0aria2c.exe" --conf-path="%~dp0aria2.conf" %SAFEONLY% %*
-timeout /t 2 /nobreak >nul
-start "" http://localhost:6800/
 echo.
 if exist "%~dp0start-help.txt" type "%~dp0start-help.txt"
 echo.
-pause
+rem The panel is opened by a short-lived helper so that aria2c can keep running in
+rem THIS window.  `start "aria2c" aria2c.exe` gave it a second console that took the
+rem focus, so the guidance printed above was left in a window nobody looked at.
+start "" /min cmd /c "timeout /t 2 /nobreak >nul & start http://localhost:6800/"
+"%~dp0aria2c.exe" --conf-path="%~dp0aria2.conf" %SAFEONLY% %*
 EOF
   printf '@echo off\r\ntaskkill /f /im %s >nul 2>&1\r\n' "$BIN_NAME" > "$OUT/stop.bat"
   # 侧车：中文用法与排障指引（UTF-8/CRLF，由 start.bat 用 type 原样输出）。
   # 若控制台代码页不是 UTF-8，这里可能显示成方框，内容与 README.txt 一致，不影响功能。
   emit "$OUT/start-help.txt" <<EOF
-aria2 已启动，面板地址： http://localhost:6800/
+aria2 即将在本窗口启动（本窗口就是 aria2 的运行窗口，请别关）
+ 面板地址： http://localhost:6800/  —— 浏览器会在几秒后自动打开，没打开就自己输这个地址。
  改设置：下载目录、端口、并发、BT 等都在本目录 aria2.conf，改完 stop.bat 再 start.bat 生效。
  别的设备访问：把 localhost 换成本机的局域网 IP，且 aria2.conf 里 rpc-listen-all 要为 true，
               并按提示设好 rpc-secret（面板自身没有登录）。
@@ -299,14 +301,16 @@ aria2 已启动，面板地址： http://localhost:6800/
      或者手动把浏览器地址改成新端口。
   5. 只有其它设备连不上：Windows 防火墙要放行该端口，首次启动弹的授权框点「允许」。
 
-停止：运行本目录 stop.bat；关掉这个窗口不影响后台继续下载。
+停止：在本窗口按 Ctrl+C，或运行本目录 stop.bat。aria2 就跑在这个窗口里，
+      所以关掉窗口同样会停掉它。
 更多说明见本目录 README.txt 与 aria2.conf 里的中文注释。
 EOF
   emit "$OUT/README.txt" <<EOF
 aria2c 内嵌 Web UI 版（Windows x64）
 
-启动：双击 start.bat，浏览器打开 http://localhost:6800/
-停止：双击 stop.bat（关掉 start.bat 的黑窗口不影响后台下载）
+启动：双击 start.bat —— aria2 就在该窗口前台运行，浏览器随后自动打开
+      http://localhost:6800/（没自动开就手动输这个地址）
+停止：在该窗口按 Ctrl+C，或双击 stop.bat；关闭该窗口同样会停止 aria2
 
 改设置
   全部默认值都在同目录的 aria2.conf 里：下载目录、监听端口、日志、并发与分片、
